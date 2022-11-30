@@ -6,7 +6,7 @@
 /// <reference lib="esnext" />
 
 /** @category Console and Debugging */
-declare interface Console {
+export interface Console {
   assert(condition?: boolean, ...data: any[]): void;
   clear(): void;
   count(label?: string): void;

@@ -6,7 +6,7 @@
 /// <reference lib="esnext" />
 
 /** @category DOM Events */
-declare class DOMException extends Error {
+export class DOMException extends Error {
   constructor(message?: string, name?: string);
   readonly name: string;
   readonly message: string;
@@ -24,7 +24,7 @@ interface EventInit {
  *
  * @category DOM Events
  */
-declare class Event {
+export class Event {
   constructor(type: string, eventInitDict?: EventInit);
   /** Returns true or false depending on how event was initialized. True if
    * event goes through its target's ancestors in reverse tree order, and
@@ -92,7 +92,7 @@ declare class Event {
  *
  * @category DOM Events
  */
-declare class EventTarget {
+export class EventTarget {
   /** Appends an event listener for events whose type attribute value is type.
    * The callback argument sets the callback that will be invoked when the event
    * is dispatched.
@@ -145,7 +145,7 @@ interface EventListenerObject {
 }
 
 /** @category DOM Events */
-declare type EventListenerOrEventListenerObject =
+export type EventListenerOrEventListenerObject =
   | EventListener
   | EventListenerObject;
 
@@ -174,7 +174,7 @@ interface ProgressEventInit extends EventInit {
  *
  * @category DOM Events
  */
-declare class ProgressEvent<T extends EventTarget = EventTarget> extends Event {
+export class ProgressEvent<T extends EventTarget = EventTarget> extends Event {
   constructor(type: string, eventInitDict?: ProgressEventInit);
   readonly lengthComputable: boolean;
   readonly loaded: number;
@@ -190,7 +190,7 @@ declare class ProgressEvent<T extends EventTarget = EventTarget> extends Event {
  *
  * @category Encoding API
  */
-declare function atob(s: string): string;
+export function atob(s: string): string;
 
 /** Creates a base-64 ASCII encoded string from the input string.
  *
@@ -200,16 +200,16 @@ declare function atob(s: string): string;
  *
  * @category Encoding API
  */
-declare function btoa(s: string): string;
+export function btoa(s: string): string;
 
 /** @category Encoding API */
-declare interface TextDecoderOptions {
+export interface TextDecoderOptions {
   fatal?: boolean;
   ignoreBOM?: boolean;
 }
 
 /** @category Encoding API */
-declare interface TextDecodeOptions {
+export interface TextDecodeOptions {
   stream?: boolean;
 }
 
@@ -227,13 +227,13 @@ interface TextDecoder {
 }
 
 /** @category Encoding API */
-declare var TextDecoder: {
+export var TextDecoder: {
   prototype: TextDecoder;
   new (label?: string, options?: TextDecoderOptions): TextDecoder;
 };
 
 /** @category Encoding API */
-declare interface TextEncoderEncodeIntoResult {
+export interface TextEncoderEncodeIntoResult {
   read: number;
   written: number;
 }
@@ -248,7 +248,7 @@ interface TextEncoder {
 }
 
 /** @category Encoding API */
-declare var TextEncoder: {
+export var TextEncoder: {
   prototype: TextEncoder;
   new (): TextEncoder;
 };
@@ -267,7 +267,7 @@ interface TextDecoderStream {
 }
 
 /** @category Encoding API */
-declare var TextDecoderStream: {
+export var TextDecoderStream: {
   prototype: TextDecoderStream;
   new (label?: string, options?: TextDecoderOptions): TextDecoderStream;
 };
@@ -282,7 +282,7 @@ interface TextEncoderStream {
 }
 
 /** @category Encoding API */
-declare var TextEncoderStream: {
+export var TextEncoderStream: {
   prototype: TextEncoderStream;
   new (): TextEncoderStream;
 };
@@ -292,7 +292,7 @@ declare var TextEncoderStream: {
  *
  * @category Web APIs
  */
-declare class AbortController {
+export class AbortController {
   /** Returns the AbortSignal object associated with this object. */
   readonly signal: AbortSignal;
   /** Invoking this method will set this object's AbortSignal's aborted flag and
@@ -343,7 +343,7 @@ interface AbortSignal extends EventTarget {
 }
 
 /** @category Web APIs */
-declare var AbortSignal: {
+export var AbortSignal: {
   prototype: AbortSignal;
   new (): AbortSignal;
   abort(reason?: any): AbortSignal;
@@ -409,7 +409,7 @@ interface FileReader extends EventTarget {
 }
 
 /** @category Web File API */
-declare var FileReader: {
+export var FileReader: {
   prototype: FileReader;
   new (): FileReader;
   readonly DONE: number;
@@ -433,7 +433,7 @@ interface BlobPropertyBag {
  *
  * @category Web File API
  */
-declare class Blob {
+export class Blob {
   constructor(blobParts?: BlobPart[], options?: BlobPropertyBag);
 
   readonly size: number;
@@ -454,7 +454,7 @@ interface FilePropertyBag extends BlobPropertyBag {
  *
  * @category Web File API
  */
-declare class File extends Blob {
+export class File extends Blob {
   constructor(
     fileBits: BlobPart[],
     fileName: string,
@@ -525,7 +525,7 @@ interface ReadableStreamBYOBRequest {
 }
 
 /** @category Streams API */
-declare var ReadableStreamDefaultReader: {
+export var ReadableStreamDefaultReader: {
   prototype: ReadableStreamDefaultReader;
   new <R>(stream: ReadableStream<R>): ReadableStreamDefaultReader<R>;
 };
@@ -538,7 +538,7 @@ interface ReadableStreamReader<R = any> {
 }
 
 /** @category Streams API */
-declare var ReadableStreamReader: {
+export var ReadableStreamReader: {
   prototype: ReadableStreamReader;
   new (): ReadableStreamReader;
 };
@@ -593,7 +593,7 @@ interface ReadableStreamDefaultController<R = any> {
 }
 
 /** @category Streams API */
-declare var ReadableStreamDefaultController: {
+export var ReadableStreamDefaultController: {
   prototype: ReadableStreamDefaultController;
   new (): ReadableStreamDefaultController;
 };
@@ -608,7 +608,7 @@ interface ReadableByteStreamController {
 }
 
 /** @category Streams API */
-declare var ReadableByteStreamController: {
+export var ReadableByteStreamController: {
   prototype: ReadableByteStreamController;
   new (): ReadableByteStreamController;
 };
@@ -643,7 +643,7 @@ interface CountQueuingStrategy extends QueuingStrategy {
 }
 
 /** @category Streams API */
-declare var CountQueuingStrategy: {
+export var CountQueuingStrategy: {
   prototype: CountQueuingStrategy;
   new (options: { highWaterMark: number }): CountQueuingStrategy;
 };
@@ -655,7 +655,7 @@ interface ByteLengthQueuingStrategy extends QueuingStrategy<ArrayBufferView> {
 }
 
 /** @category Streams API */
-declare var ByteLengthQueuingStrategy: {
+export var ByteLengthQueuingStrategy: {
   prototype: ByteLengthQueuingStrategy;
   new (options: { highWaterMark: number }): ByteLengthQueuingStrategy;
 };
@@ -683,7 +683,7 @@ interface ReadableStream<R = any> {
 }
 
 /** @category Streams API */
-declare var ReadableStream: {
+export var ReadableStream: {
   prototype: ReadableStream;
   new (
     underlyingSource: UnderlyingByteSource,
@@ -733,7 +733,7 @@ interface WritableStream<W = any> {
 }
 
 /** @category Streams API */
-declare var WritableStream: {
+export var WritableStream: {
   prototype: WritableStream;
   new <W = any>(
     underlyingSink?: UnderlyingSink<W>,
@@ -754,7 +754,7 @@ interface WritableStreamDefaultController {
 }
 
 /** @category Streams API */
-declare var WritableStreamDefaultController: WritableStreamDefaultController;
+export var WritableStreamDefaultController: WritableStreamDefaultController;
 
 /** This Streams API interface is the object returned by
  * WritableStream.getWriter() and once created locks the < writer to the
@@ -774,7 +774,7 @@ interface WritableStreamDefaultWriter<W = any> {
 }
 
 /** @category Streams API */
-declare var WritableStreamDefaultWriter: {
+export var WritableStreamDefaultWriter: {
   prototype: WritableStreamDefaultWriter;
   new (): WritableStreamDefaultWriter;
 };
@@ -786,7 +786,7 @@ interface TransformStream<I = any, O = any> {
 }
 
 /** @category Streams API */
-declare var TransformStream: {
+export var TransformStream: {
   prototype: TransformStream;
   new <I = any, O = any>(
     transformer?: Transformer<I, O>,
@@ -804,7 +804,7 @@ interface TransformStreamDefaultController<O = any> {
 }
 
 /** @category Streams API */
-declare var TransformStreamDefaultController: TransformStreamDefaultController;
+export var TransformStreamDefaultController: TransformStreamDefaultController;
 
 /** @category Streams API */
 interface Transformer<I = any, O = any> {
@@ -836,7 +836,7 @@ interface MessageEventInit<T = any> extends EventInit {
 }
 
 /** @category Streams API */
-declare class MessageEvent<T = any> extends Event {
+export class MessageEvent<T = any> extends Event {
   /**
    * Returns the data of the message.
    */
@@ -875,7 +875,7 @@ interface StructuredSerializeOptions {
  *
  * @category DOM APIs
  */
-declare class MessageChannel {
+export class MessageChannel {
   constructor();
   readonly port1: MessagePort;
   readonly port2: MessagePort;
@@ -893,7 +893,7 @@ interface MessagePortEventMap {
  *
  * @category DOM APIs
  */
-declare class MessagePort extends EventTarget {
+export class MessagePort extends EventTarget {
   onmessage: ((this: MessagePort, ev: MessageEvent) => any) | null;
   onmessageerror: ((this: MessagePort, ev: MessageEvent) => any) | null;
   /**
@@ -964,7 +964,7 @@ declare class MessagePort extends EventTarget {
  *
  * @category DOM APIs
  */
-declare function structuredClone(
+export function structuredClone(
   value: any,
   options?: StructuredSerializeOptions,
 ): any;
@@ -981,7 +981,7 @@ declare function structuredClone(
  *
  * @category Compression Streams API
  */
-declare class CompressionStream {
+export class CompressionStream {
   /**
    * Creates a new `CompressionStream` object which compresses a stream of
    * data.
@@ -1010,7 +1010,7 @@ declare class CompressionStream {
  *
  * @category Compression Streams API
  */
-declare class DecompressionStream {
+export class DecompressionStream {
   /**
    * Creates a new `DecompressionStream` object which decompresses a stream of
    * data.
@@ -1041,6 +1041,6 @@ declare class DecompressionStream {
  *
  * @category Web APIs
  */
-declare function reportError(
+export function reportError(
   error: any,
 ): void;

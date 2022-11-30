@@ -1,9 +1,12 @@
 // Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
 
 /// <reference no-default-lib="true" />
-/// <reference lib="deno.ns" />
+// <reference lib="deno.ns" />
 
-declare namespace Deno {
+import type { DenoNs, DenoNet } from '../../../types/index.js';
+import type { Conn } from '../../../ext/net/01_net.js';
+
+export namespace DenoUnstable {
   export {}; // stop default export type behavior
 
   /** **UNSTABLE**: New API, yet to be vetted.
@@ -347,7 +350,7 @@ declare namespace Deno {
    */
   export class UnsafePointer {
     /** Return the direct memory pointer to the typed array in memory. */
-    static of(value: Deno.UnsafeCallback | BufferSource): PointerValue;
+    static of(value: DenoUnstable.UnsafeCallback | BufferSource): PointerValue;
   }
 
   /** **UNSTABLE**: New API, yet to be vetted.
@@ -620,7 +623,7 @@ declare namespace Deno {
    *
    * @category Sub Process
    */
-  interface UnstableRunOptions extends RunOptions {
+  interface UnstableRunOptions extends DenoNs.RunOptions {
     /** If `true`, clears the environment variables before executing the
      * sub-process.  Defaults to `false`. */
     clearEnv?: boolean;
@@ -682,7 +685,7 @@ declare namespace Deno {
    */
   export function run<T extends UnstableRunOptions = UnstableRunOptions>(
     opt: T,
-  ): Process<T>;
+  ): DenoNs.Process<T>;
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -783,28 +786,28 @@ declare namespace Deno {
    *
    * @category Network
    */
-  export interface DatagramConn extends AsyncIterable<[Uint8Array, Addr]> {
+  export interface DatagramConn extends AsyncIterable<[Uint8Array, DenoNet.Addr]> {
     /** Waits for and resolves to the next message to the instance.
      *
      * Messages are received in the format of a tuple containing the data array
      * and the address information.
      */
-    receive(p?: Uint8Array): Promise<[Uint8Array, Addr]>;
+    receive(p?: Uint8Array): Promise<[Uint8Array, DenoNet.Addr]>;
     /** Sends a message to the target via the connection. The method resolves
      * with the number of bytes sent. */
-    send(p: Uint8Array, addr: Addr): Promise<number>;
+    send(p: Uint8Array, addr: DenoNet.Addr): Promise<number>;
     /** Close closes the socket. Any pending message promises will be rejected
      * with errors. */
     close(): void;
     /** Return the address of the instance. */
-    readonly addr: Addr;
-    [Symbol.asyncIterator](): AsyncIterableIterator<[Uint8Array, Addr]>;
+    readonly addr: DenoNet.Addr;
+    [Symbol.asyncIterator](): AsyncIterableIterator<[Uint8Array, DenoNet.Addr]>;
   }
 
   /**
    * @category Network
    */
-  export interface TcpListenOptions extends ListenOptions {
+  export interface TcpListenOptions extends DenoNet.ListenOptions {
     /** When `true` the SO_REUSEPORT flag will be set on the listener. This
      * allows multiple processes to listen on the same address and port.
      *
@@ -836,7 +839,7 @@ declare namespace Deno {
    *
    * @category Network
    */
-  export interface UdpListenOptions extends ListenOptions {
+  export interface UdpListenOptions extends DenoNet.ListenOptions {
     /** When `true` the specified address will be reused, even if another
      * process has already bound a socket on it. This effectively steals the
      * socket from the listener.
@@ -934,7 +937,7 @@ declare namespace Deno {
    * @tags allow-net, allow-read
    * @category Network
    */
-  export function connect(options: ConnectOptions): Promise<TcpConn>;
+  export function connect(options: DenoNet.ConnectOptions): Promise<DenoNet.TcpConn>;
   /** **UNSTABLE**: New API, yet to be vetted.
    *
    * Connects to the hostname (default is "127.0.0.1") and port on the named
@@ -953,7 +956,7 @@ declare namespace Deno {
    * @tags allow-net, allow-read
    * @category Network
    */
-  export function connect(options: UnixConnectOptions): Promise<UnixConn>;
+  export function connect(options: UnixConnectOptions): Promise<DenoNet.UnixConn>;
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -1123,7 +1126,7 @@ declare namespace Deno {
    *
    * @category HTTP Server
    */
-  export interface ServeOptions extends Partial<Deno.ListenOptions> {
+  export interface ServeOptions extends Partial<DenoNet.ListenOptions> {
     /** An {@linkcode AbortSignal} to close the server and all connections. */
     signal?: AbortSignal;
 
@@ -1375,7 +1378,7 @@ declare namespace Deno {
    */
   export function upgradeHttp(
     request: Request,
-  ): Promise<[Deno.Conn, Uint8Array]>;
+  ): Promise<[DenoNet.Conn, Uint8Array]>;
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -1394,7 +1397,7 @@ declare namespace Deno {
    *
    * @category HTTP Server
    */
-  export function upgradeHttpRaw(request: Request): [Deno.Conn, Uint8Array];
+  export function upgradeHttpRaw(request: Request): [Conn, Uint8Array];
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -1515,7 +1518,7 @@ declare namespace Deno {
     output(): Promise<SpawnOutput>;
     /** Kills the process with given {@linkcode Deno.Signal}. Defaults to
      * `"SIGTERM"`. */
-    kill(signo?: Signal): void;
+    kill(signo?: DenoNs.Signal): void;
 
     /** Ensure that the status of the child process prevents the Deno process
      * from exiting. */
@@ -1601,7 +1604,7 @@ declare namespace Deno {
     code: number;
     /** The signal associated with the child process, present if
      * {@linkcode Deno.spawn} was called. */
-    signal: Signal | null;
+    signal: DenoNs.Signal | null;
   }
 
   /** **UNSTABLE**: New API, yet to be vetted.
@@ -1727,7 +1730,7 @@ declare namespace Deno {
     output(): Promise<CommandOutput>;
     /** Kills the process with given {@linkcode Deno.Signal}. Defaults to
      * `"SIGTERM"`. */
-    kill(signo?: Signal): void;
+    kill(signo?: DenoNs.Signal): void;
 
     /** Ensure that the status of the child process prevents the Deno process
      * from exiting. */
@@ -1806,7 +1809,7 @@ declare namespace Deno {
     /** The exit code of the child process. */
     code: number;
     /** The signal associated with the child process. */
-    signal: Signal | null;
+    signal: DenoNs.Signal | null;
   }
 
   /** **UNSTABLE**: New API, yet to be vetted.
@@ -1834,56 +1837,56 @@ declare namespace Deno {
  * @tags allow-net, allow-read
  * @category Fetch API
  */
-declare function fetch(
-  input: Request | URL | string,
-  init?: RequestInit & { client: Deno.HttpClient },
-): Promise<Response>;
+// export function fetch(
+//   input: Request | URL | string,
+//   init?: RequestInit & { client: Deno.HttpClient },
+// ): Promise<Response>;
 
 /** **UNSTABLE**: New API, yet to be vetted.
  *
  * @category Web Workers
  */
-declare interface WorkerOptions {
-  /** **UNSTABLE**: New API, yet to be vetted.
-   *
-   * Configure permissions options to change the level of access the worker will
-   * have. By default it will have no permissions. Note that the permissions
-   * of a worker can't be extended beyond its parent's permissions reach.
-   *
-   * - `"inherit"` will take the permissions of the thread the worker is created
-   *   in.
-   * - `"none"` will use the default behavior and have no permission
-   * - A list of routes can be provided that are relative to the file the worker
-   *   is created in to limit the access of the worker (read/write permissions
-   *   only)
-   *
-   * Example:
-   *
-   * ```ts
-   * // mod.ts
-   * const worker = new Worker(
-   *   new URL("deno_worker.ts", import.meta.url).href, {
-   *     type: "module",
-   *     deno: {
-   *       permissions: {
-   *         read: true,
-   *       },
-   *     },
-   *   }
-   * );
-   * ```
-   */
-  deno?: {
-    /** Set to `"none"` to disable all the permissions in the worker. */
-    permissions?: Deno.PermissionOptions;
-  };
-}
+// interface WorkerOptions {
+//   /** **UNSTABLE**: New API, yet to be vetted.
+//    *
+//    * Configure permissions options to change the level of access the worker will
+//    * have. By default it will have no permissions. Note that the permissions
+//    * of a worker can't be extended beyond its parent's permissions reach.
+//    *
+//    * - `"inherit"` will take the permissions of the thread the worker is created
+//    *   in.
+//    * - `"none"` will use the default behavior and have no permission
+//    * - A list of routes can be provided that are relative to the file the worker
+//    *   is created in to limit the access of the worker (read/write permissions
+//    *   only)
+//    *
+//    * Example:
+//    *
+//    * ```ts
+//    * // mod.ts
+//    * const worker = new Worker(
+//    *   new URL("deno_worker.ts", import.meta.url).href, {
+//    *     type: "module",
+//    *     deno: {
+//    *       permissions: {
+//    *         read: true,
+//    *       },
+//    *     },
+//    *   }
+//    * );
+//    * ```
+//    */
+//   deno?: {
+//     /** Set to `"none"` to disable all the permissions in the worker. */
+//     permissions?: DenoNs.PermissionOptions;
+//   };
+// }
 
 /** **UNSTABLE**: New API, yet to be vetted.
  *
  * @category Web Sockets
  */
-declare interface WebSocketStreamOptions {
+export interface WebSocketStreamOptions {
   protocols?: string[];
   signal?: AbortSignal;
   headers?: HeadersInit;
@@ -1893,7 +1896,7 @@ declare interface WebSocketStreamOptions {
  *
  * @category Web Sockets
  */
-declare interface WebSocketConnection {
+export interface WebSocketConnection {
   readable: ReadableStream<string | Uint8Array>;
   writable: WritableStream<string | Uint8Array>;
   extensions: string;
@@ -1904,7 +1907,7 @@ declare interface WebSocketConnection {
  *
  * @category Web Sockets
  */
-declare interface WebSocketCloseInfo {
+export interface WebSocketCloseInfo {
   code?: number;
   reason?: string;
 }
@@ -1914,7 +1917,7 @@ declare interface WebSocketCloseInfo {
  * @tags allow-net
  * @category Web Sockets
  */
-declare class WebSocketStream {
+export class WebSocketStream {
   constructor(url: string, options?: WebSocketStreamOptions);
   url: string;
   connection: Promise<WebSocketConnection>;

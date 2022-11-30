@@ -1,29 +1,25 @@
 // Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
+// Based on https://raw.githubusercontent.com/denoland/deno/main/runtime/js/01_version.js
 "use strict";
 
-((window) => {
-  const { ObjectFreeze } = window.__bootstrap.primordials;
+import { primordials } from '../../core/00_primordials.js';
 
-  const version = {
-    deno: "",
-    v8: "",
-    typescript: "",
-  };
+const { ObjectFreeze } = primordials;
 
-  function setVersions(
-    denoVersion,
-    v8Version,
-    tsVersion,
-  ) {
-    version.deno = denoVersion;
-    version.v8 = v8Version;
-    version.typescript = tsVersion;
+export const version = {
+  deno: "",
+  v8: "",
+  typescript: "",
+};
 
-    ObjectFreeze(version);
-  }
+export function setVersions(
+  denoVersion: string,
+  v8Version: string,
+  tsVersion: string,
+) {
+  version.deno = denoVersion;
+  version.v8 = v8Version;
+  version.typescript = tsVersion;
 
-  window.__bootstrap.version = {
-    version,
-    setVersions,
-  };
-})(this);
+  ObjectFreeze(version);
+}

@@ -13,7 +13,7 @@ interface CloseEventInit extends EventInit {
 }
 
 /** @category Web Sockets */
-declare class CloseEvent extends Event {
+export class CloseEvent extends Event {
   constructor(type: string, eventInitDict?: CloseEventInit);
   /**
    * Returns the WebSocket connection close code provided by the server.
@@ -47,7 +47,7 @@ interface WebSocketEventMap {
  * @tags allow-net
  * @category Web Sockets
  */
-declare class WebSocket extends EventTarget {
+export class WebSocket extends EventTarget {
   constructor(url: string | URL, protocols?: string | string[]);
 
   static readonly CLOSED: number;

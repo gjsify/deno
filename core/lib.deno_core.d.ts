@@ -5,7 +5,7 @@
 /// <reference no-default-lib="true" />
 /// <reference lib="esnext" />
 
-declare namespace Deno {
+export namespace Deno {
   namespace core {
     /** Call an op in Rust, and asynchronously receive the result. */
     function opAsync(
@@ -25,7 +25,7 @@ declare namespace Deno {
      * List of all registered ops, in the form of a map that maps op
      * name to internal numerical op id.
      */
-    const ops: Record<string, (...args: unknown[]) => any>;
+    // const ops: Record<string, (...args: unknown[]) => any>;
 
     /**
      * Retrieve a list of all open resources, in the form of a map that maps
@@ -162,7 +162,7 @@ declare namespace Deno {
      * Tracing only occurs when `Deno.core.enableOpCallTracing()` was previously
      * enabled.
      */
-    const opCallTraces: Map<number, OpCallTrace>;
+    // const opCallTraces: Map<number, OpCallTrace>;
 
     /**
      * Adds a callback for the given Promise event. If this function is called

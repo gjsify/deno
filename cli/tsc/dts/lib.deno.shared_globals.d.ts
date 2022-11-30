@@ -5,16 +5,18 @@
 
 /// <reference no-default-lib="true" />
 /// <reference lib="esnext" />
-/// <reference lib="deno.console" />
-/// <reference lib="deno.url" />
-/// <reference lib="deno.web" />
-/// <reference lib="deno.fetch" />
-/// <reference lib="deno.websocket" />
-/// <reference lib="deno.crypto" />
-/// <reference lib="deno.broadcast_channel" />
+// <reference lib="deno.console" />
+// <reference lib="deno.url" />
+// <reference lib="deno.web" />
+// <reference lib="deno.fetch" />
+// <reference lib="deno.websocket" />
+// <reference lib="deno.crypto" />
+// <reference lib="deno.broadcast_channel" />
+
+import type { DenoNs } from './lib.deno.ns.d.js';
 
 /** @category WebAssembly */
-declare namespace WebAssembly {
+export namespace WebAssembly {
   /**
    * The `WebAssembly.CompileError` object indicates an error during WebAssembly decoding or validation.
    *
@@ -22,7 +24,7 @@ declare namespace WebAssembly {
    *
    * @category WebAssembly
    */
-  export class CompileError extends Error {
+  class CompileError extends Error {
     /** Creates a new `WebAssembly.CompileError` object. */
     constructor(message?: string, options?: ErrorOptions);
   }
@@ -36,7 +38,7 @@ declare namespace WebAssembly {
    *
    * @category WebAssembly
    */
-  export class Global {
+  class Global {
     /** Creates a new `Global` object. */
     constructor(descriptor: GlobalDescriptor, v?: any);
 
@@ -59,7 +61,7 @@ declare namespace WebAssembly {
    *
    * @category WebAssembly
    */
-  export class Instance {
+  class Instance {
     /** Creates a new Instance object. */
     constructor(module: Module, importObject?: Imports);
 
@@ -79,7 +81,7 @@ declare namespace WebAssembly {
    *
    * @category WebAssembly
    */
-  export class LinkError extends Error {
+  class LinkError extends Error {
     /** Creates a new WebAssembly.LinkError object. */
     constructor(message?: string, options?: ErrorOptions);
   }
@@ -95,7 +97,7 @@ declare namespace WebAssembly {
    *
    * @category WebAssembly
    */
-  export class Memory {
+  class Memory {
     /** Creates a new `Memory` object. */
     constructor(descriptor: MemoryDescriptor);
 
@@ -117,7 +119,7 @@ declare namespace WebAssembly {
    *
    * @category WebAssembly
    */
-  export class Module {
+  class Module {
     /** Creates a new `Module` object. */
     constructor(bytes: BufferSource);
 
@@ -130,10 +132,10 @@ declare namespace WebAssembly {
       sectionName: string,
     ): ArrayBuffer[];
 
-    /** Given a `Module`, returns an array containing descriptions of all the declared exports. */
+    /** Given a `Module`, returns an array containing descriptions of all the exportd exports. */
     static exports(moduleObject: Module): ModuleExportDescriptor[];
 
-    /** Given a `Module`, returns an array containing descriptions of all the declared imports. */
+    /** Given a `Module`, returns an array containing descriptions of all the exportd imports. */
     static imports(moduleObject: Module): ModuleImportDescriptor[];
   }
 
@@ -145,7 +147,7 @@ declare namespace WebAssembly {
    *
    * @category WebAssembly
    */
-  export class RuntimeError extends Error {
+  class RuntimeError extends Error {
     /** Creates a new `WebAssembly.RuntimeError` object. */
     constructor(message?: string, options?: ErrorOptions);
   }
@@ -160,7 +162,7 @@ declare namespace WebAssembly {
    *
    * @category WebAssembly
    */
-  export class Table {
+  class Table {
     /** Creates a new `Table` object. */
     constructor(descriptor: TableDescriptor);
 
@@ -198,7 +200,7 @@ declare namespace WebAssembly {
     shared?: boolean;
   }
 
-  /** A `ModuleExportDescriptor` is the description of a declared export in a
+  /** A `ModuleExportDescriptor` is the description of a exportd export in a
    * `WebAssembly.Module`.
    *
    * @category WebAssembly
@@ -208,7 +210,7 @@ declare namespace WebAssembly {
     name: string;
   }
 
-  /** A `ModuleImportDescriptor` is the description of a declared import in a
+  /** A `ModuleImportDescriptor` is the description of a exportd import in a
    * `WebAssembly.Module`.
    *
    * @category WebAssembly
@@ -358,7 +360,7 @@ declare namespace WebAssembly {
  *
  * @category Timers
  */
-declare function setTimeout(
+export function setTimeout(
   /** callback function to execute when timer expires */
   cb: (...args: any[]) => void,
   /** delay in ms */
@@ -376,7 +378,7 @@ declare function setTimeout(
  *
  * @category Timers
  */
-declare function setInterval(
+export function setInterval(
   /** callback function to execute when timer expires */
   cb: (...args: any[]) => void,
   /** delay in ms */
@@ -396,7 +398,7 @@ declare function setInterval(
  *
  * @category Timers
  */
-declare function clearInterval(id?: number): void;
+export function clearInterval(id?: number): void;
 
 /** Cancels a scheduled action initiated by `setTimeout()`
  *
@@ -408,7 +410,7 @@ declare function clearInterval(id?: number): void;
  *
  * @category Timers
  */
-declare function clearTimeout(id?: number): void;
+export function clearTimeout(id?: number): void;
 
 /** @category Scheduling */
 interface VoidFunction {
@@ -427,7 +429,7 @@ interface VoidFunction {
  *
  * @category Scheduling
  */
-declare function queueMicrotask(func: VoidFunction): void;
+export function queueMicrotask(func: VoidFunction): void;
 
 /** Dispatches an event in the global scope, synchronously invoking any
  * registered event listeners for this event in the appropriate order. Returns
@@ -440,7 +442,7 @@ declare function queueMicrotask(func: VoidFunction): void;
  *
  * @category DOM Events
  */
-declare function dispatchEvent(event: Event): boolean;
+export function dispatchEvent(event: Event): boolean;
 
 /** @category DOM APIs */
 interface DOMStringList {
@@ -457,7 +459,7 @@ interface DOMStringList {
 type BufferSource = ArrayBufferView | ArrayBuffer;
 
 /** @category Console and Debugging */
-declare var console: Console;
+export var console: Console;
 
 /** @category DOM Events */
 interface ErrorEventInit extends EventInit {
@@ -506,6 +508,39 @@ interface WorkerEventMap extends AbstractWorkerEventMap {
 interface WorkerOptions {
   type?: "classic" | "module";
   name?: string;
+  /** **UNSTABLE**: New API, yet to be vetted.
+   *
+   * Configure permissions options to change the level of access the worker will
+   * have. By default it will have no permissions. Note that the permissions
+   * of a worker can't be extended beyond its parent's permissions reach.
+   *
+   * - `"inherit"` will take the permissions of the thread the worker is created
+   *   in.
+   * - `"none"` will use the default behavior and have no permission
+   * - A list of routes can be provided that are relative to the file the worker
+   *   is created in to limit the access of the worker (read/write permissions
+   *   only)
+   *
+   * Example:
+   *
+   * ```ts
+   * // mod.ts
+   * const worker = new Worker(
+   *   new URL("deno_worker.ts", import.meta.url).href, {
+   *     type: "module",
+   *     deno: {
+   *       permissions: {
+   *         read: true,
+   *       },
+   *     },
+   *   }
+   * );
+   * ```
+   */
+   deno?: {
+    /** Set to `"none"` to disable all the permissions in the worker. */
+    permissions?: DenoNs.PermissionOptions;
+  };
 }
 
 /** @category Web Workers */
@@ -543,84 +578,84 @@ declare class Worker extends EventTarget {
 }
 
 /** @category Performance */
-declare type PerformanceEntryList = PerformanceEntry[];
+export type PerformanceEntryList = PerformanceEntry[];
 
 /** @category Performance */
-declare class Performance extends EventTarget {
-  /** Returns a timestamp representing the start of the performance measurement. */
-  readonly timeOrigin: number;
-  constructor();
+// declare class Performance extends EventTarget {
+//   /** Returns a timestamp representing the start of the performance measurement. */
+//   readonly timeOrigin: number;
+//   constructor();
 
-  /** Removes the stored timestamp with the associated name. */
-  clearMarks(markName?: string): void;
+//   /** Removes the stored timestamp with the associated name. */
+//   clearMarks(markName?: string): void;
 
-  /** Removes stored timestamp with the associated name. */
-  clearMeasures(measureName?: string): void;
+//   /** Removes stored timestamp with the associated name. */
+//   clearMeasures(measureName?: string): void;
 
-  getEntries(): PerformanceEntryList;
-  getEntriesByName(name: string, type?: string): PerformanceEntryList;
-  getEntriesByType(type: string): PerformanceEntryList;
+//   getEntries(): PerformanceEntryList;
+//   getEntriesByName(name: string, type?: string): PerformanceEntryList;
+//   getEntriesByType(type: string): PerformanceEntryList;
 
-  /** Stores a timestamp with the associated name (a "mark"). */
-  mark(markName: string, options?: PerformanceMarkOptions): PerformanceMark;
+//   /** Stores a timestamp with the associated name (a "mark"). */
+//   mark(markName: string, options?: PerformanceMarkOptions): PerformanceMark;
 
-  /** Stores the `DOMHighResTimeStamp` duration between two marks along with the
-   * associated name (a "measure"). */
-  measure(
-    measureName: string,
-    options?: PerformanceMeasureOptions,
-  ): PerformanceMeasure;
-  /** Stores the `DOMHighResTimeStamp` duration between two marks along with the
-   * associated name (a "measure"). */
-  measure(
-    measureName: string,
-    startMark?: string,
-    endMark?: string,
-  ): PerformanceMeasure;
+//   /** Stores the `DOMHighResTimeStamp` duration between two marks along with the
+//    * associated name (a "measure"). */
+//   measure(
+//     measureName: string,
+//     options?: PerformanceMeasureOptions,
+//   ): PerformanceMeasure;
+//   /** Stores the `DOMHighResTimeStamp` duration between two marks along with the
+//    * associated name (a "measure"). */
+//   measure(
+//     measureName: string,
+//     startMark?: string,
+//     endMark?: string,
+//   ): PerformanceMeasure;
 
-  /** Returns a current time from Deno's start in milliseconds.
-   *
-   * Use the permission flag `--allow-hrtime` return a precise value.
-   *
-   * ```ts
-   * const t = performance.now();
-   * console.log(`${t} ms since start!`);
-   * ```
-   *
-   * @tags allow-hrtime
-   */
-  now(): number;
+//   /** Returns a current time from Deno's start in milliseconds.
+//    *
+//    * Use the permission flag `--allow-hrtime` return a precise value.
+//    *
+//    * ```ts
+//    * const t = performance.now();
+//    * console.log(`${t} ms since start!`);
+//    * ```
+//    *
+//    * @tags allow-hrtime
+//    */
+//   now(): number;
 
-  /** Returns a JSON representation of the performance object. */
-  toJSON(): any;
-}
-
-/** @category Performance */
-declare var performance: Performance;
+//   /** Returns a JSON representation of the performance object. */
+//   toJSON(): any;
+// }
 
 /** @category Performance */
-declare interface PerformanceMarkOptions {
-  /** Metadata to be included in the mark. */
-  detail?: any;
+export var performance: Performance;
 
-  /** Timestamp to be used as the mark time. */
-  startTime?: number;
-}
+/** @category Performance */
+// export interface PerformanceMarkOptions {
+//   /** Metadata to be included in the mark. */
+//   detail?: any;
 
-declare interface PerformanceMeasureOptions {
-  /** Metadata to be included in the measure. */
-  detail?: any;
+//   /** Timestamp to be used as the mark time. */
+//   startTime?: number;
+// }
 
-  /** Timestamp to be used as the start time or string to be used as start
-   * mark. */
-  start?: string | number;
+// export interface PerformanceMeasureOptions {
+//   /** Metadata to be included in the measure. */
+//   detail?: any;
 
-  /** Duration between the start and end times. */
-  duration?: number;
+//   /** Timestamp to be used as the start time or string to be used as start
+//    * mark. */
+//   start?: string | number;
 
-  /** Timestamp to be used as the end time or string to be used as end mark. */
-  end?: string | number;
-}
+//   /** Duration between the start and end times. */
+//   duration?: number;
+
+//   /** Timestamp to be used as the end time or string to be used as end mark. */
+//   end?: string | number;
+// }
 
 /** Encapsulates a single performance metric that is part of the performance
  * timeline. A performance entry can be directly created by making a performance
@@ -663,7 +698,7 @@ declare class PerformanceMeasure extends PerformanceEntry {
 }
 
 /** @category DOM Events */
-declare interface CustomEventInit<T = any> extends EventInit {
+export interface CustomEventInit<T = any> extends EventInit {
   detail?: T;
 }
 

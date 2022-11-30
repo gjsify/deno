@@ -19,25 +19,25 @@ interface KeyAlgorithm {
 }
 
 /** @category Web Crypto API */
-type AlgorithmIdentifier = string | Algorithm;
+// type AlgorithmIdentifier = string | Algorithm;
 /** @category Web Crypto API */
-type HashAlgorithmIdentifier = AlgorithmIdentifier;
+// type HashAlgorithmIdentifier = AlgorithmIdentifier;
 /** @category Web Crypto API */
-type KeyType = "private" | "public" | "secret";
+//type KeyType = "private" | "public" | "secret";
 /** @category Web Crypto API */
-type KeyUsage =
-  | "decrypt"
-  | "deriveBits"
-  | "deriveKey"
-  | "encrypt"
-  | "sign"
-  | "unwrapKey"
-  | "verify"
-  | "wrapKey";
+// type KeyUsage =
+//   | "decrypt"
+//   | "deriveBits"
+//   | "deriveKey"
+//   | "encrypt"
+//   | "sign"
+//   | "unwrapKey"
+//   | "verify"
+//   | "wrapKey";
 /** @category Web Crypto API */
-type KeyFormat = "jwk" | "pkcs8" | "raw" | "spki";
+// type KeyFormat = "jwk" | "pkcs8" | "raw" | "spki";
 /** @category Web Crypto API */
-type NamedCurve = string;
+// type NamedCurve = string;
 
 /** @category Web Crypto API */
 interface RsaOtherPrimesInfo {
@@ -131,6 +131,7 @@ interface RsaPssParams extends Algorithm {
 
 /** @category Web Crypto API */
 interface RsaOaepParams extends Algorithm {
+  // @ts-ignore
   label?: Uint8Array;
 }
 

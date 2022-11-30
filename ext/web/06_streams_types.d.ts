@@ -2,6 +2,8 @@
 
 // ** Internal Interfaces **
 
+import type { Deferred } from '../../ext/web/06_streams.js';
+
 interface PendingAbortRequest {
   deferred: Deferred<void>;
   // deno-lint-ignore no-explicit-any
@@ -67,8 +69,8 @@ interface ReadableStreamGenericReader<T> {
 
 // ** Ambient Definitions and Interfaces not provided by fetch **
 
-declare function queueMicrotask(callback: VoidFunction): void;
+export function queueMicrotask(callback: VoidFunction): void;
 
-declare namespace Deno {
+export namespace Deno {
   function inspect(value: unknown, options?: Record<string, unknown>): string;
 }

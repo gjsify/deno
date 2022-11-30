@@ -45,7 +45,7 @@ interface FormData {
 }
 
 /** @category Fetch API */
-declare var FormData: {
+export var FormData: {
   prototype: FormData;
   new (): FormData;
 };
@@ -54,7 +54,7 @@ declare var FormData: {
 interface Body {
   /** A simple getter used to expose a `ReadableStream` of the body contents. */
   readonly body: ReadableStream<Uint8Array> | null;
-  /** Stores a `Boolean` that declares whether the body has been used in a
+  /** Stores a `Boolean` that exports whether the body has been used in a
    * response yet.
    */
   readonly bodyUsed: boolean;
@@ -106,7 +106,7 @@ interface Headers {
 }
 
 /** @category Fetch API */
-declare class Headers implements DomIterable<string, string> {
+export class Headers implements DomIterable<string, string> {
   constructor(init?: HeadersInit);
 
   /** Appends a new value onto an existing header inside a `Headers` object, or
@@ -275,7 +275,7 @@ interface RequestInit {
  *
  * @category Fetch API
  */
-declare class Request implements Body {
+export class Request implements Body {
   constructor(input: RequestInfo | URL, init?: RequestInit);
 
   /**
@@ -364,7 +364,7 @@ declare class Request implements Body {
 
   /** A simple getter used to expose a `ReadableStream` of the body contents. */
   readonly body: ReadableStream<Uint8Array> | null;
-  /** Stores a `Boolean` that declares whether the body has been used in a
+  /** Stores a `Boolean` that exports whether the body has been used in a
    * request yet.
    */
   readonly bodyUsed: boolean;
@@ -410,7 +410,7 @@ type ResponseType =
  *
  * @category Fetch API
  */
-declare class Response implements Body {
+export class Response implements Body {
   constructor(body?: BodyInit | null, init?: ResponseInit);
   static json(data: unknown, init?: ResponseInit): Response;
   static error(): Response;
@@ -428,7 +428,7 @@ declare class Response implements Body {
 
   /** A simple getter used to expose a `ReadableStream` of the body contents. */
   readonly body: ReadableStream<Uint8Array> | null;
-  /** Stores a `Boolean` that declares whether the body has been used in a
+  /** Stores a `Boolean` that exports whether the body has been used in a
    * response yet.
    */
   readonly bodyUsed: boolean;
@@ -467,7 +467,7 @@ declare class Response implements Body {
  * @tags allow-net, allow-read
  * @category Fetch API
  */
-declare function fetch(
+export function fetch(
   input: URL | Request | string,
   init?: RequestInit,
 ): Promise<Response>;
