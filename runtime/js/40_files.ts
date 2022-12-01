@@ -10,17 +10,18 @@ import { ftruncate, ftruncateSync, fstat, fstatSync } from './30_fs.js';
 import { pathFromURL } from './06_util.js';
 import { readableStreamForRid, writableStreamForRid, WritableStream, ReadableStream } from '../../ext/web/06_streams.js';
 import type {
-  SeekMode,
-  OpenOptions,
-  Reader,
-  ReaderSync,
-  Writer,
-  WriterSync,
-  Seeker,
-  SeekerSync,
-  Closer,
-  FileInfo,
-  SetRawOptions,
+  // SeekMode,
+  // OpenOptions,
+  // Reader,
+  // ReaderSync,
+  // Writer,
+  // WriterSync,
+  // Seeker,
+  // SeekerSync,
+  // Closer,
+  // FileInfo,
+  // SetRawOptions,
+  Deno,
 } from '../../types/index.js';
 
 const {
@@ -73,7 +74,7 @@ const {
 export function seekSync(
   rid: number,
   offset: number,
-  whence: SeekMode,
+  whence: Deno.SeekMode,
 ): number {
   return ops.op_seek_sync({ rid, offset, whence });
 }
@@ -122,7 +123,7 @@ export function seekSync(
 export function seek(
   rid: number,
   offset: number,
-  whence: SeekMode,
+  whence: Deno.SeekMode,
 ) {
   return core.opAsync("op_seek_async", { rid, offset, whence });
 }
@@ -145,7 +146,7 @@ export function seek(
  * @category File System
  */
 export function openSync(
-  path: string | URL, options?: OpenOptions
+  path: string | URL, options?: Deno.OpenOptions
 ) {
   if (options) checkOpenOptions(options);
   const mode = options?.mode;
@@ -177,7 +178,7 @@ export function openSync(
  */
 export async function open(
   path: string | URL,
-  options?: OpenOptions,
+  options?: Deno.OpenOptions,
 ): Promise<FsFile> {
   if (options) checkOpenOptions(options);
   const mode = options?.mode;
@@ -253,13 +254,13 @@ export function create(path: string | URL): Promise<FsFile> {
  */
 export class FsFile
   implements
-  Reader,
-  ReaderSync,
-  Writer,
-  WriterSync,
-  Seeker,
-  SeekerSync,
-  Closer {
+  Deno.Reader,
+  Deno.ReaderSync,
+  Deno.Writer,
+  Deno.WriterSync,
+  Deno.Seeker,
+  Deno.SeekerSync,
+  Deno.Closer {
   #rid = 0;
 
   #readable;
@@ -459,7 +460,7 @@ export class FsFile
    * console.log(await file.seek(-2, Deno.SeekMode.End)); // "9" (e.g. 11-2)
    * ```
    */
-  seek(offset: number, whence: SeekMode): Promise<number> {
+  seek(offset: number, whence: Deno.SeekMode): Promise<number> {
     return seek(this.rid, offset, whence);
   }
 
@@ -501,7 +502,7 @@ export class FsFile
    * file.close();
    * ```
    */
-  seekSync(offset: number, whence: SeekMode): number {
+  seekSync(offset: number, whence: Deno.SeekMode): number {
     return seekSync(this.rid, offset, whence);
   }
 
@@ -516,7 +517,7 @@ export class FsFile
    * file.close();
    * ```
    */
-  stat(): Promise<FileInfo> {
+  stat(): Promise<Deno.FileInfo> {
     return fstat(this.rid);
   }
 
@@ -531,7 +532,7 @@ export class FsFile
    * file.close();
    * ```
    */
-  statSync(): FileInfo {
+  statSync(): Deno.FileInfo {
     return fstatSync(this.rid);
   }
 
@@ -620,7 +621,7 @@ class Stdin {
     return this.#readable;
   }
 
-  setRaw(mode: boolean, options: Partial<SetRawOptions> = {}): void {
+  setRaw(mode: boolean, options: Partial<Deno.SetRawOptions> = {}): void {
     const cbreak = !!(options.cbreak ?? false);
     ops.op_stdin_set_raw(mode, cbreak);
   }
@@ -690,7 +691,7 @@ export const stdin = new Stdin();
 export const stdout = new Stdout();
 export const stderr = new Stderr();
 
-function checkOpenOptions(options: OpenOptions) {
+function checkOpenOptions(options: Deno.OpenOptions) {
   if (
     ArrayPrototypeFilter(
       ObjectValues(options),

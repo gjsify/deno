@@ -5,7 +5,7 @@
 import { primordials } from '../../core/00_primordials.js';
 import * as ops from '../../ops/index.js';
 import type {
-  Env,
+  Deno,
 } from '../../types/index.js';
 import { Event, EventTarget } from '../../ext/web/02_event.js';
 const {
@@ -177,7 +177,7 @@ function deleteEnv(key: string): void {
   ops.op_delete_env(key);
 }
 
-export const env: Env = {
+export const env: Deno.Env = {
   get: getEnv,
 
   /** Returns a snapshot of the environment variables at invocation as a

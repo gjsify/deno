@@ -13,7 +13,7 @@
 // <reference lib="deno.crypto" />
 // <reference lib="deno.broadcast_channel" />
 
-import type { DenoNs } from './lib.deno.ns.d.js';
+import type { Deno } from './lib.deno.ns.d.js';
 
 /** @category WebAssembly */
 export namespace WebAssembly {
@@ -539,7 +539,7 @@ interface WorkerOptions {
    */
    deno?: {
     /** Set to `"none"` to disable all the permissions in the worker. */
-    permissions?: DenoNs.PermissionOptions;
+    permissions?: Deno.PermissionOptions;
   };
 }
 

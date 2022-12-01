@@ -64,3 +64,5 @@ export * as flash from '../../ext/flash/01_http.js';
 export * as broadcastChannel from '../../ext/broadcast_channel/01_broadcast_channel.js';
 export * as webStorage from '../../ext/webstorage/01_webstorage.js';
 export * as crypto from '../../ext/crypto/00_crypto.js';
+
+export * as internals from './70_internals.js';

@@ -257,7 +257,7 @@ export class WebSocket extends EventTarget {
     let wsURL: URL;
 
     try {
-      wsURL = new URL(url);
+      wsURL = new URL(url as string);
     } catch (e) {
       throw new DOMException(e.message, "SyntaxError");
     }

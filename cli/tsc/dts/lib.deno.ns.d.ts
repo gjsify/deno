@@ -115,7 +115,7 @@ export interface PerformanceMeasureOptions {
 }
 
 /** The global namespace where Deno specific, non-standard APIs are located. */
-declare namespace DenoNs {
+declare namespace Deno {
   /** A set of error constructors that are raised by Deno APIs.
    *
    * Can be used to provide more specific handling of failures within code

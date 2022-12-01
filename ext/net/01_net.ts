@@ -19,7 +19,7 @@ const {
   Uint8Array,
 } = primordials;
 
-import type { DenoNs, DenoNet } from '../../types/index.js';
+import type { Deno, DenoNet } from '../../types/index.js';
 import type { ReadableStream, WritableStream } from '../web/06_streams.js';
 
 const promiseIdSymbol = SymbolFor("Deno.core.internalPromiseId");
@@ -47,7 +47,7 @@ export function resolveDns(query, recordType, options) {
   return core.opAsync("op_dns_resolve", { query, recordType, options });
 }
 
-export class Conn implements DenoNs.Reader, DenoNs.Writer, DenoNs.Closer  {
+export class Conn implements Deno.Reader, Deno.Writer, Deno.Closer  {
   #rid: number = 0;
   #remoteAddr: DenoNet.Addr = null;
   #localAddr: DenoNet.Addr = null;

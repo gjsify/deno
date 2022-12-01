@@ -61,6 +61,7 @@ import {
   broadcastChannel,
   webStorage,
   crypto,
+  internals,
 } from './index.js';
 
 export const __bootstrap = {
@@ -73,16 +74,7 @@ export const __bootstrap = {
   },
   version,
   webUtil,
-  internals: {
-    pathFromURL: util.pathFromURL,
-    // packages/deno/runtime/src/ext/console/02_console.ts
-    // Expose these fields to internalObject for tests.
-    Console: console.Console,
-    cssToAnsi: console.cssToAnsi,
-    inspectArgs: console.inspectArgs,
-    parseCss: console.parseCss,
-    parseCssColor: console.parseCssColor,
-  },
+  internals,
   webidl,
   // packages/deno/runtime/src/ext/url/00_url.ts
   url,

@@ -6,12 +6,13 @@ import { primordials } from '../../core/00_primordials.js';
 import * as core from '../../core/01_core.js';
 import * as ops from '../../ops/index.js';
 import type {
-  MkdirOptions,
-  DirEntry,
-  MakeTempOptions,
-  RemoveOptions,
-  FileInfo,
-  SymlinkOptions,
+  // MkdirOptions,
+  // DirEntry,
+  // MakeTempOptions,
+  // RemoveOptions,
+  // FileInfo,
+  // SymlinkOptions,
+  Deno,
 } from '../../types/index.js';
 
 const {
@@ -260,7 +261,7 @@ export function chdir(directory: string | URL): void {
  * @tags allow-write
  * @category File System
  */
-export function makeTempDirSync(options: MakeTempOptions = {}) {
+export function makeTempDirSync(options: Deno.MakeTempOptions = {}) {
   return ops.op_make_temp_dir_sync(options);
 }
 
@@ -285,7 +286,7 @@ export function makeTempDirSync(options: MakeTempOptions = {}) {
  * @tags allow-write
  * @category File System
  */
-export function makeTempDir(options: MakeTempOptions = {}): Promise<string> {
+export function makeTempDir(options: Deno.MakeTempOptions = {}): Promise<string> {
   return core.opAsync<string>("op_make_temp_dir_async", options);
 }
 
@@ -336,11 +337,11 @@ export function makeTempFileSync(options = {}) {
  * @tags allow-write
  * @category File System
  */
-export function makeTempFile(options: MakeTempOptions = {}): Promise<string> {
+export function makeTempFile(options: Deno.MakeTempOptions = {}): Promise<string> {
   return core.opAsync<string>("op_make_temp_file_async", options);
 }
 
-function mkdirArgs(path: string | URL, options?: MkdirOptions) {
+function mkdirArgs(path: string | URL, options?: Deno.MkdirOptions) {
   const args: { path: string, recursive: boolean, mode?: number } = { path: pathFromURL(path), recursive: false };
   if (options != null) {
     if (typeof options.recursive == "boolean") {
@@ -368,7 +369,7 @@ function mkdirArgs(path: string | URL, options?: MkdirOptions) {
  * @tags allow-write
  * @category File System
  */
-export function mkdirSync(path: string | URL, options?: MkdirOptions): void {
+export function mkdirSync(path: string | URL, options?: Deno.MkdirOptions): void {
   ops.op_mkdir_sync(mkdirArgs(path, options));
 }
 
@@ -389,7 +390,7 @@ export function mkdirSync(path: string | URL, options?: MkdirOptions): void {
  */
  export async function mkdir(
   path: string | URL,
-  options?: MkdirOptions,
+  options?: Deno.MkdirOptions,
 ): Promise<void> {
   await core.opAsync("op_mkdir_async", mkdirArgs(path, options));
 }
@@ -410,7 +411,7 @@ export function mkdirSync(path: string | URL, options?: MkdirOptions): void {
  * @tags allow-read
  * @category File System
  */
-export function readDirSync(path: string | URL): Iterable<DirEntry> {
+export function readDirSync(path: string | URL): Iterable<Deno.DirEntry> {
   return ops.op_read_dir_sync(pathFromURL(path))[
     SymbolIterator
   ]();
@@ -432,7 +433,7 @@ export function readDirSync(path: string | URL): Iterable<DirEntry> {
  * @tags allow-read
  * @category File System
  */
-export function readDir(path: string | URL): AsyncIterable<DirEntry> {
+export function readDir(path: string | URL): AsyncIterable<Deno.DirEntry> {
   const array = core.opAsync(
     "op_read_dir_async",
     pathFromURL(path),
@@ -546,7 +547,7 @@ export function realPath(path: string | URL): Promise<string> {
  */
 export function removeSync(
   path: string | URL,
-  options: RemoveOptions = {},
+  options: Deno.RemoveOptions = {},
 ): void {
   ops.op_remove_sync(
     pathFromURL(path),
@@ -571,7 +572,7 @@ export function removeSync(
  */
 export async function remove(
   path: string | URL,
-  options: RemoveOptions = {},
+  options: Deno.RemoveOptions = {},
 ): Promise<void> {
   await core.opAsync(
     "op_remove_async",
@@ -707,7 +708,7 @@ const [statStruct, statBuf] = createByteStruct({
   blocks: "?u64",
 });
 
-function parseFileInfo(response): FileInfo {
+function parseFileInfo(response): Deno.FileInfo {
   const unix = build.os === "darwin" || build.os === "linux";
   return {
     isFile: response.isFile,
@@ -746,9 +747,9 @@ function parseFileInfo(response): FileInfo {
  *
  * @category File System
  */
-export function fstatSync(rid: number): FileInfo {
+export function fstatSync(rid: number): Deno.FileInfo {
   ops.op_fstat_sync(rid, statBuf);
-  return (statStruct as Function)(statBuf) as FileInfo;
+  return (statStruct as Function)(statBuf) as Deno.FileInfo;
 }
 
 /**
@@ -764,7 +765,7 @@ export function fstatSync(rid: number): FileInfo {
  *
  * @category File System
  */
-export async function fstat(rid: number): Promise<FileInfo> {
+export async function fstat(rid: number): Promise<Deno.FileInfo> {
   return parseFileInfo(await core.opAsync("op_fstat_async", rid));
 }
 
@@ -783,7 +784,7 @@ export async function fstat(rid: number): Promise<FileInfo> {
  * @tags allow-read
  * @category File System
  */
-export async function lstat(path: string | URL): Promise<FileInfo> {
+export async function lstat(path: string | URL): Promise<Deno.FileInfo> {
   const res = await core.opAsync("op_stat_async", {
     path: pathFromURL(path),
     lstat: true,
@@ -806,7 +807,7 @@ export async function lstat(path: string | URL): Promise<FileInfo> {
  * @tags allow-read
  * @category File System
  */
-export function lstatSync(path: string | URL): FileInfo {
+export function lstatSync(path: string | URL): Deno.FileInfo {
   ops.op_stat_sync(
     pathFromURL(path),
     true,
@@ -829,7 +830,7 @@ export function lstatSync(path: string | URL): FileInfo {
  * @tags allow-read
  * @category File System
  */
-export async function stat(path: string | URL): Promise<FileInfo> {
+export async function stat(path: string | URL): Promise<Deno.FileInfo> {
   const res = await core.opAsync("op_stat_async", {
     path: pathFromURL(path),
     lstat: false,
@@ -851,7 +852,7 @@ export async function stat(path: string | URL): Promise<FileInfo> {
  * @tags allow-read
  * @category File System
  */
-export function statSync(path: string | URL): FileInfo {
+export function statSync(path: string | URL): Deno.FileInfo {
   ops.op_stat_sync(
     pathFromURL(path),
     false,
@@ -1229,7 +1230,7 @@ export async function utime(
 export function symlinkSync(
   oldpath: string | URL,
   newpath: string | URL,
-  options?: SymlinkOptions,
+  options?: Deno.SymlinkOptions,
 ): void {
   ops.op_symlink_sync(
     pathFromURL(oldpath),
@@ -1256,7 +1257,7 @@ export function symlinkSync(
 export async function symlink(
   oldpath: string | URL,
   newpath: string | URL,
-  options?: SymlinkOptions,
+  options?: Deno.SymlinkOptions,
 ) {
   await core.opAsync(
     "op_symlink_async",

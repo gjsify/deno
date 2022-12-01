@@ -5,6 +5,25 @@
 /// <reference no-default-lib="true" />
 /// <reference lib="esnext" />
 
+// Gjsify
+export interface UrlComponents {
+  protocol: UrlComponent;
+  username: UrlComponent;
+  password: UrlComponent;
+  hostname: UrlComponent;
+  port: UrlComponent;
+  pathname: UrlComponent;
+  search: UrlComponent;
+  hash: UrlComponent;
+}
+
+// Gjsify
+export interface UrlComponent {
+  patternString: string;
+  regexp: RegExp;
+  groupNameList: string[];
+}
+
 /** @category Web APIs */
 export class URLSearchParams {
   constructor(

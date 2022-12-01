@@ -42,7 +42,7 @@ import {
   RsaOaepParams,
   RsaOtherPrimesInfo,
   RsaPssParams,
-} from './lib.deno_crypto.js';
+} from './lib.deno_crypto.d.js';
 
 "use strict";
 

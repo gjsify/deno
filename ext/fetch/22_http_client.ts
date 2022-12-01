@@ -15,9 +15,9 @@
 import * as core from '../../core/01_core.js';
 import * as ops from '../../ops/index.js';
 
-import type { CreateHttpClientOptions } from '../../types/index.js';
+import type { DenoUnstable } from '../../types/index.js';
 
-export function createHttpClient(options: CreateHttpClientOptions): HttpClient {
+export function createHttpClient(options: DenoUnstable.CreateHttpClientOptions): HttpClient {
   options.caCerts ??= [];
   return new HttpClient(
     ops.op_fetch_custom_client(

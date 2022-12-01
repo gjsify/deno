@@ -6,7 +6,7 @@
 /// <reference lib="esnext" />
 
 /** @category Web Crypto API */
-declare var crypto: Crypto;
+export var crypto: Crypto;
 
 /** @category Web Crypto API */
 interface Algorithm {
@@ -19,25 +19,25 @@ interface KeyAlgorithm {
 }
 
 /** @category Web Crypto API */
-// type AlgorithmIdentifier = string | Algorithm;
+export type AlgorithmIdentifier = string | Algorithm;
 /** @category Web Crypto API */
-// type HashAlgorithmIdentifier = AlgorithmIdentifier;
+export type HashAlgorithmIdentifier = AlgorithmIdentifier;
 /** @category Web Crypto API */
-//type KeyType = "private" | "public" | "secret";
+export type KeyType = "private" | "public" | "secret";
 /** @category Web Crypto API */
-// type KeyUsage =
-//   | "decrypt"
-//   | "deriveBits"
-//   | "deriveKey"
-//   | "encrypt"
-//   | "sign"
-//   | "unwrapKey"
-//   | "verify"
+export type KeyUsage =
+  | "decrypt"
+  | "deriveBits"
+  | "deriveKey"
+  | "encrypt"
+  | "sign"
+  | "unwrapKey"
+  | "verify"
 //   | "wrapKey";
 /** @category Web Crypto API */
-// type KeyFormat = "jwk" | "pkcs8" | "raw" | "spki";
+export type KeyFormat = "jwk" | "pkcs8" | "raw" | "spki";
 /** @category Web Crypto API */
-// type NamedCurve = string;
+export type NamedCurve = string;
 
 /** @category Web Crypto API */
 interface RsaOtherPrimesInfo {
@@ -210,7 +210,7 @@ interface CryptoKey {
 }
 
 /** @category Web Crypto API */
-declare var CryptoKey: {
+export var CryptoKey: {
   prototype: CryptoKey;
   new (): CryptoKey;
 };
@@ -226,7 +226,7 @@ interface CryptoKeyPair {
 }
 
 /** @category Web Crypto API */
-declare var CryptoKeyPair: {
+export var CryptoKeyPair: {
   prototype: CryptoKeyPair;
   new (): CryptoKeyPair;
 };
@@ -370,7 +370,7 @@ interface SubtleCrypto {
 }
 
 /** @category Web Crypto API */
-declare interface Crypto {
+export interface Crypto {
   readonly subtle: SubtleCrypto;
   getRandomValues<
     T extends
@@ -390,7 +390,7 @@ declare interface Crypto {
 }
 
 /** @category Web Crypto API */
-declare var SubtleCrypto: {
+export var SubtleCrypto: {
   prototype: SubtleCrypto;
   new (): SubtleCrypto;
 };

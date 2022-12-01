@@ -83,7 +83,7 @@ const {
 
 import { __bootstrap } from './80_bootstrap.js';
 
-import type { DedicatedWorkerGlobalScope } from '../../ext/web/04_global_interfaces.js';
+import { DedicatedWorkerGlobalScope } from '../../ext/web/04_global_interfaces.js';
 
 const util = __bootstrap.util;
 const event = __bootstrap.event;
@@ -240,7 +240,7 @@ function importScripts(...urls: Array<string|URL>) {
         "SyntaxError",
       );
     }
-  });
+  }) as string[];
 
   // A classic worker's main script has looser MIME type checks than any
   // imported scripts, so we use `loadedMainWorkerScript` to distinguish them.

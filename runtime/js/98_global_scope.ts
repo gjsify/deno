@@ -273,6 +273,7 @@ ObjectDefineProperties(WorkerNavigator.prototype, {
       webidl.assertBranded(this, WorkerNavigatorPrototype);
       return numCpus;
     },
+    // @ts-ignore
     language: {
       configurable: true,
       enumerable: true,

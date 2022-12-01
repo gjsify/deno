@@ -32,7 +32,7 @@ const {
 
 import * as ops from '../ops/index.js';
 
-import type { OpCallTrace, UncaughtExceptionCallback, PromiseRejectCallback } from '../types/index.js';
+import type { DenoCore } from '../types/index.js';
 
 const errorMap = {};
 // Builtin v8 / JS errors
@@ -59,7 +59,7 @@ let opCallTracingEnabled = false;
  * Tracing only occurs when `Deno.core.enableOpCallTracing()` was previously
  * enabled.
  */
-export const opCallTraces: Map<number, OpCallTrace> = new Map();
+export const opCallTraces: Map<number, DenoCore.OpCallTrace> = new Map();
 
 /**
  * Enables collection of stack traces of all async ops. This allows for
@@ -462,8 +462,8 @@ export const runMicrotasks = () => ops.op_run_microtasks();
 export const hasTickScheduled = () => ops.op_has_tick_scheduled();
 export const setHasTickScheduled = (bool: boolean) => ops.op_set_has_tick_scheduled(bool);
 export const evalContext = (
-  source,
-  specifier,
+  source: string,
+  specifier: string,
 ) => ops.op_eval_context(source, specifier);
 export const createHostObject = () => ops.op_create_host_object();
 
@@ -517,7 +517,7 @@ export const eventLoopHasMoreWork = () => ops.op_event_loop_has_more_work();
  * Set a callback that will be called when a promise without a .catch
  * handler is rejected. Returns the old handler or undefined.
  */
-export const setPromiseRejectCallback = (fn: PromiseRejectCallback) => ops.op_set_promise_reject_callback(fn);
+export const setPromiseRejectCallback = (fn: DenoCore.PromiseRejectCallback) => ops.op_set_promise_reject_callback(fn);
 
 /**
  * Set a callback that will be called when an exception isn't caught
@@ -526,8 +526,8 @@ export const setPromiseRejectCallback = (fn: PromiseRejectCallback) => ops.op_se
  * to change in the future. Returns the old handler or undefined.
  */
 export const setUncaughtExceptionCallback = (
-  cb: UncaughtExceptionCallback,
-): undefined | UncaughtExceptionCallback => {
+  cb: DenoCore.UncaughtExceptionCallback,
+): undefined | DenoCore.UncaughtExceptionCallback => {
   console.warn("Not implemented: core.setUncaughtExceptionCallback");
   return undefined;
 }

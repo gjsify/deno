@@ -93,7 +93,7 @@ export class TextDecoder {
       if (
         ObjectPrototypeIsPrototypeOf(
           SharedArrayBuffer.prototype,
-          input || input.buffer,
+          input || (input as ArrayBufferView).buffer,
         )
       ) {
         // We clone the data into a non-shared ArrayBuffer so we can pass it

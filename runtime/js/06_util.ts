@@ -4,7 +4,7 @@
 
 import { primordials } from '../../core/00_primordials.js';
 import { build } from './01_build.js';
-import { URLPrototype } from '../../ext/url/index.js';
+import { URLPrototype } from '../../ext/url/00_url.js';
 
 const {
   decodeURIComponent,

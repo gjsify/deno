@@ -39,6 +39,9 @@ export namespace webidl {
      * Wether to clamp this number to the acceptable values for this type.
      */
     clamp?: boolean;
+
+    // Gjsify: Was missing in deno types?
+    unsigned?: boolean;
   }
   export interface StringConverterOpts extends ValueConverterOpts {
     /**
@@ -52,7 +55,7 @@ export namespace webidl {
      */
     allowShared?: boolean;
   }
-  export const converters: {
+  export interface Converters {
     any(v: any): any;
     /**
      * Convert a value into a `boolean` (bool).
@@ -91,7 +94,7 @@ export namespace webidl {
      * Convert a value into a `unsigned long long` (uint64).
      * **Note this is truncated to a JS number (53 bit precision).**
      */
-    ["unsigned long long"](v: any, opts?: IntConverterOpts): number;
+    ["unsigned long long"](v: any, opts?: Partial<IntConverterOpts>): number;
     /**
      * Convert a value into a `float` (f32).
      */
@@ -181,7 +184,7 @@ export namespace webidl {
      */
     BufferSource(
       v: any,
-      opts?: BufferConverterOpts,
+      opts?: Partial<BufferConverterOpts>,
     ): ArrayBuffer | ArrayBufferView;
     /**
      * Convert a value into a `DOMTimeStamp` (u64). Alias for unsigned long long
@@ -198,8 +201,8 @@ export namespace webidl {
     ["UVString?"](v: any, opts?: ValueConverterOpts): string | null;
     ["sequence<double>"](v: any, opts?: ValueConverterOpts): number[];
 
-    [type: string]: (v: any, opts: ValueConverterOpts) => any;
-  };
+    [type: string]: (v: any, opts?: ValueConverterOpts) => any;
+  }
 
   /**
    * Assert that the a function has at least a required amount of arguments.

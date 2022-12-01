@@ -8,7 +8,12 @@ import { illegalConstructorKey } from './01_web_util.js';
 import { pathFromURL } from './06_util.js';
 import { Event, EventTarget } from '../../ext/web/02_event.js';
 
-import type { PermissionDescriptor, PermissionState, PermissionOptions } from '../../types/index.js';
+import type {
+  // Deno.PermissionDescriptor,
+  // Deno.PermissionState,
+  // Deno.PermissionOptions,
+  Deno,
+} from '../../types/index.js';
 
 const {
   ArrayIsArray,
@@ -28,7 +33,7 @@ const {
 } = primordials;
 
 interface StatusCacheValue {
-  state: PermissionState;
+  state: Deno.PermissionState;
   status: PermissionStatus;
 }
 
@@ -44,28 +49,28 @@ const permissionNames = [
   "hrtime",
 ];
 
-function opQuery(desc: PermissionDescriptor): PermissionState {
+function opQuery(desc: Deno.PermissionDescriptor): Deno.PermissionState {
   return ops.op_query_permission(desc);
 }
 
-function opRevoke(desc: PermissionDescriptor): PermissionState {
+function opRevoke(desc: Deno.PermissionDescriptor): Deno.PermissionState {
   return ops.op_revoke_permission(desc);
 }
 
-function opRequest(desc: PermissionDescriptor): PermissionState {
+function opRequest(desc: Deno.PermissionDescriptor): Deno.PermissionState {
   return ops.op_request_permission(desc);
 }
 
 export class PermissionStatus extends EventTarget {
-  #state: { state: PermissionState };
+  #state: { state: Deno.PermissionState };
 
   onchange: ((this: PermissionStatus, event: Event) => any) | null = null;
 
-  get state(): PermissionState {
+  get state(): Deno.PermissionState {
     return this.#state.state;
   }
 
-  constructor(state: { state: PermissionState } | null = null, key: unknown | null = null) {
+  constructor(state: { state: Deno.PermissionState } | null = null, key: unknown | null = null) {
     if (key != illegalConstructorKey) {
       throw new TypeError("Illegal constructor.");
     }
@@ -91,7 +96,7 @@ export class PermissionStatus extends EventTarget {
 
 const statusCache: Map<string, StatusCacheValue> = new Map();
 
-function cache(desc: PermissionDescriptor, state: PermissionState): PermissionStatus {
+function cache(desc: Deno.PermissionDescriptor, state: Deno.PermissionState): PermissionStatus {
   let { name: key } = desc;
   if (
     (desc.name === "read" || desc.name === "write" || desc.name === "ffi") &&
@@ -117,13 +122,13 @@ function cache(desc: PermissionDescriptor, state: PermissionState): PermissionSt
     }
     return status.status;
   }
-  const status: { state: PermissionState; status?: PermissionStatus } = { state };
+  const status: { state: Deno.PermissionState; status?: PermissionStatus } = { state };
   status.status = new PermissionStatus(status, illegalConstructorKey);
   MapPrototypeSet(statusCache, key, status);
   return status.status;
 }
 
-function isValidDescriptor(desc: unknown): desc is PermissionDescriptor {
+function isValidDescriptor(desc: unknown): desc is Deno.PermissionDescriptor {
   return typeof desc === "object" && desc !== null &&
     ArrayPrototypeIncludes(permissionNames, (desc as any).name);
 }
@@ -198,7 +203,7 @@ export class Permissions {
 export const permissions = new Permissions(illegalConstructorKey);
 
 /** Converts all file URLs in FS allowlists to paths. */
-export function serializePermissions(permissions: PermissionOptions) {
+export function serializePermissions(permissions: Deno.PermissionOptions) {
   if (typeof permissions == "object" && permissions != null) {
     const serializedPermissions = {};
     for (const key of ["read", "write", "run", "ffi"]) {

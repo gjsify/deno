@@ -5,8 +5,12 @@
 /// <reference no-default-lib="true" />
 /// <reference lib="esnext" />
 
+import type { Blob } from '../../ext/web/09_file.js';
+import type { ReadableStream } from '../../ext/web/06_streams.js';
+
+
 /** @category DOM APIs */
-interface DomIterable<K, V> {
+export interface DomIterable<K, V> {
   keys(): IterableIterator<K>;
   values(): IterableIterator<V>;
   entries(): IterableIterator<[K, V]>;
@@ -18,7 +22,7 @@ interface DomIterable<K, V> {
 }
 
 /** @category Fetch API */
-type FormDataEntryValue = File | string;
+export type FormDataEntryValue = File | string;
 
 /** Provides a way to easily construct a set of key/value pairs representing
  * form fields and their values, which can then be easily sent using the
@@ -27,7 +31,7 @@ type FormDataEntryValue = File | string;
  *
  * @category Fetch API
  */
-interface FormData {
+export interface FormData {
   append(name: string, value: string | Blob, fileName?: string): void;
   delete(name: string): void;
   get(name: string): FormDataEntryValue | null;
@@ -51,7 +55,7 @@ export var FormData: {
 };
 
 /** @category Fetch API */
-interface Body {
+export interface Body {
   /** A simple getter used to expose a `ReadableStream` of the body contents. */
   readonly body: ReadableStream<Uint8Array> | null;
   /** Stores a `Boolean` that exports whether the body has been used in a
@@ -81,7 +85,7 @@ interface Body {
 }
 
 /** @category Fetch API */
-type HeadersInit = Headers | string[][] | Record<string, string>;
+export type HeadersInit = Headers | string[][] | Record<string, string>;
 
 /** This Fetch API interface allows you to perform various actions on HTTP
  * request and response headers. These actions include retrieving, setting,
@@ -151,9 +155,9 @@ export class Headers implements DomIterable<string, string> {
 }
 
 /** @category Fetch API */
-type RequestInfo = Request | string;
+export type RequestInfo = Request | string;
 /** @category Fetch API */
-type RequestCache =
+export type RequestCache =
   | "default"
   | "force-cache"
   | "no-cache"
@@ -161,13 +165,13 @@ type RequestCache =
   | "only-if-cached"
   | "reload";
 /** @category Fetch API */
-type RequestCredentials = "include" | "omit" | "same-origin";
+export type RequestCredentials = "include" | "omit" | "same-origin";
 /** @category Fetch API */
-type RequestMode = "cors" | "navigate" | "no-cors" | "same-origin";
+export type RequestMode = "cors" | "navigate" | "no-cors" | "same-origin";
 /** @category Fetch API */
-type RequestRedirect = "error" | "follow" | "manual";
+export type RequestRedirect = "error" | "follow" | "manual";
 /** @category Fetch API */
-type ReferrerPolicy =
+export type ReferrerPolicy =
   | ""
   | "no-referrer"
   | "no-referrer-when-downgrade"
@@ -178,7 +182,7 @@ type ReferrerPolicy =
   | "strict-origin-when-cross-origin"
   | "unsafe-url";
 /** @category Fetch API */
-type BodyInit =
+export type BodyInit =
   | Blob
   | BufferSource
   | FormData
@@ -186,7 +190,7 @@ type BodyInit =
   | ReadableStream<Uint8Array>
   | string;
 /** @category Fetch API */
-type RequestDestination =
+export type RequestDestination =
   | ""
   | "audio"
   | "audioworklet"
@@ -207,7 +211,7 @@ type RequestDestination =
   | "xslt";
 
 /** @category Fetch API */
-interface RequestInit {
+export interface RequestInit {
   /**
    * A BodyInit object or null to set request's body.
    */

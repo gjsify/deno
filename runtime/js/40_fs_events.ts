@@ -15,10 +15,12 @@ const {
 } = primordials;
 
 import type {
-  FsEvent,
+  Deno,
 } from '../../types/index.js'
 
-class FsWatcher /*implements AsyncIterable<FsEvent>*/ {
+interface FsWatcher extends AsyncIterable<Deno.FsEvent> {};
+
+class FsWatcher /*implements AsyncIterable<Deno.FsEvent>*/ {
   #rid: number = 0;
 
   constructor(paths: string[], options: { recursive: boolean }) {
@@ -56,7 +58,7 @@ class FsWatcher /*implements AsyncIterable<FsEvent>*/ {
    *
    * @deprecated Will be removed in the future.
    */
-  return(value?: any): Promise<IteratorResult<FsEvent>> {
+  return(value?: any): Promise<IteratorResult<Deno.FsEvent>> {
     core.close(this.rid);
     return PromiseResolve({ value, done: true });
   }

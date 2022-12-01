@@ -454,7 +454,7 @@ _primordials.PromisePrototypeCatch = (thisPromise, onRejected) =>
  * @param {unknown[]} values An array of Promises.
  * @returns A new Promise.
  */
-_primordials.SafePromiseAll = (values: unknown[]) =>
+_primordials.SafePromiseAll = <T = unknown>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>[]> =>
   // Wrapping on a new Promise is necessary to not expose the SafePromise
   // prototype to user-land.
   new Promise((a, b) =>

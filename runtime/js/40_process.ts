@@ -10,7 +10,7 @@ import { pathFromURL } from './06_util.js';
 import { FsFile } from './40_files.js';
 import { assert } from '../../ext/web/00_infra.js';
 
-import type { Signal } from '../../types/index.js';
+import type { Deno } from '../../types/index.js';
 
 const {
   ArrayPrototypeMap,
@@ -20,11 +20,11 @@ const {
   String,
 } = primordials;
 
-function opKill(pid: number, signo: Signal, apiName: string) {
+function opKill(pid: number, signo: Deno.Signal, apiName: string) {
   ops.op_kill(pid, signo, apiName);
 }
 
-export function kill(pid: number, signo: Signal = "SIGTERM") {
+export function kill(pid: number, signo: Deno.Signal = "SIGTERM") {
   opKill(pid, signo, "Deno.kill()");
 }
 
@@ -103,7 +103,7 @@ export class Process {
     core.close(this.rid);
   }
 
-  kill(signo: Signal = "SIGTERM") {
+  kill(signo: Deno.Signal = "SIGTERM") {
     opKill(this.pid, signo, "Deno.Process.kill()");
   }
 }

@@ -19,9 +19,10 @@ const {
 } = primordials;
 
 import type {
-  ReaderSync,
-  Reader,
-  Writer,
+  // ReaderSync,
+  // Reader,
+  // Writer,
+  Deno
 } from '../../types/index.js';
 
 const DEFAULT_BUFFER_SIZE = 32 * 1024;
@@ -54,8 +55,8 @@ export const SeekMode = {
  * @param options Can be used to tune size of the buffer. Default size is 32kB
  */
 export async function copy(
-  src: Reader,
-  dst: Writer,
+  src: Deno.Reader,
+  dst: Deno.Writer,
   options?: { bufSize?: number },
 ): Promise<number> {
   let n = 0;
@@ -91,7 +92,7 @@ export async function copy(
  * @category I/O
  */
 export async function* iter(
-  r: Reader,
+  r: Deno.Reader,
   options?: { bufSize?: number },
 ): AsyncIterableIterator<Uint8Array> {
   const bufSize = options?.bufSize ?? DEFAULT_BUFFER_SIZE;
@@ -118,7 +119,7 @@ export async function* iter(
  * @category I/O
  */
 export function* iterSync(
-  r: ReaderSync,
+  r: Deno.ReaderSync,
   options?: {
     bufSize?: number;
   },
@@ -278,12 +279,12 @@ const READ_PER_ITER = 64 * 1024; // 64kb
  *
  * @category I/O
  */
-export function readAll(r: Reader): Promise<Uint8Array> {
+export function readAll(r: Deno.Reader): Promise<Uint8Array> {
   return readAllInner(r);
 }
 
 
-export async function readAllInner(r: Reader, options?) {
+export async function readAllInner(r: Deno.Reader, options?) {
   const buffers = [];
   const signal = options?.signal ?? null;
   while (true) {
@@ -313,7 +314,7 @@ export async function readAllInner(r: Reader, options?) {
  *
  * @category I/O
  */
-export function readAllSync(r: ReaderSync): Uint8Array {
+export function readAllSync(r: Deno.ReaderSync): Uint8Array {
   const buffers = [];
 
   while (true) {
@@ -346,7 +347,7 @@ function concatBuffers(buffers) {
   return contents;
 }
 
-export function readAllSyncSized(r: ReaderSync, size: number) {
+export function readAllSyncSized(r: Deno.ReaderSync, size: number) {
   const buf = new Uint8Array(size + 1); // 1B to detect extended files
   let cursor = 0;
 
@@ -370,7 +371,7 @@ export function readAllSyncSized(r: ReaderSync, size: number) {
   }
 }
 
-export async function readAllInnerSized(r: Reader, size: number, options) {
+export async function readAllInnerSized(r: Deno.Reader, size: number, options) {
   const buf = new Uint8Array(size + 1); // 1B to detect extended files
   let cursor = 0;
   const signal = options?.signal ?? null;

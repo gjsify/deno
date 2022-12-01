@@ -284,7 +284,7 @@ export function createLongLongConversion(bitLength, { unsigned }: { unsigned?: b
   };
 }
 
-const converters = {} as webidl.converters;
+const converters = {} as webidl.Converters;
 
 converters.any = (V: any): any => {
   return V;

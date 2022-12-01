@@ -55,7 +55,7 @@ const {
   WeakMapPrototypeSet,
 } = primordials;
 
-import type { RequestInit } from '../../types/index.js';
+import type { RequestInit, RequestInfo } from '../../types/index.js';
 
 const REQUEST_BODY_HEADER_NAMES = [
   "content-encoding",

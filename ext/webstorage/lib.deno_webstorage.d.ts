@@ -38,7 +38,7 @@ interface Storage {
    * Throws a "QuotaExceededError" DOMException exception if the new value couldn't be set. (Setting could fail if, e.g., the user has disabled storage for the site, or if the quota has been exceeded.)
    */
   setItem(key: string, value: string): void;
-  [name: string]: any;
+  // [name: string]: any; TODO error Duplicate index signature for type 'string'.
 }
 
 /** @category Web Storage API */

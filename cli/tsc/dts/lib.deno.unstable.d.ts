@@ -3,7 +3,7 @@
 /// <reference no-default-lib="true" />
 // <reference lib="deno.ns" />
 
-import type { DenoNs, DenoNet } from '../../../types/index.js';
+import type { Deno, DenoNet } from '../../../types/index.js';
 import type { Conn } from '../../../ext/net/01_net.js';
 
 export namespace DenoUnstable {
@@ -35,7 +35,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  type NativeNumberType =
+  export type NativeNumberType =
     | "u8"
     | "i8"
     | "u16"
@@ -51,7 +51,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  type NativeBigIntType =
+  export type NativeBigIntType =
     | "u64"
     | "i64"
     | "usize"
@@ -63,7 +63,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  type NativeBooleanType = "bool";
+  export type NativeBooleanType = "bool";
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -71,7 +71,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  type NativePointerType = "pointer";
+  export type NativePointerType = "pointer";
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -79,7 +79,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  type NativeBufferType = "buffer";
+  export type NativeBufferType = "buffer";
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -87,7 +87,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  type NativeFunctionType = "function";
+  export type NativeFunctionType = "function";
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -95,7 +95,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  type NativeVoidType = "void";
+  export type NativeVoidType = "void";
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -124,7 +124,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  type ToNativeTypeMap =
+  export type ToNativeTypeMap =
     & Record<NativeNumberType, number>
     & Record<NativeBigIntType, PointerValue>
     & Record<NativeBooleanType, boolean>
@@ -139,7 +139,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  type ToNativeType<T extends NativeType = NativeType> = ToNativeTypeMap[T];
+  export type ToNativeType<T extends NativeType = NativeType> = ToNativeTypeMap[T];
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -147,7 +147,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  type ToNativeResultTypeMap = ToNativeTypeMap & Record<NativeVoidType, void>;
+  export type ToNativeResultTypeMap = ToNativeTypeMap & Record<NativeVoidType, void>;
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -155,7 +155,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  type ToNativeResultType<T extends NativeResultType = NativeResultType> =
+  export type ToNativeResultType<T extends NativeResultType = NativeResultType> =
     ToNativeResultTypeMap[T];
 
   /** **UNSTABLE**: New API, yet to be vetted.
@@ -164,7 +164,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  type ToNativeParameterTypes<T extends readonly NativeType[]> =
+  export type ToNativeParameterTypes<T extends readonly NativeType[]> =
     //
     [(T[number])[]] extends [T] ? ToNativeType<T[number]>[]
       : [readonly (T[number])[]] extends [T]
@@ -181,7 +181,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  type FromNativeTypeMap =
+  export type FromNativeTypeMap =
     & Record<NativeNumberType, number>
     & Record<NativeBigIntType, PointerValue>
     & Record<NativeBooleanType, boolean>
@@ -196,7 +196,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  type FromNativeType<T extends NativeType = NativeType> = FromNativeTypeMap[T];
+  export type FromNativeType<T extends NativeType = NativeType> = FromNativeTypeMap[T];
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -204,7 +204,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  type FromNativeResultTypeMap =
+  export type FromNativeResultTypeMap =
     & FromNativeTypeMap
     & Record<NativeVoidType, void>;
 
@@ -214,14 +214,14 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  type FromNativeResultType<T extends NativeResultType = NativeResultType> =
+  export type FromNativeResultType<T extends NativeResultType = NativeResultType> =
     FromNativeResultTypeMap[T];
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
    * @category FFI
    */
-  type FromNativeParameterTypes<
+  export type FromNativeParameterTypes<
     T extends readonly NativeType[],
   > =
     //
@@ -290,7 +290,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  type StaticForeignSymbol<T extends ForeignFunction | ForeignStatic> =
+  export type StaticForeignSymbol<T extends ForeignFunction | ForeignStatic> =
     T extends ForeignFunction ? FromForeignFunction<T>
       : T extends ForeignStatic ? FromNativeType<T["type"]>
       : never;
@@ -299,7 +299,7 @@ export namespace DenoUnstable {
    *
    *  @category FFI
    */
-  type FromForeignFunction<T extends ForeignFunction> = T["parameters"] extends
+  export type FromForeignFunction<T extends ForeignFunction> = T["parameters"] extends
     readonly [] ? () => StaticForeignSymbolReturnType<T>
     : (
       ...args: ToNativeParameterTypes<T["parameters"]>
@@ -309,14 +309,14 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  type StaticForeignSymbolReturnType<T extends ForeignFunction> =
+  export type StaticForeignSymbolReturnType<T extends ForeignFunction> =
     ConditionalAsync<T["nonblocking"], FromNativeResultType<T["result"]>>;
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
    * @category FFI
    */
-  type ConditionalAsync<IsAsync extends boolean | undefined, T> =
+  export type ConditionalAsync<IsAsync extends boolean | undefined, T> =
     IsAsync extends true ? Promise<T> : T;
 
   /** **UNSTABLE**: New API, yet to be vetted.
@@ -325,7 +325,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  type StaticForeignLibraryInterface<T extends ForeignLibraryInterface> = {
+  export type StaticForeignLibraryInterface<T extends ForeignLibraryInterface> = {
     [K in keyof T]: StaticForeignSymbol<T[K]>;
   };
 
@@ -474,7 +474,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  type UnsafeCallbackFunction<
+  export type UnsafeCallbackFunction<
     Parameters extends readonly NativeType[] = readonly NativeType[],
     Result extends NativeResultType = NativeResultType,
   > = Parameters extends readonly [] ? () => ToNativeResultType<Result> : (
@@ -623,7 +623,7 @@ export namespace DenoUnstable {
    *
    * @category Sub Process
    */
-  interface UnstableRunOptions extends DenoNs.RunOptions {
+  interface UnstableRunOptions extends Deno.RunOptions {
     /** If `true`, clears the environment variables before executing the
      * sub-process.  Defaults to `false`. */
     clearEnv?: boolean;
@@ -685,7 +685,7 @@ export namespace DenoUnstable {
    */
   export function run<T extends UnstableRunOptions = UnstableRunOptions>(
     opt: T,
-  ): DenoNs.Process<T>;
+  ): Deno.Process<T>;
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -1518,7 +1518,7 @@ export namespace DenoUnstable {
     output(): Promise<SpawnOutput>;
     /** Kills the process with given {@linkcode Deno.Signal}. Defaults to
      * `"SIGTERM"`. */
-    kill(signo?: DenoNs.Signal): void;
+    kill(signo?: Deno.Signal): void;
 
     /** Ensure that the status of the child process prevents the Deno process
      * from exiting. */
@@ -1604,7 +1604,7 @@ export namespace DenoUnstable {
     code: number;
     /** The signal associated with the child process, present if
      * {@linkcode Deno.spawn} was called. */
-    signal: DenoNs.Signal | null;
+    signal: Deno.Signal | null;
   }
 
   /** **UNSTABLE**: New API, yet to be vetted.
@@ -1730,7 +1730,7 @@ export namespace DenoUnstable {
     output(): Promise<CommandOutput>;
     /** Kills the process with given {@linkcode Deno.Signal}. Defaults to
      * `"SIGTERM"`. */
-    kill(signo?: DenoNs.Signal): void;
+    kill(signo?: Deno.Signal): void;
 
     /** Ensure that the status of the child process prevents the Deno process
      * from exiting. */
@@ -1809,7 +1809,7 @@ export namespace DenoUnstable {
     /** The exit code of the child process. */
     code: number;
     /** The signal associated with the child process. */
-    signal: DenoNs.Signal | null;
+    signal: Deno.Signal | null;
   }
 
   /** **UNSTABLE**: New API, yet to be vetted.
@@ -1866,7 +1866,7 @@ export namespace DenoUnstable {
 //    * // mod.ts
 //    * const worker = new Worker(
 //    *   new URL("deno_worker.ts", import.meta.url).href, {
-//    *     type: "module",
+//    *     export type: "module",
 //    *     deno: {
 //    *       permissions: {
 //    *         read: true,
@@ -1878,7 +1878,7 @@ export namespace DenoUnstable {
 //    */
 //   deno?: {
 //     /** Set to `"none"` to disable all the permissions in the worker. */
-//     permissions?: DenoNs.PermissionOptions;
+//     permissions?: Deno.PermissionOptions;
 //   };
 // }
 

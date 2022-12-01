@@ -8,7 +8,7 @@ import { pathFromURL } from './06_util.js';
 import { illegalConstructorKey } from './01_web_util.js';
 import { add, remove } from '../../ext/web/03_abort_signal.js';
 
-import type { SpawnOptions, ChildStatus, SpawnOutput, Signal, AbortSignal } from '../../types/index.js';
+import type { Deno, DenoUnstable, AbortSignal } from '../../types/index.js';
 
 const {
   ArrayPrototypeMap,
@@ -19,12 +19,15 @@ const {
   SafePromiseAll,
   SymbolFor,
 } = primordials;
+
 import {
   readableStreamCollectIntoUint8Array,
   readableStreamForRidUnrefable,
   readableStreamForRidUnrefableRef,
   readableStreamForRidUnrefableUnref,
   writableStreamForRid,
+  ReadableStream,
+  WritableStream,
 } from '../../ext/web/06_streams.js';
 
 const promiseIdSymbol = SymbolFor("Deno.core.internalPromiseId");
@@ -165,19 +168,19 @@ function collectOutput(readableStream) {
       this.#rid = null;
       signal?.[remove](onAbort);
       return res;
-    }) as Promise<ChildStatus>;
+    }) as Promise<DenoUnstable.ChildStatus>;
   }
 
-  #status: Promise<ChildStatus>;
+  #status: Promise<DenoUnstable.ChildStatus>;
 
   /** Get the status of the child. */
-  get status(): Promise<ChildStatus> {
+  get status(): Promise<DenoUnstable.ChildStatus> {
     return this.#status;
   }
 
   /** Waits for the child to exit completely, returning all its output and
    * status. */
-  async output(): Promise<SpawnOutput> {
+  async output(): Promise<DenoUnstable.SpawnOutput> {
     if (this.#stdout?.locked) {
       throw new TypeError(
         "Can't collect output because stdout is locked",
@@ -193,7 +196,7 @@ function collectOutput(readableStream) {
       this.#status,
       collectOutput(this.#stdout),
       collectOutput(this.#stderr),
-    ]) as [ ChildStatus, Uint8Array, Uint8Array ];
+    ]) as [ DenoUnstable.ChildStatus, Uint8Array, Uint8Array ];
 
     return {
       success: status.success,
@@ -216,7 +219,7 @@ function collectOutput(readableStream) {
 
   /** Kills the process with given {@linkcode Deno.Signal}. Defaults to
    * `"SIGTERM"`. */
-  kill(signo: Signal = "SIGTERM"): void {
+  kill(signo: Deno.Signal = "SIGTERM"): void {
     if (this.#rid === null) {
       throw new TypeError("Child process has already terminated.");
     }

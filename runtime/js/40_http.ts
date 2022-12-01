@@ -6,7 +6,7 @@ import * as ops from '../../ops/index.js';
 import { HttpConn } from '../../ext/http/01_http.js';
 
 import type {
-  Conn,
+  DenoNet,
 } from '../../types/index.js';
 
 /**
@@ -56,7 +56,7 @@ import type {
  *
  * @category HTTP Server
  */
-export function serveHttp(conn: Conn): HttpConn {
+export function serveHttp(conn: DenoNet.Conn): HttpConn {
   const rid = ops.op_http_start(conn.rid);
   return new HttpConn(rid, conn.remoteAddr, conn.localAddr);
 }

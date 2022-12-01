@@ -6,7 +6,7 @@ import { primordials } from '../../core/00_primordials.js';
 import * as core from '../../core/01_core.js';
 import * as ops from '../../ops/index.js';
 
-import type { Signal } from '../../types/index.js';
+import type { Deno } from '../../types/index.js';
 
 const {
   Set,
@@ -14,7 +14,7 @@ const {
   TypeError,
 } = primordials;
 
-function bindSignal(signo: Signal) {
+function bindSignal(signo: Deno.Signal) {
   return ops.op_signal_bind(signo);
 }
 
@@ -33,7 +33,7 @@ function unbindSignal(rid: number) {
 const signalData: Record<string, { rid?: number, listeners: Set<() => void>}> = {};
 
 /** Gets the signal handlers and resource data of the given signal */
-function getSignalData(signo: Signal) {
+function getSignalData(signo: Deno.Signal) {
   return signalData[signo] ??
     (signalData[signo] = { rid: undefined, listeners: new Set() });
 }
@@ -46,7 +46,7 @@ function checkSignalListenerType(listener) {
   }
 }
 
-export function addSignalListener(signo: Signal, listener) {
+export function addSignalListener(signo: Deno.Signal, listener) {
   checkSignalListenerType(listener);
 
   const sigData = getSignalData(signo);
@@ -60,7 +60,7 @@ export function addSignalListener(signo: Signal, listener) {
   }
 }
 
-export function removeSignalListener(signo: Signal, listener) {
+export function removeSignalListener(signo: Deno.Signal, listener) {
   checkSignalListenerType(listener);
 
   const sigData = getSignalData(signo);

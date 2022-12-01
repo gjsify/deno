@@ -7,7 +7,7 @@ import * as ops from '../../ops/index.js';
 import * as abortSignal from '../../ext/web/03_abort_signal.js';
 import { pathFromURL } from './06_util.js';
 
-import type { DenoNs } from '../../types/index.js';
+import type { Deno } from '../../types/index.js';
 
 /** Synchronously write `data` to the given `path`, by default creating a new
  * file if needed, else overwriting.
@@ -30,7 +30,7 @@ import type { DenoNs } from '../../types/index.js';
 export function writeFileSync(
   path: string | URL,
   data: Uint8Array,
-  options: DenoNs.WriteFileOptions = {},
+  options: Deno.WriteFileOptions = {},
 ) {
   options.signal?.throwIfAborted();
   ops.op_write_file_sync(
@@ -63,7 +63,7 @@ export function writeFileSync(
 export async function writeFile(
   path: string | URL,
   data: Uint8Array,
-  options: DenoNs.WriteFileOptions = {},
+  options: Deno.WriteFileOptions = {},
 ) {
   let cancelRid;
   let abortHandler;
@@ -110,7 +110,7 @@ export async function writeFile(
 export function writeTextFileSync(
   path: string | URL,
   data: string,
-  options: DenoNs.WriteFileOptions = {},
+  options: Deno.WriteFileOptions = {},
 ) {
   const encoder = new TextEncoder();
   return writeFileSync(path, encoder.encode(data), options);
@@ -132,7 +132,7 @@ export function writeTextFileSync(
 export function writeTextFile(
   path: string | URL,
   data: string,
-  options: DenoNs.WriteFileOptions = {},
+  options: Deno.WriteFileOptions = {},
 ) {
   const encoder = new TextEncoder();
   return writeFile(path, encoder.encode(data), options);

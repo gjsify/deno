@@ -7,14 +7,7 @@ import * as ops from '../../ops/index.js';
 import * as util from '../../runtime/js/06_util.js';
 
 import type {
-  PointerValue,
-  UnsafeCallbackDefinition,
-  UnsafeCallbackFunction,
-  ForeignFunction,
-  StaticForeignSymbolReturnType,
-  ToNativeParameterTypes,
-  ForeignLibraryInterface,
-  StaticForeignLibraryInterface,
+  DenoUnstable,
 } from '../../types/index.js';
 
 const {
@@ -46,9 +39,9 @@ const I64_BUFFER = new BigInt64Array(U32_BUFFER.buffer);
  * @category FFI
  */
 export class UnsafePointerView {
-  pointer: PointerValue;
+  pointer: DenoUnstable.PointerValue;
 
-  constructor(pointer: PointerValue) {
+  constructor(pointer: DenoUnstable.PointerValue) {
     this.pointer = pointer;
   }
 
@@ -116,7 +109,7 @@ export class UnsafePointerView {
 
   /** Gets an unsigned 64-bit integer at the specified byte offset from the
      * pointer. */
-  getBigUint64(offset: number = 0): PointerValue {
+  getBigUint64(offset: number = 0): DenoUnstable.PointerValue {
     ops.op_ffi_read_u64(
       this.pointer,
       offset,
@@ -127,7 +120,7 @@ export class UnsafePointerView {
 
   /** Gets a signed 64-bit integer at the specified byte offset from the
      * pointer. */
-  getBigInt64(offset: number = 0): PointerValue {
+  getBigInt64(offset: number = 0): DenoUnstable.PointerValue {
     ops.op_ffi_read_i64(
       this.pointer,
       offset,
@@ -165,7 +158,7 @@ export class UnsafePointerView {
 
   /** Gets a C string (`null` terminated string) at the specified byte offset
      * from the specified pointer. */
-  static getCString(pointer: PointerValue, offset: number = 0): string {
+  static getCString(pointer: DenoUnstable.PointerValue, offset: number = 0): string {
     return ops.op_ffi_cstr_read(
       pointer,
       offset,
@@ -184,7 +177,7 @@ export class UnsafePointerView {
 
   /** Gets an `ArrayBuffer` of length `byteLength` at the specified byte
      * offset from the specified pointer. */
-  static getArrayBuffer(pointer: PointerValue, byteLength: number, offset: number = 0): ArrayBuffer {
+  static getArrayBuffer(pointer: DenoUnstable.PointerValue, byteLength: number, offset: number = 0): ArrayBuffer {
     return ops.op_ffi_get_buf(
       pointer,
       offset,
@@ -211,7 +204,7 @@ export class UnsafePointerView {
    * Length is determined from the typed array's `byteLength`.
    *
    * Also takes optional byte offset from the pointer. */
-  static copyInto(pointer: PointerValue, destination, offset: number = 0): void {
+  static copyInto(pointer: DenoUnstable.PointerValue, destination, offset: number = 0): void {
     ops.op_ffi_buf_copy_into(
       pointer,
       offset,
@@ -234,9 +227,9 @@ const OUT_BUFFER_64 = new BigInt64Array(OUT_BUFFER.buffer);
  */
 export class UnsafePointer {
   /** Return the direct memory pointer to the typed array in memory. */
-  static of(value: UnsafeCallback | BufferSource): PointerValue {
+  static of(value: DenoUnstable.UnsafeCallback | BufferSource): DenoUnstable.PointerValue {
     if (ObjectPrototypeIsPrototypeOf(UnsafeCallbackPrototype, value)) {
-      return (value as UnsafeCallback).pointer;
+      return (value as DenoUnstable.UnsafeCallback).pointer;
     }
     ops.op_ffi_ptr_of(value, OUT_BUFFER);
     const result = OUT_BUFFER[0] + 2 ** 32 * OUT_BUFFER[1];
@@ -254,32 +247,32 @@ export class UnsafePointer {
  *
  * @category FFI
  */
-export class UnsafeFnPointer<Fn extends ForeignFunction> {
+export class UnsafeFnPointer<Fn extends DenoUnstable.ForeignFunction> {
   /** The pointer to the function. */
-  pointer: PointerValue;
+  pointer: DenoUnstable.PointerValue;
   /** The definition of the function. */
   definition: Fn;
 
-  constructor(pointer: PointerValue, definition: Fn) {
+  constructor(pointer: DenoUnstable.PointerValue, definition: Fn) {
     this.pointer = pointer;
     this.definition = definition;
   }
 
   /** Call the foreign function. */
-  call<T extends ForeignFunction>(...parameters: ToNativeParameterTypes<T["parameters"]>): StaticForeignSymbolReturnType<T> {
+  call<T extends DenoUnstable.ForeignFunction>(...parameters: DenoUnstable.ToNativeParameterTypes<T["parameters"]>): DenoUnstable.StaticForeignSymbolReturnType<T> {
     if (this.definition.nonblocking) {
       return core.opAsync(
         "op_ffi_call_ptr_nonblocking",
         this.pointer,
         this.definition,
         parameters,
-      ) as StaticForeignSymbolReturnType<T>;
+      ) as DenoUnstable.StaticForeignSymbolReturnType<T>;
     } else {
       return ops.op_ffi_call_ptr(
         this.pointer,
         this.definition,
         parameters,
-      ) as StaticForeignSymbolReturnType<T>;
+      ) as DenoUnstable.StaticForeignSymbolReturnType<T>;
     }
   }
 }
@@ -307,7 +300,7 @@ function isI64(type) {
  * @category FFI
  */
 export class UnsafeCallback<
-Definition extends UnsafeCallbackDefinition = UnsafeCallbackDefinition,
+Definition extends DenoUnstable.UnsafeCallbackDefinition,
 > {
   #refcount;
   // Internal promise only meant to keep Deno from exiting
@@ -315,16 +308,16 @@ Definition extends UnsafeCallbackDefinition = UnsafeCallbackDefinition,
   #rid;
 
   /** The pointer to the unsafe callback. */
-  pointer: PointerValue;
+  pointer: DenoUnstable.PointerValue;
   /** The definition of the unsafe callback. */
   definition: Definition;
   /** The callback function. */
-  callback: UnsafeCallbackFunction<
+  callback: DenoUnstable.UnsafeCallbackFunction<
     Definition["parameters"],
     Definition["result"]
   >;
 
-  constructor(definition: Definition, callback: UnsafeCallbackFunction<
+  constructor(definition: Definition, callback: DenoUnstable.UnsafeCallbackFunction<
     Definition["parameters"],
     Definition["result"]
   >) {
@@ -402,9 +395,9 @@ const UnsafeCallbackPrototype = UnsafeCallback.prototype;
  *
  * @category FFI
  */
-class DynamicLibrary<S extends ForeignLibraryInterface> {
+class DynamicLibrary<S extends DenoUnstable.ForeignLibraryInterface> {
   #rid: number;
-  symbols: StaticForeignLibraryInterface<S> = {} as StaticForeignLibraryInterface<S>;
+  symbols: DenoUnstable.StaticForeignLibraryInterface<S> = {} as DenoUnstable.StaticForeignLibraryInterface<S>;
 
   constructor(path: string, symbols: S) {
     // @ts-ignore
@@ -550,7 +543,7 @@ class DynamicLibrary<S extends ForeignLibraryInterface> {
  * @tags allow-ffi
  * @category FFI
  */
-export function dlopen<S extends ForeignLibraryInterface>(path: string | URL, symbols: S) {
+export function dlopen<S extends DenoUnstable.ForeignLibraryInterface>(path: string | URL, symbols: S) {
   // URL support is progressively enhanced by util in `runtime/js`.
   const pathFromURL = util.pathFromURL ?? ((p) => p as string);
   return new DynamicLibrary(pathFromURL(path), symbols);

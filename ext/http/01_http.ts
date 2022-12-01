@@ -50,7 +50,7 @@ import {
 import { TcpConn, UnixConn } from '../net/01_net.js';
 import { TlsConn } from '../net/02_tls.js';
 
-import type { UpgradeWebSocketOptions } from '../../types/index.js';
+import type { Deno } from '../../types/index.js';
 
 const {
   ArrayPrototypeIncludes,
@@ -393,7 +393,7 @@ function createRespondWith(
 
 export const _ws = Symbol("[[associated_ws]]");
 
-export function upgradeWebSocket(request, options: UpgradeWebSocketOptions = {}) {
+export function upgradeWebSocket(request, options: Deno.UpgradeWebSocketOptions = {}) {
   const upgrade = request.headers.get("upgrade");
   const upgradeHasWebSocketOption = upgrade !== null &&
     ArrayPrototypeSome(
