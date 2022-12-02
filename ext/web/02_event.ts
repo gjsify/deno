@@ -117,7 +117,7 @@ const isTrusted = ObjectGetOwnPropertyDescriptor({
   },
 }, "isTrusted").get;
 
-const eventInitConverter = webidl.createDictionaryConverter("EventInit", [{
+const eventInitConverter = webidl.createDictionaryConverter<EventInit>("EventInit", [{
   key: "bubbles",
   defaultValue: false,
   converter: webidl.converters.boolean,
@@ -141,6 +141,8 @@ const _inPassiveListener = Symbol("[[inPassiveListener]]");
 const _dispatched = Symbol("[[dispatched]]");
 const _isTrusted = Symbol("[[isTrusted]]");
 const _path = Symbol("[[path]]");
+// internal.
+export const _skipInternalInit = Symbol("[[skipSlowInit]]");
 
 /** An event which takes place in the DOM.
  *
@@ -152,7 +154,7 @@ export class Event {
    * otherwise. */
   readonly isTrusted: boolean;
 
-  constructor(type: string, eventInitDict: EventInit = {}) {
+  constructor(type: string, eventInitDict: EventInit & { data?: any } = {}) {
     // TODO(lucacasonato): remove when this interface is spec aligned
     this[SymbolToStringTag] = "Event";
     this[_canceledFlag] = false;
@@ -163,30 +165,47 @@ export class Event {
     this[_isTrusted] = false;
     this[_path] = [];
 
-    webidl.requiredArguments(arguments.length, 1, {
-      prefix: "Failed to construct 'Event'",
-    });
-    type = webidl.converters.DOMString(type, {
-      prefix: "Failed to construct 'Event'",
-      context: "Argument 1",
-    });
-    const eventInit = eventInitConverter(eventInitDict, {
-      prefix: "Failed to construct 'Event'",
-      context: "Argument 2",
-    });
-    this[_attributes] = {
-      type,
-      // @ts-ignore
-      ...eventInit,
-      currentTarget: null,
-      eventPhase: Event.NONE,
-      target: null,
-      timeStamp: DateNow(),
-    };
-    ReflectDefineProperty(this, "isTrusted", {
-      enumerable: true,
-      get: isTrusted,
-    });
+    if (!eventInitDict[_skipInternalInit]) {
+      webidl.requiredArguments(arguments.length, 1, {
+        prefix: "Failed to construct 'Event'",
+      });
+      type = webidl.converters.DOMString(type, {
+        prefix: "Failed to construct 'Event'",
+        context: "Argument 1",
+      });
+      const eventInit = eventInitConverter(eventInitDict, {
+        prefix: "Failed to construct 'Event'",
+        context: "Argument 2",
+      });
+      this[_attributes] = {
+        type,
+        ...eventInit,
+        currentTarget: null,
+        eventPhase: Event.NONE,
+        target: null,
+        timeStamp: DateNow(),
+      };
+      // [LegacyUnforgeable]
+      ReflectDefineProperty(this, "isTrusted", {
+        enumerable: true,
+        get: isTrusted,
+      });
+    } else {
+      this[_attributes] = {
+        type,
+        data: eventInitDict.data ?? null,
+        bubbles: eventInitDict.bubbles ?? false,
+        cancelable: eventInitDict.cancelable ?? false,
+        composed: eventInitDict.composed ?? false,
+        currentTarget: null,
+        eventPhase: Event.NONE,
+        target: null,
+        timeStamp: DateNow(),
+      };
+      // TODO(@littledivy): Not spec compliant but performance is hurt badly
+      // for users of `_skipInternalInit`.
+      this.isTrusted = false;
+    }
   }
 
   [SymbolFor("Deno.privateCustomInspect")](inspect) {
@@ -1298,6 +1317,7 @@ export class MessageEvent<T = any> extends Event {
       bubbles: eventInitDict?.bubbles ?? false,
       cancelable: eventInitDict?.cancelable ?? false,
       composed: eventInitDict?.composed ?? false,
+      [_skipInternalInit]: eventInitDict?.[_skipInternalInit],
     });
 
     this.data = eventInitDict?.data ?? null;

@@ -12,7 +12,15 @@ import { URL } from '../url/00_url.js';
 import * as webidl from '../webidl/00_webidl.js';
 import { HTTP_TOKEN_CODE_POINT_RE } from '../web/00_infra.js';
 import { DOMException } from '../web/01_dom_exception.js';
-import { Event, ErrorEvent, CloseEvent, MessageEvent, defineEventHandler, EventTarget } from '../web/02_event.js';
+import {
+  Event,
+  ErrorEvent,
+  CloseEvent,
+  MessageEvent,
+  defineEventHandler,
+  EventTarget,
+  _skipInternalInit
+} from '../web/02_event.js';
 import { Blob, BlobPrototype } from '../web/09_file.js';
 
 import type { TypedArray } from '../../types/index.js';
@@ -515,6 +523,7 @@ export class WebSocket extends EventTarget {
           const event = new MessageEvent("message", {
             data: value,
             origin: this[_url],
+            [_skipInternalInit]: true,
           });
           this.dispatchEvent(event);
           break;
