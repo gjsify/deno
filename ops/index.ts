@@ -9,6 +9,7 @@ export * from './node.js';
 export * from '../runtime/ops/spawn.js';
 export * from '../ext/node/lib.js';
 export * from '../ext/napi/lib.js';
+export * from '../cli/ops/testing.js';
 
 import type {
     // DenoCore.PromiseRejectCallback,

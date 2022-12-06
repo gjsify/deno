@@ -446,7 +446,7 @@ export namespace DenoUnstable {
     /** The definition of the function. */
     definition: Fn;
 
-    constructor(pointer: PointerValue, definition: Fn);
+    constructor(pointer: PointerValue, definition: Const<Fn>);
 
     /** Call the foreign function. */
     call: FromForeignFunction<Fn>;
@@ -497,7 +497,7 @@ export namespace DenoUnstable {
     Definition extends UnsafeCallbackDefinition = UnsafeCallbackDefinition,
   > {
     constructor(
-      definition: Definition,
+      definition: Const<Definition>,
       callback: UnsafeCallbackFunction<
         Definition["parameters"],
         Definition["result"]
@@ -565,6 +565,17 @@ export namespace DenoUnstable {
     close(): void;
   }
 
+  /**
+   *  This magic code used to implement better type hints for {@linkcode Deno.dlopen}
+   */
+  type Cast<A, B> = A extends B ? A : B;
+  type Const<T> = Cast<
+    T,
+    | (T extends string | number | bigint | boolean ? T : never)
+    | { [K in keyof T]: Const<T[K]> }
+    | []
+  >;
+
   /** **UNSTABLE**: New API, yet to be vetted.
    *
    * Opens an external dynamic library and registers symbols, making foreign
@@ -614,7 +625,7 @@ export namespace DenoUnstable {
    */
   export function dlopen<S extends ForeignLibraryInterface>(
     filename: string | URL,
-    symbols: S,
+    symbols: Const<S>,
   ): DynamicLibrary<S>;
 
   /** **UNSTABLE**: New API, yet to be vetted.

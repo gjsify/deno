@@ -167,14 +167,14 @@ export function newInnerRequest(method: () => string, url: string | (() => strin
  * @param {InnerRequest} request
  * @returns {InnerRequest}
  */
-function cloneInnerRequest(request: InnerRequest): InnerRequest {
+function cloneInnerRequest(request: InnerRequest, skipBody = false): InnerRequest {
   const headerList = ArrayPrototypeMap(
     request.headerList,
     (x) => [x[0], x[1]],
   );
 
   let body = null;
-  if (request.body !== null) {
+  if (request.body !== null && !skipBody) {
     // @ts-ignore
     body = request.body.clone();
   }
@@ -425,12 +425,15 @@ export class Request implements Body {
       if (!ObjectPrototypeIsPrototypeOf(RequestPrototype, input)) {
         throw new TypeError("Unreachable");
       }
-      request = input[_request];
+      const originalReq = input[_request];
+      // fold in of step 12 from below
+      request = cloneInnerRequest(originalReq, true);
+      request.redirectCount = 0; // reset to 0 - cloneInnerRequest copies the value
+      signal = input[_signal];
       signal = input[_signal];
     }
 
-    // 12.
-    // TODO(lucacasonato): create a copy of `request`
+    // 12. is folded into the else statement of step 6 above.
 
     // 22.
     if (init.redirect !== undefined) {

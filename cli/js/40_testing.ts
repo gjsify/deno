@@ -1163,6 +1163,9 @@ export async function runTests({
   }
 
   for (const desc of filtered) {
+    if (ops.op_tests_should_stop()) {
+      break;
+    }
     ops.op_dispatch_test_event({ wait: desc.id });
     const earlier = DateNow();
     const result = await runTest(desc);
