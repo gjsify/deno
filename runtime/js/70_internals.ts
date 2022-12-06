@@ -5,6 +5,14 @@ export { Console, cssToAnsi, inspectArgs, parseCss, parseCssColor } from '../../
 export * as node from '../../ext/node/01_node.js';
 export * as require from '../../ext/node/02_require.js';
 
+export { testing } from '../../cli/js/40_testing.js';
+
+// packages/deno/runtime/src/cli/js/40_testing.ts
+// window.__bootstrap.internals = {
+//   ...window.__bootstrap.internals ?? {},
+//   testing,
+// };
+
 // packages/deno/runtime/src/ext/node/01_node.ts
 // window.__bootstrap.internals = {
 //   ...window.__bootstrap.internals ?? {},

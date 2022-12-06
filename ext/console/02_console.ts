@@ -1942,6 +1942,8 @@ function getConsoleInspectOptions() {
   };
 }
 
+export interface Console extends globalThis.Console {};
+
 export class Console {
   #printFunc = null;
   // @ts-ignore

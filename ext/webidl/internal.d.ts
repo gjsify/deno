@@ -276,7 +276,7 @@ export namespace webidl {
   /**
    * The branding symbol.
    */
-  export const brand: unique symbol;
+  // export const brand: unique symbol;
 
   /**
    * Create a branded instance of an interface.

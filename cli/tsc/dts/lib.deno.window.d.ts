@@ -1,12 +1,15 @@
 // Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
 
 /// <reference no-default-lib="true" />
-/// <reference lib="deno.ns" />
-/// <reference lib="deno.shared_globals" />
-/// <reference lib="deno.webgpu" />
-/// <reference lib="deno.webstorage" />
+// <reference lib="deno.ns" />
+// <reference lib="deno.shared_globals" />
+// <reference lib="deno.webgpu" />
+// <reference lib="deno.webstorage" />
 /// <reference lib="esnext" />
-/// <reference lib="deno.cache" />
+// <reference lib="deno.cache" />
+
+import type { Deno } from './lib.deno.ns.d.js';
+import type { GPU } from '../../../ext/webgpu/src/01_webgpu.js';
 
 /** @category Web APIs */
 interface WindowEventMap {
@@ -15,7 +18,7 @@ interface WindowEventMap {
 }
 
 /** @category Web APIs */
-declare class Window extends EventTarget {
+export class Window extends EventTarget {
   new(): Window;
   readonly window: Window & typeof globalThis;
   readonly self: Window & typeof globalThis;
@@ -69,30 +72,30 @@ declare class Window extends EventTarget {
 }
 
 /** @category Web APIs */
-declare var window: Window & typeof globalThis;
+export var window: Window & typeof globalThis;
 /** @category Web APIs */
-declare var self: Window & typeof globalThis;
+export var self: Window & typeof globalThis;
 /** @category DOM Events */
-declare var onerror: ((this: Window, ev: ErrorEvent) => any) | null;
+export var onerror: ((this: Window, ev: ErrorEvent) => any) | null;
 /** @category DOM Events */
-declare var onload: ((this: Window, ev: Event) => any) | null;
+export var onload: ((this: Window, ev: Event) => any) | null;
 /** @category DOM Events */
-declare var onbeforeunload: ((this: Window, ev: Event) => any) | null;
+export var onbeforeunload: ((this: Window, ev: Event) => any) | null;
 /** @category DOM Events */
-declare var onunload: ((this: Window, ev: Event) => any) | null;
+export var onunload: ((this: Window, ev: Event) => any) | null;
 /** @category Observability */
-declare var onunhandledrejection:
+export var onunhandledrejection:
   | ((this: Window, ev: PromiseRejectionEvent) => any)
   | null;
 /** @category Web Storage API */
-declare var localStorage: Storage;
+export var localStorage: Storage;
 /** @category Web Storage API */
-declare var sessionStorage: Storage;
+export var sessionStorage: Storage;
 /** @category Cache API */
-declare var caches: CacheStorage;
+export var caches: CacheStorage;
 
 /** @category Web APIs */
-declare class Navigator {
+export class Navigator {
   constructor();
   readonly gpu: GPU;
   readonly hardwareConcurrency: number;
@@ -102,7 +105,7 @@ declare class Navigator {
 }
 
 /** @category Web APIs */
-declare var navigator: Navigator;
+export var navigator: Navigator;
 
 /**
  * Shows the given message and waits for the enter key pressed.
@@ -113,7 +116,7 @@ declare var navigator: Navigator;
  *
  * @param message
  */
-declare function alert(message?: string): void;
+export function alert(message?: string): void;
 
 /**
  * Shows the given message and waits for the answer. Returns the user's answer as boolean.
@@ -126,7 +129,7 @@ declare function alert(message?: string): void;
  *
  * @param message
  */
-declare function confirm(message?: string): boolean;
+export function confirm(message?: string): boolean;
 
 /**
  * Shows the given message and waits for the user's input. Returns the user's input as string.
@@ -143,7 +146,7 @@ declare function confirm(message?: string): boolean;
  * @param message
  * @param defaultValue
  */
-declare function prompt(message?: string, defaultValue?: string): string | null;
+export function prompt(message?: string, defaultValue?: string): string | null;
 
 /** Registers an event listener in the global scope, which will be called
  * synchronously whenever the event `type` is dispatched.
@@ -156,7 +159,7 @@ declare function prompt(message?: string, defaultValue?: string): string | null;
  *
  * @category DOM Events
  */
-declare function addEventListener<
+export function addEventListener<
   K extends keyof WindowEventMap,
 >(
   type: K,
@@ -164,7 +167,7 @@ declare function addEventListener<
   options?: boolean | AddEventListenerOptions,
 ): void;
 /** @category DOM Events */
-declare function addEventListener(
+export function addEventListener(
   type: string,
   listener: EventListenerOrEventListenerObject,
   options?: boolean | AddEventListenerOptions,
@@ -180,14 +183,14 @@ declare function addEventListener(
  *
  * @category DOM Events
  */
-declare function removeEventListener<
+export function removeEventListener<
   K extends keyof WindowEventMap,
 >(
   type: K,
   listener: (this: Window, ev: WindowEventMap[K]) => any,
   options?: boolean | EventListenerOptions,
 ): void;
-declare function removeEventListener(
+export function removeEventListener(
   type: string,
   listener: EventListenerOrEventListenerObject,
   options?: boolean | EventListenerOptions,
@@ -201,7 +204,7 @@ declare function removeEventListener(
  *
  * @category Web APIs
  */
-declare class Location {
+export class Location {
   constructor();
   /** Returns a DOMStringList object listing the origins of the ancestor
    * browsing contexts, from the parent browsing context to the top-level
@@ -267,4 +270,4 @@ declare class Location {
 // TODO(nayeemrmn): Move this to `extensions/web` where its implementation is.
 // The types there must first be split into window, worker and global types.
 /** @category Web APIs */
-declare var location: Location;
+export var location: Location;

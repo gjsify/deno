@@ -3,6 +3,7 @@
 
 import * as core from '../../core/01_core.js';
 import { __bootstrap } from './80_bootstrap.js';
+import { bench, test } from '../../cli/js/40_testing.js';
 
 export const denoNs = {
   metrics: core.metrics,
@@ -124,6 +125,8 @@ export const denoNs = {
   consoleSize: __bootstrap.tty.consoleSize,
   gid: __bootstrap.os.gid,
   uid: __bootstrap.os.uid,
+  bench,
+  test,
 };
 
 export const denoNsUnstable = {
@@ -152,4 +155,3 @@ export const denoNsUnstable = {
   upgradeHttp: __bootstrap.http.upgradeHttp,
   upgradeHttpRaw: __bootstrap.flash.upgradeHttpRaw,
 };
-

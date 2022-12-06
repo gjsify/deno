@@ -43,6 +43,8 @@ import type {
     messagePort,
 } from '../types/index.js';
 
+import type { TestDescription } from '../cli/js/40_testing.js';
+
 import type { URL } from '../ext/url/00_url.js';
 import type { HeaderList } from '../ext/fetch/20_headers.js';
 
@@ -1402,7 +1404,7 @@ export const op_dispatch_bench_event = (options: {
     console.warn("Not implemented: ops.op_dispatch_bench_event");
 }
 
-export const op_register_test = (desc: /*TestDescription*/ any) => {
+export const op_register_test = (desc: TestDescription) => {
     console.warn("Not implemented: ops.op_register_test");
     const id: number = 0;
     const filteredOut: boolean = false;

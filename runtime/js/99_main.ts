@@ -735,12 +735,16 @@ function bootstrapWorkerRuntime(
   ObjectFreeze(globalThis.Deno.core);
 }
 
+export const mainRuntime = bootstrapMainRuntime;
+export const workerRuntime = bootstrapWorkerRuntime;
+
 ObjectDefineProperties(globalThis, {
   bootstrap: {
     value: {
-      mainRuntime: bootstrapMainRuntime,
-      workerRuntime: bootstrapWorkerRuntime,
+      mainRuntime,
+      workerRuntime,
     },
     configurable: true,
   },
 });
+
