@@ -207,7 +207,7 @@ export function initializeAsyncOps() {
           // Rethrow the error
           throw err;
         }
-        handleOpCallTracing("${name}", id, promise);
+        promise = handleOpCallTracing("${name}", id, promise);
         promise[promiseIdSymbol] = id;
         return promise;
       }
@@ -239,10 +239,12 @@ export function handleOpCallTracing(opName: string, promiseId: number, p: Promis
   if (opCallTracingEnabled) {
     const stack = StringPrototypeSlice(new Error().stack, 6);
     MapPrototypeSet(opCallTraces, promiseId, { opName, stack });
-    p = PromisePrototypeFinally(
+    return PromisePrototypeFinally(
       p,
       () => MapPrototypeDelete(opCallTraces, promiseId),
     );
+  } else {
+    return p;
   }
 }
 
