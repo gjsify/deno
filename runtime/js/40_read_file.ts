@@ -11,7 +11,7 @@ export function readFileSync(path) {
   return ops.op_readfile_sync(pathFromURL(path));
 }
 
-export async function readFile(path, options) {
+export async function readFile(path, options?) {
   let cancelRid;
   let abortHandler;
   if (options?.signal) {

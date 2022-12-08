@@ -36,7 +36,6 @@ const {
 } = primordials;
 
 import type { Deno } from '../../types/index.js';
-import { ExecOptionsWithStringEncoding } from 'child_process';
 
 const opSanitizerDelayResolveQueue = [];
 
@@ -688,7 +687,7 @@ let isBenchSubcommand = false;
 export function test(
   nameOrFnOrOptions,
   optionsOrFn,
-  maybeFn,
+  maybeFn?,
 ) {
   if (!isTestSubcommand) {
     return;

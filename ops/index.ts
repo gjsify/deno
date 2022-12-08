@@ -1000,8 +1000,9 @@ export const op_utime_sync = (...args: any[]) => {
 export const op_utime_async = async (...args: any[]) => {
     console.warn("Not implemented: ops.op_utime_async");
 }
-export const op_readfile_sync = (...args: any[]) => {
-    console.warn("Not implemented: ops.op_readfile_sync");
+export const op_readfile_sync = (...args: any[]): BufferSource => {
+  console.warn("Not implemented: ops.op_readfile_sync");
+  return new ArrayBuffer(0);
 }
 export const op_readfile_text_sync = (...args: any[]) => {
     console.warn("Not implemented: ops.op_readfile_text_sync");
