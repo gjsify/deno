@@ -307,7 +307,12 @@ function finalizeEsmResolution(
 // 1. name/.*
 // 2. @scope/name/.*
 const EXPORTS_PATTERN = /^((?:@[^/\\%]+\/)?[^./\\%][^/\\%]*)(\/.*)?$/;
-function resolveExports(modulesPath, request, parentPath) {
+function resolveExports(
+  modulesPath: string,
+  request: string,
+  parentPath: string,
+  usesLocalNodeModulesDir: boolean,
+) {
   // The implementation's behavior is meant to mirror resolution in ESM.
   const [, name, expansion = ""] =
     StringPrototypeMatch(request, EXPORTS_PATTERN) || [];
@@ -316,6 +321,7 @@ function resolveExports(modulesPath, request, parentPath) {
   }
 
   return ops.op_require_resolve_exports(
+    usesLocalNodeModulesDir,
     modulesPath,
     request,
     name,
@@ -353,7 +359,12 @@ Module._findPath = function (request, paths, isMain, parentPath) {
     if (curPath && stat(curPath) < 1) continue;
 
     if (!absoluteRequest) {
-      const exportsResolved = resolveExports(curPath, request, parentPath);
+      const exportsResolved = resolveExports(
+        curPath,
+        request,
+        parentPath,
+        usesLocalNodeModulesDir,
+      );
       if (exportsResolved) {
         return exportsResolved;
       }

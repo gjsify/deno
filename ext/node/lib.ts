@@ -112,6 +112,7 @@ export function op_require_as_file_path(file_or_url: string): string {
 }
 
 export function op_require_resolve_exports(
+  usesLocalNodeModulesDir: boolean,
   modules_path: string,
   _request: string,
   name: string,
