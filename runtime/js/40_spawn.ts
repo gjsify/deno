@@ -66,7 +66,7 @@ function spawnChildInner(opFn, command, apiName, {
 
 export function createSpawnChild(opFn) {
   return function spawnChild(command, options = {}) {
-    return spawnChildInner(opFn, command, "Deno.spawnChild()", options);
+    return spawnChildInner(opFn, command, "Deno.Command().spawn()", options);
   };
 }
 
@@ -168,19 +168,19 @@ function collectOutput(readableStream) {
       this.#rid = null;
       signal?.[remove](onAbort);
       return res;
-    }) as Promise<DenoUnstable.ChildStatus>;
+    }) as Promise<DenoUnstable.CommandStatus>;
   }
 
-  #status: Promise<DenoUnstable.ChildStatus>;
+  #status: Promise<DenoUnstable.CommandStatus>;
 
   /** Get the status of the child. */
-  get status(): Promise<DenoUnstable.ChildStatus> {
+  get status(): Promise<DenoUnstable.CommandStatus> {
     return this.#status;
   }
 
   /** Waits for the child to exit completely, returning all its output and
    * status. */
-  async output(): Promise<DenoUnstable.SpawnOutput> {
+  async output(): Promise<DenoUnstable.CommandOutput> {
     if (this.#stdout?.locked) {
       throw new TypeError(
         "Can't collect output because stdout is locked",
@@ -196,7 +196,7 @@ function collectOutput(readableStream) {
       this.#status,
       collectOutput(this.#stdout),
       collectOutput(this.#stderr),
-    ]) as [ DenoUnstable.ChildStatus, Uint8Array, Uint8Array ];
+    ]) as [ DenoUnstable.CommandStatus, Uint8Array, Uint8Array ];
 
     return {
       success: status.success,
@@ -249,7 +249,7 @@ export function createSpawn(opFn) {
   return function spawn(command, options) {
     if (options?.stdin === "piped") {
       throw new TypeError(
-        "Piped stdin is not supported for this function, use 'Deno.spawnChild()' instead",
+        "Piped stdin is not supported for this function, use 'Deno.Command().spawn()' instead",
       );
     }
     return spawnChildInner(opFn, command, "Deno.spawn()", options).output();
@@ -271,7 +271,7 @@ export function createSpawnSync(opFn) {
   } = {}) {
     if (stdin === "piped") {
       throw new TypeError(
-        "Piped stdin is not supported for this function, use 'Deno.spawnChild()' instead",
+        "Piped stdin is not supported for this function, use 'Deno.Command().spawn()' instead",
       );
     }
     const result = opFn({
@@ -336,7 +336,12 @@ export function createCommand(spawn, spawnSync, spawnChild) {
     }
 
     spawn() {
-      return spawnChild(this.#command, this.#options);
+      const options = {
+        ...(this.#options ?? {}),
+        stdout: this.#options?.stdout ?? "inherit",
+        stderr: this.#options?.stderr ?? "inherit",
+      };
+      return spawnChild(this.#command, options);
     }
   };
 }

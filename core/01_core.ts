@@ -149,7 +149,14 @@ export function registerErrorBuilder(className: string, errorBuilder: (msg: stri
 }
 
 export function buildCustomError(className: string, message: string, code: number) {
-  const error = errorMap[className]?.(message);
+  let error: string | Error & { code: number } | undefined;
+  try {
+    error = errorMap[className]?.(message);
+  } catch (e) {
+    throw new Error(
+      `Unsable to build custom error for "${className}"\n  ${e.message}`,
+    );
+  }
   // Strip buildCustomError() calls from stack trace
   if (typeof error == "object") {
     ErrorCaptureStackTrace(error, buildCustomError);

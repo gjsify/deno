@@ -6,6 +6,7 @@
 export * from './webstorage.js';
 export * from './crypto.js';
 export * from './node.js';
+export * from '../runtime/ops/os/mod.js';
 export * from '../runtime/ops/fs.js';
 export * from '../runtime/ops/io.js';
 export * from '../runtime/ops/spawn.js';
@@ -705,12 +706,12 @@ export const op_spawn_wait = (...args: any[]) => {
   console.warn("Not implemented: ops.op_spawn_wait");
 }
 export const op_spawn_sync = (...args: any[]): {
-  status: DenoUnstable.ChildStatus;
+  status: DenoUnstable.CommandStatus;
   stdout: Uint8Array | null;
   stderr: Uint8Array | null;
 } => {
   console.warn("Not implemented: ops.op_spawn_sync");
-  const status: DenoUnstable.ChildStatus = {
+  const status: DenoUnstable.CommandStatus = {
     code: 0,
     signal: null,
     success: false,
@@ -1182,8 +1183,9 @@ export const op_is_proxy = (value): boolean => {
   return false;
 }
 
-export const op_memory_usage = () => {
+export const op_memory_usage = (): number => {
   console.warn("Not implemented: ops.op_memory_usage");
+  return -1;
 }
 
 export const op_set_wasm_streaming_callback = (

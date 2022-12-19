@@ -74,6 +74,8 @@ let isPreloading = false;
 let mainModule = null;
 let hasBrokenOnInspectBrk = false;
 let hasInspectBrk = false;
+// Are we running with --node-modules-dir flag?
+let usesLocalNodeModulesDir = false;
 
 function stat(filename: string) {
   // TODO: required only on windows
@@ -363,11 +365,11 @@ Module._findPath = function (request, paths, isMain, parentPath) {
     const isRelative = ops.op_require_is_request_relative(
       request,
     );
-    // TODO(bartlomieju): could be a single op
-    const basePath = (isDenoDirPackage && !isRelative)
+    const basePath =
+    (isDenoDirPackage && !isRelative && !usesLocalNodeModulesDir)
       ? pathResolve(curPath, packageSpecifierSubPath(request))
       : pathResolve(curPath, request);
-    let filename;
+    let filename: string;
 
     const rc = stat(basePath);
     if (!trailingSlash) {
@@ -916,6 +918,10 @@ function packageSpecifierSubPath(specifier) {
   return ArrayPrototypeJoin(parts, "/");
 }
 
+export function setUsesLocalNodeModulesDir() {
+  usesLocalNodeModulesDir = true;
+};
+
 export function setInspectBrk() {
   hasInspectBrk = true;
 };
@@ -923,6 +929,7 @@ export function setInspectBrk() {
 // window.__bootstrap.internals = {
 //   ...window.__bootstrap.internals ?? {},
 //   require: {
+//     setUsesLocalNodeModulesDir,
 //     setInspectBrk,
 //     Module,
 //     wrapSafe,

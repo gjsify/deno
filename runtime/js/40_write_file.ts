@@ -38,6 +38,7 @@ export function writeFileSync(
     options.mode,
     options.append ?? false,
     options.create ?? true,
+    options.createNew ?? false,
     data,
   );
 }
@@ -80,6 +81,7 @@ export async function writeFile(
       options.mode,
       options.append ?? false,
       options.create ?? true,
+      options.createNew ?? false,
       data,
       cancelRid,
     );

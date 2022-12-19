@@ -518,12 +518,14 @@ function bootstrapMainRuntime(runtimeOptions: RuntimeOptions) {
 
   ObjectAssign(internals, {
     nodeUnstable: {
-      spawnChild: __bootstrap.spawn.createSpawnChild(
-        ops.op_node_unstable_spawn_child,
-      ),
-      spawn: __bootstrap.spawn.createSpawn(ops.op_node_unstable_spawn_child),
-      spawnSync: __bootstrap.spawn.createSpawnSync(
-        ops.op_node_unstable_spawn_sync,
+      Command: __bootstrap.spawn.createCommand(
+        __bootstrap.spawn.createSpawn(ops.op_node_unstable_spawn_child),
+        __bootstrap.spawn.createSpawnSync(
+          ops.op_node_unstable_spawn_sync,
+        ),
+        __bootstrap.spawn.createSpawnChild(
+          ops.op_node_unstable_spawn_child,
+        ),
       ),
       serve: __bootstrap.flash.createServe(ops.op_node_unstable_flash_serve),
       upgradeHttpRaw: __bootstrap.flash.upgradeHttpRaw,
@@ -532,14 +534,6 @@ function bootstrapMainRuntime(runtimeOptions: RuntimeOptions) {
         ops.op_node_unstable_net_listen_unixpacket,
       ),
     },
-  });
-
-  ObjectAssign((internals as any).nodeUnstable, {
-    Command: __bootstrap.spawn.createCommand(
-      (internals as any).nodeUnstable.spawn,
-      (internals as any).nodeUnstable.spawnSync,
-      (internals as any).nodeUnstable.spawnChild,
-    ),
   });
 
   const finalDenoNs = {
@@ -564,21 +558,15 @@ function bootstrapMainRuntime(runtimeOptions: RuntimeOptions) {
     // the op function that needs to be passed will be invalidated by creating
     // a snapshot
     ObjectAssign(finalDenoNs, {
-      spawnChild: __bootstrap.spawn.createSpawnChild(ops.op_spawn_child),
-      spawn: __bootstrap.spawn.createSpawn(ops.op_spawn_child),
-      spawnSync: __bootstrap.spawn.createSpawnSync(ops.op_spawn_sync),
+      Command: __bootstrap.spawn.createCommand(
+        __bootstrap.spawn.createSpawn(ops.op_spawn_child),
+        __bootstrap.spawn.createSpawnSync(ops.op_spawn_sync),
+        __bootstrap.spawn.createSpawnChild(ops.op_spawn_child),
+      ),
       serve: __bootstrap.flash.createServe(ops.op_flash_serve),
       listenDatagram: __bootstrap.net.createListenDatagram(
         ops.op_net_listen_udp,
         ops.op_net_listen_unixpacket,
-      ),
-    });
-
-    ObjectAssign(finalDenoNs, {
-      Command: __bootstrap.spawn.createCommand(
-        finalDenoNs.spawn,
-        finalDenoNs.spawnSync,
-        finalDenoNs.spawnChild,
       ),
     });
   }
@@ -669,12 +657,14 @@ function bootstrapWorkerRuntime(
   // a snapshot
   ObjectAssign(internals, {
     nodeUnstable: {
-      spawnChild: __bootstrap.spawn.createSpawnChild(
-        ops.op_node_unstable_spawn_child,
-      ),
-      spawn: __bootstrap.spawn.createSpawn(ops.op_node_unstable_spawn_child),
-      spawnSync: __bootstrap.spawn.createSpawnSync(
-        ops.op_node_unstable_spawn_sync,
+      Command: __bootstrap.spawn.createCommand(
+        __bootstrap.spawn.createSpawn(ops.op_node_unstable_spawn_child),
+        __bootstrap.spawn.createSpawnSync(
+          ops.op_node_unstable_spawn_sync,
+        ),
+        __bootstrap.spawn.createSpawnChild(
+          ops.op_node_unstable_spawn_child,
+        ),
       ),
       serve: __bootstrap.flash.createServe(ops.op_node_unstable_flash_serve),
       upgradeHttpRaw: __bootstrap.flash.upgradeHttpRaw,
@@ -707,20 +697,15 @@ function bootstrapWorkerRuntime(
     // the op function that needs to be passed will be invalidated by creating
     // a snapshot
     ObjectAssign(finalDenoNs, {
-      spawnChild: __bootstrap.spawn.createSpawnChild(ops.op_spawn_child),
-      spawn: __bootstrap.spawn.createSpawn(ops.op_spawn_child),
-      spawnSync: __bootstrap.spawn.createSpawnSync(ops.op_spawn_sync),
+      Command: __bootstrap.spawn.createCommand(
+        __bootstrap.spawn.createSpawn(ops.op_spawn_child),
+        __bootstrap.spawn.createSpawnSync(ops.op_spawn_sync),
+        __bootstrap.spawn.createSpawnChild(ops.op_spawn_child),
+      ),
       serve: __bootstrap.flash.createServe(ops.op_flash_serve),
       listenDatagram: __bootstrap.net.createListenDatagram(
         ops.op_net_listen_udp,
         ops.op_net_listen_unixpacket,
-      ),
-    });
-    ObjectAssign(finalDenoNs, {
-      Command: __bootstrap.spawn.createCommand(
-        finalDenoNs.spawn,
-        finalDenoNs.spawnSync,
-        finalDenoNs.spawnChild,
       ),
     });
   }

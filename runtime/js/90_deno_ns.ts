@@ -2,6 +2,7 @@
 "use strict";
 
 import * as core from '../../core/01_core.js';
+import * as ops from '../../ops/index.js';
 import { __bootstrap } from './80_bootstrap.js';
 import { bench, test } from '../../cli/js/40_testing.js';
 
@@ -29,7 +30,7 @@ export const denoNs = {
   makeTempDir: __bootstrap.fs.makeTempDir,
   makeTempFileSync: __bootstrap.fs.makeTempFileSync,
   makeTempFile: __bootstrap.fs.makeTempFile,
-  memoryUsage: core.memoryUsage,
+  memoryUsage: () => ops.op_runtime_memory_usage(),
   mkdirSync: __bootstrap.fs.mkdirSync,
   mkdir: __bootstrap.fs.mkdir,
   chdir: __bootstrap.fs.chdir,

@@ -61,12 +61,12 @@ function opUrlReparse(href: string, setter: number, value: any) {
 function opUrlParse(href: string, maybeBase?: string) {
   let status: number;
   if (maybeBase === undefined) {
-    status = ops.op_url_parse(href, componentsBuf);
+    status = ops.op_url_parse(href, componentsBuf.buffer);
   } else {
     status = ops.op_url_parse_with_base(
       href,
       maybeBase,
-      componentsBuf,
+      componentsBuf.buffer,
     );
   }
   return getSerialization(status, href);

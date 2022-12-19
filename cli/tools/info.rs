@@ -47,7 +47,11 @@ pub async fn info(flags: Flags, info_flags: InfoFlags) -> Result<(), AnyError> {
     }
   } else {
     // If it was just "deno info" print location of caches and exit
-    print_cache_info(&ps, info_flags.json, ps.options.location_flag())?;
+    print_cache_info(
+      &ps,
+      info_flags.json,
+      ps.options.location_flag().as_ref(),
+    )?;
   }
   Ok(())
 }
@@ -66,7 +70,7 @@ fn print_cache_info(
 
   if let Some(location) = &location {
     origin_dir =
-      origin_dir.join(&checksum::gen(&[location.to_string().as_bytes()]));
+      origin_dir.join(checksum::gen(&[location.to_string().as_bytes()]));
   }
 
   let local_storage_dir = origin_dir.join("local_storage");
@@ -522,11 +526,9 @@ impl<'a> GraphDisplayContext<'a> {
         Specifier(_) => specifier_str,
       };
       let maybe_size = match &package_or_specifier {
-        Package(package) => self
-          .npm_info
-          .package_sizes
-          .get(&package.id)
-          .map(|s| *s as u64),
+        Package(package) => {
+          self.npm_info.package_sizes.get(&package.id).copied()
+        }
         Specifier(_) => module
           .maybe_source
           .as_ref()

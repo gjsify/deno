@@ -259,7 +259,7 @@ export namespace DenoUnstable {
     /** When `true`, function calls can safely callback into JavaScript or
      * trigger a garbage collection event.
      *
-     * Default is `false`. */
+     * @default {false} */
     callback?: boolean;
   }
 
@@ -586,8 +586,7 @@ export namespace DenoUnstable {
    * permission users should acknowledge in practice that is effectively the
    * same as running with the `allow-all` permission.
    *
-   * An example, given a C library which exports a foreign function named
-   * `add()`:
+   * @example Given a C library which exports a foreign function named `add()`
    *
    * ```ts
    * // Determine library extension based on
@@ -636,7 +635,9 @@ export namespace DenoUnstable {
    */
   interface UnstableRunOptions extends Deno.RunOptions {
     /** If `true`, clears the environment variables before executing the
-     * sub-process.  Defaults to `false`. */
+     * sub-process.
+     *
+     * @default {false} */
     clearEnv?: boolean;
     /** For POSIX systems, sets the group ID for the sub process. */
     gid?: number;
@@ -703,7 +704,7 @@ export namespace DenoUnstable {
    * A custom `HttpClient` for use with {@linkcode fetch} function. This is
    * designed to allow custom certificates or proxies to be used with `fetch()`.
    *
-   * ```ts
+   * @example ```ts
    * const caCert = await Deno.readTextFile("./ca.pem");
    * const client = Deno.createHttpClient({ caCerts: [ caCert ] });
    * const req = await fetch("https://myserver.com", { client });
@@ -772,13 +773,13 @@ export namespace DenoUnstable {
    * extension of the web platform Fetch API which allows Deno to use custom
    * TLS certificates and connect via a proxy while using `fetch()`.
    *
-   * ```ts
+   * @example ```ts
    * const caCert = await Deno.readTextFile("./ca.pem");
    * const client = Deno.createHttpClient({ caCerts: [ caCert ] });
    * const response = await fetch("https://myserver.com", { client });
    * ```
    *
-   * ```ts
+   * @example ```ts
    * const client = Deno.createHttpClient({
    *   proxy: { url: "http://myproxy.com:8080" }
    * });
@@ -827,7 +828,9 @@ export namespace DenoUnstable {
      * port.
      *
      * This flag is only supported on Linux. It is silently ignored on other
-     * platforms. Defaults to `false`. */
+     * platforms.
+     *
+     * @default {false} */
     reusePort?: boolean;
   }
 
@@ -855,7 +858,7 @@ export namespace DenoUnstable {
      * process has already bound a socket on it. This effectively steals the
      * socket from the listener.
      *
-     * Defaults to `false`. */
+     * @default {false} */
     reuseAddress?: boolean;
   }
 
@@ -1087,9 +1090,9 @@ export namespace DenoUnstable {
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
-   * Acquire an advisory file-system lock for the provided file. `exclusive`
-   * defaults to `false`.
+   * Acquire an advisory file-system lock for the provided file.
    *
+   * @param [exclusive=false]
    * @category File System
    */
   export function flock(rid: number, exclusive?: boolean): Promise<void>;
@@ -1097,8 +1100,8 @@ export namespace DenoUnstable {
   /** **UNSTABLE**: New API, yet to be vetted.
    *
    * Acquire an advisory file-system lock synchronously for the provided file.
-   * `exclusive` defaults to `false`.
    *
+   * @param [exclusive=false]
    * @category File System
    */
   export function flockSync(rid: number, exclusive?: boolean): void;
@@ -1433,6 +1436,8 @@ export namespace DenoUnstable {
      *
      * Doesn't guarantee that only `env` variables are present, as the OS may
      * set environmental variables for processes.
+     *
+     * @default {false}
      */
     clearEnv?: boolean;
     /** Environmental variables to pass to the subprocess. */
@@ -1457,182 +1462,20 @@ export namespace DenoUnstable {
      *
      * Defaults to `"null"`. */
     stdin?: "piped" | "inherit" | "null";
-    /**  How `stdout` of the spawned process should be handled.
+    /** How `stdout` of the spawned process should be handled.
+     *
+     * Defaults to `"piped". */
+    stdout?: "piped" | "inherit" | "null";
+    /** How `stderr` of the spawned process should be handled.
      *
      * Defaults to `"piped"`. */
-    stdout?: "piped" | "inherit" | "null";
-    /**  How `stderr` of the spawned process should be handled.
-     *
-     * Defaults to "piped". */
     stderr?: "piped" | "inherit" | "null";
 
     /** Skips quoting and escaping of the arguments on windows. This option
-     * is ignored on non-windows platforms. Defaults to `false`. */
+     * is ignored on non-windows platforms.
+     *
+     * @default {false} */
     windowsRawArguments?: boolean;
-  }
-
-  /** **UNSTABLE**: New API, yet to be vetted.
-   *
-   * @deprecated Use the Deno.Command API instead.
-   *
-   * Spawns a child process.
-   *
-   * If any stdio options are not set to `"piped"`, accessing the corresponding
-   * field on the `Child` or its `SpawnOutput` will throw a `TypeError`.
-   *
-   * If `stdin` is set to `"piped"`, the `stdin` {@linkcode WritableStream}
-   * needs to be closed manually.
-   *
-   * ```ts
-   * const child = Deno.spawnChild(Deno.execPath(), {
-   *   args: [
-   *     "eval",
-   *     "console.log('Hello World')",
-   *   ],
-   *   stdin: "piped",
-   * });
-   *
-   * // open a file and pipe the subprocess output to it.
-   * child.stdout.pipeTo(Deno.openSync("output").writable);
-   *
-   * // manually close stdin
-   * child.stdin.close();
-   * const status = await child.status;
-   * ```
-   *
-   * @category Sub Process
-   */
-  export function spawnChild(
-    command: string | URL,
-    options?: SpawnOptions,
-  ): Child;
-
-  /** **UNSTABLE**: New API, yet to be vetted.
-   *
-   * @deprecated Use the Deno.Command API instead.
-   *
-   * The interface for handling a child process returned from
-   * {@linkcode Deno.spawnChild}.
-   *
-   * @category Sub Process
-   */
-  export class Child {
-    get stdin(): WritableStream<Uint8Array>;
-    get stdout(): ReadableStream<Uint8Array>;
-    get stderr(): ReadableStream<Uint8Array>;
-    readonly pid: number;
-    /** Get the status of the child. */
-    readonly status: Promise<ChildStatus>;
-
-    /** Waits for the child to exit completely, returning all its output and
-     * status. */
-    output(): Promise<SpawnOutput>;
-    /** Kills the process with given {@linkcode Deno.Signal}. Defaults to
-     * `"SIGTERM"`. */
-    kill(signo?: Deno.Signal): void;
-
-    /** Ensure that the status of the child process prevents the Deno process
-     * from exiting. */
-    ref(): void;
-    /** Ensure that the status of the child process does not block the Deno
-     * process from exiting. */
-    unref(): void;
-  }
-
-  /** **UNSTABLE**: New API, yet to be vetted.
-   *
-   * @deprecated Use the Deno.Command API instead.
-   *
-   * Executes a subprocess, waiting for it to finish and collecting all of its
-   * output.
-   *
-   * Will throw an error if `stdin: "piped"` is passed.
-   *
-   * If options `stdout` or `stderr` are not set to `"piped"`, accessing the
-   * corresponding field on `SpawnOutput` will throw a `TypeError`.
-   *
-   * ```ts
-   * const { code, stdout, stderr } = await Deno.spawn(Deno.execPath(), {
-   *   args: [
-   *     "eval",
-   *     "console.log('hello'); console.error('world')",
-   *   ],
-   * });
-   * console.assert(code === 0);
-   * console.assert("hello\n" === new TextDecoder().decode(stdout));
-   * console.assert("world\n" === new TextDecoder().decode(stderr));
-   * ```
-   *
-   * @category Sub Process
-   */
-  export function spawn(
-    command: string | URL,
-    options?: SpawnOptions,
-  ): Promise<SpawnOutput>;
-
-  /** **UNSTABLE**: New API, yet to be vetted.
-   *
-   * @deprecated Use the Deno.Command API instead.
-   *
-   * Synchronously executes a subprocess, waiting for it to finish and
-   * collecting all of its output.
-   *
-   * Will throw an error if `stdin: "piped"` is passed.
-   *
-   * If options `stdout` or `stderr` are not set to `"piped"`, accessing the
-   * corresponding field on `SpawnOutput` will throw a `TypeError`.
-   *
-   * ```ts
-   * const { code, stdout, stderr } = Deno.spawnSync(Deno.execPath(), {
-   *   args: [
-   *     "eval",
-   *     "console.log('hello'); console.error('world')",
-   *   ],
-   * });
-   * console.assert(code === 0);
-   * console.assert("hello\n" === new TextDecoder().decode(stdout));
-   * console.assert("world\n" === new TextDecoder().decode(stderr));
-   * ```
-   *
-   * @category Sub Process
-   */
-  export function spawnSync(
-    command: string | URL,
-    options?: SpawnOptions,
-  ): SpawnOutput;
-
-  /** **UNSTABLE**: New API, yet to be vetted.
-   *
-   * @deprecated Use the Deno.Command API instead.
-   *
-   * @category Sub Process
-   */
-  export interface ChildStatus {
-    /** If the child process exits with a 0 status code, `success` will be set
-     * to `true`, otherwise `false`. */
-    success: boolean;
-    /** The exit code of the child process. */
-    code: number;
-    /** The signal associated with the child process, present if
-     * {@linkcode Deno.spawn} was called. */
-    signal: Deno.Signal | null;
-  }
-
-  /** **UNSTABLE**: New API, yet to be vetted.
-   *
-   * @deprecated Use the Deno.Command API instead.
-   *
-   * The interface returned from calling {@linkcode Deno.spawn} or
-   * {@linkcode Deno.spawnSync} which represents the result of spawning the
-   * child process.
-   *
-   * @category Sub Process
-   */
-  export interface SpawnOutput extends ChildStatus {
-    /** The buffered output from the child processes `stdout`. */
-    readonly stdout: Uint8Array;
-    /** The buffered output from the child processes `stderr`. */
-    readonly stderr: Uint8Array;
   }
 
   /** **UNSTABLE**: New API, yet to be vetted.
@@ -1644,6 +1487,8 @@ export namespace DenoUnstable {
    *
    * If `stdin` is set to `"piped"`, the `stdin` {@linkcode WritableStream}
    * needs to be closed manually.
+   *
+   * @example Spawn a subprocess and pipe the output to a file
    *
    * ```ts
    * const command = new Deno.Command(Deno.execPath(), {
@@ -1663,6 +1508,8 @@ export namespace DenoUnstable {
    * const status = await child.status;
    * ```
    *
+   * @example Spawn a subprocess and collect its output
+   *
    * ```ts
    * const command = new Deno.Command(Deno.execPath(), {
    *   args: [
@@ -1675,6 +1522,8 @@ export namespace DenoUnstable {
    * console.assert("hello\n" === new TextDecoder().decode(stdout));
    * console.assert("world\n" === new TextDecoder().decode(stderr));
    * ```
+   *
+   * @example Spawn a subprocess and collect its output synchronously
    *
    * ```ts
    * const command = new Deno.Command(Deno.execPath(), {
@@ -1739,8 +1588,10 @@ export namespace DenoUnstable {
     /** Waits for the child to exit completely, returning all its output and
      * status. */
     output(): Promise<CommandOutput>;
-    /** Kills the process with given {@linkcode Deno.Signal}. Defaults to
-     * `"SIGTERM"`. */
+    /** Kills the process with given {@linkcode Deno.Signal}.
+     *
+     * @param [signo="SIGTERM"]
+     */
     kill(signo?: Deno.Signal): void;
 
     /** Ensure that the status of the child process prevents the Deno process
@@ -1771,6 +1622,8 @@ export namespace DenoUnstable {
      *
      * Doesn't guarantee that only `env` variables are present, as the OS may
      * set environmental variables for processes.
+     *
+     * @default {false}
      */
     clearEnv?: boolean;
     /** Environmental variables to pass to the subprocess. */
@@ -1787,7 +1640,7 @@ export namespace DenoUnstable {
      * corresponding {@linkcode AbortController} by sending the process a
      * SIGTERM signal.
      *
-     * Ignored by {@linkcode Command.outputSync}.
+     * Not supported in {@linkcode Deno.spawnSync}.
      */
     signal?: AbortSignal;
 
@@ -1797,15 +1650,19 @@ export namespace DenoUnstable {
     stdin?: "piped" | "inherit" | "null";
     /** How `stdout` of the spawned process should be handled.
      *
-     * Defaults to `"piped"`. */
+     * Defaults to `"piped"` for `output` & `outputSync`,
+     * and `"inherit"` for `spawn`. */
     stdout?: "piped" | "inherit" | "null";
     /** How `stderr` of the spawned process should be handled.
      *
-     * Defaults to "piped". */
+     * Defaults to `"piped"` for `output` & `outputSync`,
+     * and `"inherit"` for `spawn`. */
     stderr?: "piped" | "inherit" | "null";
 
-    /** Skips quoting and escaping of the arguments on Windows. This option
-     * is ignored on non-windows platforms. Defaults to `false`. */
+    /** Skips quoting and escaping of the arguments on windows. This option
+     * is ignored on non-windows platforms.
+     *
+     * @default {false} */
     windowsRawArguments?: boolean;
   }
 
