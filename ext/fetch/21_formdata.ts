@@ -39,7 +39,7 @@ const {
   TypedArrayPrototypeSubarray,
 } = primordials;
 
-import type { BodyInit } from './lib.deno_fetch';
+import type { BodyInit } from './lib.deno_fetch.js';
 
 const entryList = Symbol("entry list");
 

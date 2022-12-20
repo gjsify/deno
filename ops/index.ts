@@ -14,6 +14,7 @@ export * from '../ext/node/lib.js';
 export * from '../ext/napi/lib.js';
 export * from '../ext/web/lib.js';
 export * from '../cli/ops/testing.js';
+export * from '../ext/url/lib.js'
 
 
 import type {
@@ -100,31 +101,7 @@ export const op_metrics = (...args: any[]) => {
   console.warn("Not implemented: ops.op_metrics");
   return [];
 }
-export const op_url_parse = function (href: string, buf: ArrayBufferLike): number {
-  console.warn("Not implemented: ops.op_url_parse", arguments);
-  const status = -1;
-  return status;
-}
 
-export const op_url_parse_with_base = (href: string, maybeBase: string, buf: ArrayBufferLike): number => {
-  console.warn("Not implemented: ops.op_url_parse_with_base");
-  const status = -1;
-  return status;
-}
-
-export const op_url_reparse = (href: string, setter: number, value: any, buf: ArrayBufferLike): number => {
-  console.warn("Not implemented: ops.op_url_reparse");
-  const status = -1;
-  return status;
-}
-export const op_url_parse_search_params = (a?: string | null, bytes?: Uint8Array): [string, string][] => {
-  console.warn("Not implemented: ops.op_url_parse_search_params");
-  return [];
-}
-export const op_url_stringify_search_params = (value: any): string => {
-  console.warn("Not implemented: ops.op_url_stringify_search_params");
-  return "";
-}
 export const op_urlpattern_parse = (input: URLPatternInput, baseURL: string): UrlComponents => {
   console.warn("Not implemented: ops.op_urlpattern_parse");
   const emptyRes: UrlComponent = {

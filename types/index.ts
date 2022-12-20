@@ -13,7 +13,7 @@ export * from './url.js';
 export * from './web-util.js';
 export * from './web.js';
 export * from './webgpu.js';
-export * from './webidl';
+export * from './webidl.js';
 export * from './websocket.js';
 export * from './window.js';
 export * from './worker.js';

@@ -49,7 +49,7 @@ import {
 
 import type { Blob } from '../web/09_file.js';
 
-import type { Body, BodyInit } from './lib.deno_fetch';
+import type { Body, BodyInit } from './lib.deno_fetch.js';
 import type { FormData } from './21_formdata.js';
 
 const VCHAR = ["\x21-\x7E"];

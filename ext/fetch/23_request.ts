@@ -33,7 +33,7 @@ import { blobFromObjectUrl, Blob } from '../web/09_file.js';
 import { HttpClientPrototype } from './22_http_client.js';
 import * as abortSignal from '../web/03_abort_signal.js';
 
-import type { RequestInfo, RequestInit, Body } from './lib.deno_fetch';
+import type { RequestInfo, RequestInit, Body } from './lib.deno_fetch.js';
 import type { FormData } from './21_formdata.js';
 
 import {

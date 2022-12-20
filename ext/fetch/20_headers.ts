@@ -42,7 +42,7 @@ const {
   TypeError,
 } = primordials;
 
-import type { DomIterable } from './lib.deno_fetch';
+import type { DomIterable } from './lib.deno_fetch.js';
 
 const _headerList = Symbol("header list");
 const _iterableHeaders = Symbol("iterable headers");

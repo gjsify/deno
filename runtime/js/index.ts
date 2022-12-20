@@ -55,7 +55,7 @@ export * as tls from '../../ext/net/02_tls.js';
 export * as extHttp from '../../ext/http/01_http.js';
 export * as caches from '../../ext/cache/01_cache.js';
 
-export { fetchUtil, headers, formData, fetchBody, fetch } from '../../ext/fetch/99_bootstrap';
+export { fetchUtil, headers, formData, fetchBody, fetch } from '../../ext/fetch/99_bootstrap.js';
 
 export * as webgpu from '../../ext/webgpu/src/01_webgpu.js';
 export * as webSocket from '../../ext/websocket/01_websocket.js';

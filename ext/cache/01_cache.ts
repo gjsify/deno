@@ -20,7 +20,7 @@ const RequestPrototype = Request.prototype;
 import { getHeader } from '../fetch/20_headers.js';
 import { readableStreamForRid } from '../web/06_streams.js';
 
-import type { ReadableStream } from '../web/06_streams';
+import type { ReadableStream } from '../web/06_streams.js';
 
 export class CacheStorage {
   constructor() {
