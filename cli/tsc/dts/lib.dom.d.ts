@@ -16,7 +16,7 @@ and limitations under the License.
 
 
 /// <reference no-default-lib="true"/>
-/// <reference lib="dom.extras" />
+/// <reference path="./lib.dom.extras.d.ts" />
 
 
 /////////////////////////////

@@ -5,7 +5,7 @@
 
 import { Deno } from '../../cli/tsc/dts/lib.deno.ns.d.js'
 
-export namespace DenoNet {
+declare namespace DenoNet {
   /** @category Network */
   export interface NetAddr {
     transport: "tcp" | "udp";

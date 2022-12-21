@@ -5,13 +5,13 @@
 
 /// <reference no-default-lib="true" />
 /// <reference lib="esnext" />
-// <reference lib="deno.console" />
-// <reference lib="deno.url" />
-// <reference lib="deno.web" />
-// <reference lib="deno.fetch" />
-// <reference lib="deno.websocket" />
-// <reference lib="deno.crypto" />
-// <reference lib="deno.broadcast_channel" />
+/// <reference path="../../../ext/console/lib.deno_console.d.ts" />
+/// <reference path="../../../ext/url/lib.deno_url.d.ts" />
+/// <reference path="../../../ext/web/lib.deno_web.d.ts" />
+/// <reference path="../../../ext/fetch/lib.deno_fetch.d.ts" />
+/// <reference path="../../../ext/websocket/lib.deno_websocket.d.ts" />
+/// <reference path="../../../ext/crypto/lib.deno_crypto.d.ts" />
+/// <reference path="../../../ext/broadcast_channel/lib.deno_broadcast_channel.d.ts" />
 
 import type { Deno } from './lib.deno.ns.d.js';
 

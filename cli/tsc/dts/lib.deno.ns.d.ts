@@ -2,7 +2,7 @@
 
 /// <reference no-default-lib="true" />
 /// <reference lib="esnext" />
-// <reference lib="deno.net" />
+/// <reference path="../../../ext/net/lib.deno_net.d.ts" />
 
 import { DenoNet } from '../../../ext/net/lib.deno_net.d.js'
 

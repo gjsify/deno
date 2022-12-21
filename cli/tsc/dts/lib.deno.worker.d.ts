@@ -1,11 +1,11 @@
 // Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
 
 /// <reference no-default-lib="true" />
-// <reference lib="deno.ns" />
-// <reference lib="deno.shared_globals" />
-// <reference lib="deno.webgpu" />
+/// <reference path="./lib.deno.ns.d.ts" />
+/// <reference path="./lib.deno.shared_globals.d.ts" />
+/// <reference path="./lib.deno_webgpu.d.ts" />
 /// <reference lib="esnext" />
-// <reference lib="deno.cache" />
+/// <reference path="../../../ext/cache/lib.deno_cache.d.ts" />
 
 import type { Deno } from './lib.deno.ns.d.js';
 import type { GPU } from '../../../ext/webgpu/src/01_webgpu.js';

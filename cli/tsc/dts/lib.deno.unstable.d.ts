@@ -1,7 +1,7 @@
 // Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
 
 /// <reference no-default-lib="true" />
-// <reference lib="deno.ns" />
+/// <reference path="./lib.deno.ns.d.ts" />
 
 import type { Deno, DenoNet } from '../../../types/index.js';
 import type { Conn } from '../../../ext/net/01_net.js';
