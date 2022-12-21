@@ -18,8 +18,8 @@ and limitations under the License.
 /// <reference no-default-lib="true"/>
 
 
-/// <reference lib="es2020" />
-/// <reference lib="es2021.promise" />
-/// <reference lib="es2021.string" />
-/// <reference lib="es2021.weakref" />
-/// <reference lib="es2021.intl" />
+/// <reference path="./lib.es2020.d.ts" />
+/// <reference path="./lib.es2021.promise.d.ts" />
+/// <reference path="./lib.es2021.string.d.ts" />
+/// <reference path="./lib.es2021.weakref.d.ts" />
+/// <reference path="./lib.es2021.intl.d.ts" />

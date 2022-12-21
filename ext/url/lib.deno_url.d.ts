@@ -3,10 +3,10 @@
 // deno-lint-ignore-file no-explicit-any
 
 /// <reference no-default-lib="true" />
-/// <reference lib="esnext" />
+/// <reference path="../../cli/tsc/dts/lib.dom.d.ts" />
 
 // Gjsify
-export interface UrlComponents {
+interface UrlComponents {
   protocol: UrlComponent;
   username: UrlComponent;
   password: UrlComponent;
@@ -18,14 +18,14 @@ export interface UrlComponents {
 }
 
 // Gjsify
-export interface UrlComponent {
+interface UrlComponent {
   patternString: string;
   regexp: RegExp;
   groupNameList: string[];
 }
 
 /** @category Web APIs */
-export class URLSearchParams {
+declare class URLSearchParams {
   constructor(
     init?: string[][] | Record<string, string> | string | URLSearchParams,
   );
@@ -176,29 +176,29 @@ export class URLSearchParams {
  *
  * @category Web APIs
  */
-export class URL {
-  constructor(url: string | URL, base?: string | URL);
-  static createObjectURL(blob: Blob): string;
-  static revokeObjectURL(url: string): void;
+// declare class URL {
+//   constructor(url: string | URL, base?: string | URL);
+//   static createObjectURL(blob: Blob): string;
+//   static revokeObjectURL(url: string): void;
 
-  hash: string;
-  host: string;
-  hostname: string;
-  href: string;
-  toString(): string;
-  readonly origin: string;
-  password: string;
-  pathname: string;
-  port: string;
-  protocol: string;
-  search: string;
-  readonly searchParams: URLSearchParams;
-  username: string;
-  toJSON(): string;
-}
+//   hash: string;
+//   host: string;
+//   hostname: string;
+//   href: string;
+//   toString(): string;
+//   readonly origin: string;
+//   password: string;
+//   pathname: string;
+//   port: string;
+//   protocol: string;
+//   search: string;
+//   readonly searchParams: URLSearchParams;
+//   username: string;
+//   toJSON(): string;
+// }
 
 /** @category Web APIs */
-export interface URLPatternInit {
+declare interface URLPatternInit {
   protocol?: string;
   username?: string;
   password?: string;
@@ -211,10 +211,10 @@ export interface URLPatternInit {
 }
 
 /** @category Web APIs */
-export type URLPatternInput = string | URLPatternInit;
+declare type URLPatternInput = string | URLPatternInit;
 
 /** @category Web APIs */
-export interface URLPatternComponentResult {
+declare interface URLPatternComponentResult {
   input: string;
   groups: Record<string, string>;
 }
@@ -223,7 +223,7 @@ export interface URLPatternComponentResult {
  *
  * @category Web APIs
  */
-export interface URLPatternResult {
+declare interface URLPatternResult {
   /** The inputs provided when matching. */
   inputs: [URLPatternInit] | [URLPatternInit, string];
 
@@ -275,7 +275,7 @@ export interface URLPatternResult {
  *
  * @category Web APIs
  */
-export class URLPattern {
+declare class URLPattern {
   constructor(input: URLPatternInput, baseURL?: string);
 
   /**

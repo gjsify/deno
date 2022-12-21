@@ -18,7 +18,7 @@ and limitations under the License.
 /// <reference no-default-lib="true"/>
 
 
-/// <reference lib="es2018.intl" />
+/// <reference path="./lib.es2018.intl.d.ts" />
 declare namespace Intl {
 
     /**

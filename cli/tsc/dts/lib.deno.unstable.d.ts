@@ -2,12 +2,10 @@
 
 /// <reference no-default-lib="true" />
 /// <reference path="./lib.deno.ns.d.ts" />
+/// <reference path="./lib.esnext.d.ts"  />
 
-import type { Deno, DenoNet } from '../../../types/index.js';
-import type { Conn } from '../../../ext/net/01_net.js';
-
-export namespace DenoUnstable {
-  export {}; // stop default export type behavior
+declare namespace Deno {
+  // export {}; // stop default export type behavior
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -35,7 +33,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  export type NativeNumberType =
+  type NativeNumberType =
     | "u8"
     | "i8"
     | "u16"
@@ -51,7 +49,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  export type NativeBigIntType =
+  type NativeBigIntType =
     | "u64"
     | "i64"
     | "usize"
@@ -63,7 +61,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  export type NativeBooleanType = "bool";
+  type NativeBooleanType = "bool";
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -71,7 +69,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  export type NativePointerType = "pointer";
+  type NativePointerType = "pointer";
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -79,7 +77,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  export type NativeBufferType = "buffer";
+  type NativeBufferType = "buffer";
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -87,7 +85,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  export type NativeFunctionType = "function";
+  type NativeFunctionType = "function";
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -95,7 +93,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  export type NativeVoidType = "void";
+  type NativeVoidType = "void";
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -124,7 +122,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  export type ToNativeTypeMap =
+  type ToNativeTypeMap =
     & Record<NativeNumberType, number>
     & Record<NativeBigIntType, PointerValue>
     & Record<NativeBooleanType, boolean>
@@ -139,7 +137,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  export type ToNativeType<T extends NativeType = NativeType> = ToNativeTypeMap[T];
+  type ToNativeType<T extends NativeType = NativeType> = ToNativeTypeMap[T];
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -147,7 +145,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  export type ToNativeResultTypeMap = ToNativeTypeMap & Record<NativeVoidType, void>;
+  type ToNativeResultTypeMap = ToNativeTypeMap & Record<NativeVoidType, void>;
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -155,7 +153,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  export type ToNativeResultType<T extends NativeResultType = NativeResultType> =
+  type ToNativeResultType<T extends NativeResultType = NativeResultType> =
     ToNativeResultTypeMap[T];
 
   /** **UNSTABLE**: New API, yet to be vetted.
@@ -164,7 +162,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  export type ToNativeParameterTypes<T extends readonly NativeType[]> =
+  type ToNativeParameterTypes<T extends readonly NativeType[]> =
     //
     [(T[number])[]] extends [T] ? ToNativeType<T[number]>[]
       : [readonly (T[number])[]] extends [T]
@@ -181,7 +179,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  export type FromNativeTypeMap =
+  type FromNativeTypeMap =
     & Record<NativeNumberType, number>
     & Record<NativeBigIntType, PointerValue>
     & Record<NativeBooleanType, boolean>
@@ -196,7 +194,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  export type FromNativeType<T extends NativeType = NativeType> = FromNativeTypeMap[T];
+  type FromNativeType<T extends NativeType = NativeType> = FromNativeTypeMap[T];
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -204,7 +202,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  export type FromNativeResultTypeMap =
+  type FromNativeResultTypeMap =
     & FromNativeTypeMap
     & Record<NativeVoidType, void>;
 
@@ -214,14 +212,14 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  export type FromNativeResultType<T extends NativeResultType = NativeResultType> =
+  type FromNativeResultType<T extends NativeResultType = NativeResultType> =
     FromNativeResultTypeMap[T];
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
    * @category FFI
    */
-  export type FromNativeParameterTypes<
+  type FromNativeParameterTypes<
     T extends readonly NativeType[],
   > =
     //
@@ -290,7 +288,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  export type StaticForeignSymbol<T extends ForeignFunction | ForeignStatic> =
+  type StaticForeignSymbol<T extends ForeignFunction | ForeignStatic> =
     T extends ForeignFunction ? FromForeignFunction<T>
       : T extends ForeignStatic ? FromNativeType<T["type"]>
       : never;
@@ -299,7 +297,7 @@ export namespace DenoUnstable {
    *
    *  @category FFI
    */
-  export type FromForeignFunction<T extends ForeignFunction> = T["parameters"] extends
+  type FromForeignFunction<T extends ForeignFunction> = T["parameters"] extends
     readonly [] ? () => StaticForeignSymbolReturnType<T>
     : (
       ...args: ToNativeParameterTypes<T["parameters"]>
@@ -309,14 +307,14 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  export type StaticForeignSymbolReturnType<T extends ForeignFunction> =
+  type StaticForeignSymbolReturnType<T extends ForeignFunction> =
     ConditionalAsync<T["nonblocking"], FromNativeResultType<T["result"]>>;
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
    * @category FFI
    */
-  export type ConditionalAsync<IsAsync extends boolean | undefined, T> =
+  type ConditionalAsync<IsAsync extends boolean | undefined, T> =
     IsAsync extends true ? Promise<T> : T;
 
   /** **UNSTABLE**: New API, yet to be vetted.
@@ -325,7 +323,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  export type StaticForeignLibraryInterface<T extends ForeignLibraryInterface> = {
+  type StaticForeignLibraryInterface<T extends ForeignLibraryInterface> = {
     [K in keyof T]: StaticForeignSymbol<T[K]>;
   };
 
@@ -350,7 +348,7 @@ export namespace DenoUnstable {
    */
   export class UnsafePointer {
     /** Return the direct memory pointer to the typed array in memory. */
-    static of(value: DenoUnstable.UnsafeCallback | BufferSource): PointerValue;
+    static of(value: Deno.UnsafeCallback | BufferSource): PointerValue;
   }
 
   /** **UNSTABLE**: New API, yet to be vetted.
@@ -474,7 +472,7 @@ export namespace DenoUnstable {
    *
    * @category FFI
    */
-  export type UnsafeCallbackFunction<
+  type UnsafeCallbackFunction<
     Parameters extends readonly NativeType[] = readonly NativeType[],
     Result extends NativeResultType = NativeResultType,
   > = Parameters extends readonly [] ? () => ToNativeResultType<Result> : (
@@ -633,7 +631,7 @@ export namespace DenoUnstable {
    *
    * @category Sub Process
    */
-  interface UnstableRunOptions extends Deno.RunOptions {
+  interface UnstableRunOptions extends RunOptions {
     /** If `true`, clears the environment variables before executing the
      * sub-process.
      *
@@ -697,7 +695,7 @@ export namespace DenoUnstable {
    */
   export function run<T extends UnstableRunOptions = UnstableRunOptions>(
     opt: T,
-  ): Deno.Process<T>;
+  ): Process<T>;
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -798,28 +796,28 @@ export namespace DenoUnstable {
    *
    * @category Network
    */
-  export interface DatagramConn extends AsyncIterable<[Uint8Array, DenoNet.Addr]> {
+  export interface DatagramConn extends AsyncIterable<[Uint8Array, Addr]> {
     /** Waits for and resolves to the next message to the instance.
      *
      * Messages are received in the format of a tuple containing the data array
      * and the address information.
      */
-    receive(p?: Uint8Array): Promise<[Uint8Array, DenoNet.Addr]>;
+    receive(p?: Uint8Array): Promise<[Uint8Array, Addr]>;
     /** Sends a message to the target via the connection. The method resolves
      * with the number of bytes sent. */
-    send(p: Uint8Array, addr: DenoNet.Addr): Promise<number>;
+    send(p: Uint8Array, addr: Addr): Promise<number>;
     /** Close closes the socket. Any pending message promises will be rejected
      * with errors. */
     close(): void;
     /** Return the address of the instance. */
-    readonly addr: DenoNet.Addr;
-    [Symbol.asyncIterator](): AsyncIterableIterator<[Uint8Array, DenoNet.Addr]>;
+    readonly addr: Addr;
+    [Symbol.asyncIterator](): AsyncIterableIterator<[Uint8Array, Addr]>;
   }
 
   /**
    * @category Network
    */
-  export interface TcpListenOptions extends DenoNet.ListenOptions {
+  export interface TcpListenOptions extends ListenOptions {
     /** When `true` the SO_REUSEPORT flag will be set on the listener. This
      * allows multiple processes to listen on the same address and port.
      *
@@ -853,7 +851,7 @@ export namespace DenoUnstable {
    *
    * @category Network
    */
-  export interface UdpListenOptions extends DenoNet.ListenOptions {
+  export interface UdpListenOptions extends ListenOptions {
     /** When `true` the specified address will be reused, even if another
      * process has already bound a socket on it. This effectively steals the
      * socket from the listener.
@@ -951,7 +949,7 @@ export namespace DenoUnstable {
    * @tags allow-net, allow-read
    * @category Network
    */
-  export function connect(options: DenoNet.ConnectOptions): Promise<DenoNet.TcpConn>;
+  export function connect(options: ConnectOptions): Promise<TcpConn>;
   /** **UNSTABLE**: New API, yet to be vetted.
    *
    * Connects to the hostname (default is "127.0.0.1") and port on the named
@@ -970,7 +968,7 @@ export namespace DenoUnstable {
    * @tags allow-net, allow-read
    * @category Network
    */
-  export function connect(options: UnixConnectOptions): Promise<DenoNet.UnixConn>;
+  export function connect(options: UnixConnectOptions): Promise<UnixConn>;
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -1140,7 +1138,7 @@ export namespace DenoUnstable {
    *
    * @category HTTP Server
    */
-  export interface ServeOptions extends Partial<DenoNet.ListenOptions> {
+  export interface ServeOptions extends Partial<Deno.ListenOptions> {
     /** An {@linkcode AbortSignal} to close the server and all connections. */
     signal?: AbortSignal;
 
@@ -1392,7 +1390,7 @@ export namespace DenoUnstable {
    */
   export function upgradeHttp(
     request: Request,
-  ): Promise<[DenoNet.Conn, Uint8Array]>;
+  ): Promise<[Deno.Conn, Uint8Array]>;
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -1411,7 +1409,7 @@ export namespace DenoUnstable {
    *
    * @category HTTP Server
    */
-  export function upgradeHttpRaw(request: Request): [Conn, Uint8Array];
+  export function upgradeHttpRaw(request: Request): [Deno.Conn, Uint8Array];
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -1592,7 +1590,7 @@ export namespace DenoUnstable {
      *
      * @param [signo="SIGTERM"]
      */
-    kill(signo?: Deno.Signal): void;
+    kill(signo?: Signal): void;
 
     /** Ensure that the status of the child process prevents the Deno process
      * from exiting. */
@@ -1677,7 +1675,7 @@ export namespace DenoUnstable {
     /** The exit code of the child process. */
     code: number;
     /** The signal associated with the child process. */
-    signal: Deno.Signal | null;
+    signal: Signal | null;
   }
 
   /** **UNSTABLE**: New API, yet to be vetted.
@@ -1705,56 +1703,56 @@ export namespace DenoUnstable {
  * @tags allow-net, allow-read
  * @category Fetch API
  */
-// export function fetch(
-//   input: Request | URL | string,
-//   init?: RequestInit & { client: Deno.HttpClient },
-// ): Promise<Response>;
+declare function fetch(
+  input: Request | URL | string,
+  init?: RequestInit & { client: Deno.HttpClient },
+): Promise<Response>;
 
 /** **UNSTABLE**: New API, yet to be vetted.
  *
  * @category Web Workers
  */
-// interface WorkerOptions {
-//   /** **UNSTABLE**: New API, yet to be vetted.
-//    *
-//    * Configure permissions options to change the level of access the worker will
-//    * have. By default it will have no permissions. Note that the permissions
-//    * of a worker can't be extended beyond its parent's permissions reach.
-//    *
-//    * - `"inherit"` will take the permissions of the thread the worker is created
-//    *   in.
-//    * - `"none"` will use the default behavior and have no permission
-//    * - A list of routes can be provided that are relative to the file the worker
-//    *   is created in to limit the access of the worker (read/write permissions
-//    *   only)
-//    *
-//    * Example:
-//    *
-//    * ```ts
-//    * // mod.ts
-//    * const worker = new Worker(
-//    *   new URL("deno_worker.ts", import.meta.url).href, {
-//    *     export type: "module",
-//    *     deno: {
-//    *       permissions: {
-//    *         read: true,
-//    *       },
-//    *     },
-//    *   }
-//    * );
-//    * ```
-//    */
-//   deno?: {
-//     /** Set to `"none"` to disable all the permissions in the worker. */
-//     permissions?: Deno.PermissionOptions;
-//   };
-// }
+declare interface WorkerOptions {
+  /** **UNSTABLE**: New API, yet to be vetted.
+   *
+   * Configure permissions options to change the level of access the worker will
+   * have. By default it will have no permissions. Note that the permissions
+   * of a worker can't be extended beyond its parent's permissions reach.
+   *
+   * - `"inherit"` will take the permissions of the thread the worker is created
+   *   in.
+   * - `"none"` will use the default behavior and have no permission
+   * - A list of routes can be provided that are relative to the file the worker
+   *   is created in to limit the access of the worker (read/write permissions
+   *   only)
+   *
+   * Example:
+   *
+   * ```ts
+   * // mod.ts
+   * const worker = new Worker(
+   *   new URL("deno_worker.ts", import.meta.url).href, {
+   *     type: "module",
+   *     deno: {
+   *       permissions: {
+   *         read: true,
+   *       },
+   *     },
+   *   }
+   * );
+   * ```
+   */
+  deno?: {
+    /** Set to `"none"` to disable all the permissions in the worker. */
+    permissions?: Deno.PermissionOptions;
+  };
+}
 
 /** **UNSTABLE**: New API, yet to be vetted.
  *
  * @category Web Sockets
  */
-export interface WebSocketStreamOptions {
+declare interface WebSocketStreamOptions {
   protocols?: string[];
   signal?: AbortSignal;
   headers?: HeadersInit;
@@ -1764,7 +1762,7 @@ export interface WebSocketStreamOptions {
  *
  * @category Web Sockets
  */
-export interface WebSocketConnection {
+declare interface WebSocketConnection {
   readable: ReadableStream<string | Uint8Array>;
   writable: WritableStream<string | Uint8Array>;
   extensions: string;
@@ -1775,7 +1773,7 @@ export interface WebSocketConnection {
  *
  * @category Web Sockets
  */
-export interface WebSocketCloseInfo {
+declare interface WebSocketCloseInfo {
   code?: number;
   reason?: string;
 }
@@ -1785,7 +1783,7 @@ export interface WebSocketCloseInfo {
  * @tags allow-net
  * @category Web Sockets
  */
-export class WebSocketStream {
+declare class WebSocketStream {
   constructor(url: string, options?: WebSocketStreamOptions);
   url: string;
   connection: Promise<WebSocketConnection>;

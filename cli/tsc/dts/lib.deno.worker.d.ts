@@ -4,11 +4,8 @@
 /// <reference path="./lib.deno.ns.d.ts" />
 /// <reference path="./lib.deno.shared_globals.d.ts" />
 /// <reference path="./lib.deno_webgpu.d.ts" />
-/// <reference lib="esnext" />
+/// <reference path="./lib.esnext.d.ts" />
 /// <reference path="../../../ext/cache/lib.deno_cache.d.ts" />
-
-import type { Deno } from './lib.deno.ns.d.js';
-import type { GPU } from '../../../ext/webgpu/src/01_webgpu.js';
 
 /** @category Web Workers */
 interface WorkerGlobalScopeEventMap {
@@ -17,7 +14,7 @@ interface WorkerGlobalScopeEventMap {
 }
 
 /** @category Web Workers */
-export class WorkerGlobalScope extends EventTarget {
+declare class WorkerGlobalScope extends EventTarget {
   readonly location: WorkerLocation;
   readonly navigator: WorkerNavigator;
   onerror: ((this: WorkerGlobalScope, ev: ErrorEvent) => any) | null;
@@ -59,7 +56,7 @@ export class WorkerGlobalScope extends EventTarget {
 }
 
 /** @category Web APIs */
-export class WorkerNavigator {
+declare class WorkerNavigator {
   constructor();
   readonly gpu: GPU;
   readonly hardwareConcurrency: number;
@@ -69,7 +66,7 @@ export class WorkerNavigator {
 }
 
 /** @category Web APIs */
-// export var navigator: WorkerNavigator;
+// declare var navigator: WorkerNavigator;
 
 /** @category Web Workers */
 interface DedicatedWorkerGlobalScopeEventMap extends WorkerGlobalScopeEventMap {
@@ -78,7 +75,7 @@ interface DedicatedWorkerGlobalScopeEventMap extends WorkerGlobalScopeEventMap {
 }
 
 /** @category Web APIs */
-export class DedicatedWorkerGlobalScope extends WorkerGlobalScope {
+declare class DedicatedWorkerGlobalScope extends WorkerGlobalScope {
   readonly name: string;
   onmessage:
     | ((this: DedicatedWorkerGlobalScope, ev: MessageEvent) => any)
@@ -118,38 +115,38 @@ export class DedicatedWorkerGlobalScope extends WorkerGlobalScope {
 }
 
 /** @category Web Workers */
-export var name: string;
+// declare var name: string;
 /** @category Web Workers */
-export var onmessage:
-  | ((this: DedicatedWorkerGlobalScope, ev: MessageEvent) => any)
-  | null;
+// declare var onmessage:
+//   | ((this: DedicatedWorkerGlobalScope, ev: MessageEvent) => any)
+//   | null;
 /** @category Web Workers */
-export var onmessageerror:
-  | ((this: DedicatedWorkerGlobalScope, ev: MessageEvent) => any)
-  | null;
+// declare var onmessageerror:
+//   | ((this: DedicatedWorkerGlobalScope, ev: MessageEvent) => any)
+//   | null;
 /** @category Web Workers */
-export function close(): void;
+declare function close(): void;
 /** @category Web Workers */
-export function postMessage(message: any, transfer: Transferable[]): void;
+declare function postMessage(message: any, transfer: Transferable[]): void;
 /** @category Web Workers */
-export function postMessage(
+declare function postMessage(
   message: any,
   options?: StructuredSerializeOptions,
 ): void;
 /** @category Web APIs */
-export var navigator: WorkerNavigator;
+// declare var navigator: WorkerNavigator;
 /** @category Web APIs */
-export var onerror:
-  | ((this: DedicatedWorkerGlobalScope, ev: ErrorEvent) => any)
-  | null;
-/** @category Observability */
-export var onunhandledrejection:
-  | ((this: DedicatedWorkerGlobalScope, ev: PromiseRejectionEvent) => any)
-  | null;
+// declare var onerror:
+//   | ((this: DedicatedWorkerGlobalScope, ev: ErrorEvent) => any)
+//   | null;
+// /** @category Observability */
+// declare var onunhandledrejection:
+//   | ((this: DedicatedWorkerGlobalScope, ev: PromiseRejectionEvent) => any)
+//   | null;
 /** @category Web Workers */
-export var self: WorkerGlobalScope & typeof globalThis;
+// declare var self: WorkerGlobalScope & typeof globalThis;
 /** @category DOM Events */
-export function addEventListener<
+declare function addEventListener<
   K extends keyof DedicatedWorkerGlobalScopeEventMap,
 >(
   type: K,
@@ -160,13 +157,13 @@ export function addEventListener<
   options?: boolean | AddEventListenerOptions,
 ): void;
 /** @category DOM Events */
-export function addEventListener(
+declare function addEventListener(
   type: string,
   listener: EventListenerOrEventListenerObject,
   options?: boolean | AddEventListenerOptions,
 ): void;
 /** @category DOM Events */
-export function removeEventListener<
+declare function removeEventListener<
   K extends keyof DedicatedWorkerGlobalScopeEventMap,
 >(
   type: K,
@@ -177,7 +174,7 @@ export function removeEventListener<
   options?: boolean | EventListenerOptions,
 ): void;
 /** @category DOM Events */
-export function removeEventListener(
+declare function removeEventListener(
   type: string,
   listener: EventListenerOrEventListenerObject,
   options?: boolean | EventListenerOptions,
@@ -191,7 +188,7 @@ export function removeEventListener(
  *
  * @category Web APIs
  */
-export class WorkerLocation {
+declare class WorkerLocation {
   constructor();
   readonly hash: string;
   readonly host: string;
@@ -208,4 +205,4 @@ export class WorkerLocation {
 // TODO(nayeemrmn): Move this to `extensions/web` where its implementation is.
 // The types there must first be split into window, worker and global types.
 /** @category Web APIs */
-export var location: WorkerLocation;
+// declare var location: WorkerLocation;

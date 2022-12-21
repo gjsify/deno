@@ -35,8 +35,6 @@ const {
   TypeError,
 } = primordials;
 
-import type { Deno } from '../../types/index.js';
-
 const opSanitizerDelayResolveQueue = [];
 
 // Even if every resource is closed by the end of a test, there can be a delay

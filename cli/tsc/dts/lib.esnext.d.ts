@@ -18,6 +18,6 @@ and limitations under the License.
 /// <reference no-default-lib="true"/>
 
 
-/// <reference lib="es2022" />
-/// <reference lib="esnext.array" />
-/// <reference lib="esnext.intl" />
+/// <reference path="./lib.es2022.d.ts" />
+/// <reference path="./lib.esnext.array.d.ts" />
+/// <reference path="./lib.esnext.intl.d.ts" />

@@ -7,8 +7,6 @@ import * as ops from '../../ops/index.js';
 import { pathFromURL } from './06_util.js';
 import * as abortSignal from '../../ext/web/03_abort_signal.js';
 
-import type { Deno } from '../../types/index.js';
-
 export function readFileSync(path: string) {
   return ops.op_readfile_sync(pathFromURL(path));
 }

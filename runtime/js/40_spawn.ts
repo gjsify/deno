@@ -8,7 +8,7 @@ import { pathFromURL } from './06_util.js';
 import { illegalConstructorKey } from './01_web_util.js';
 import { add, remove } from '../../ext/web/03_abort_signal.js';
 
-import type { Deno, DenoUnstable, AbortSignal } from '../../types/index.js';
+import type { AbortSignal } from '../../types/index.js';
 
 const {
   ArrayPrototypeMap,
@@ -172,19 +172,19 @@ function collectOutput(readableStream) {
       this.#rid = null;
       signal?.[remove](onAbort);
       return res;
-    }) as Promise<DenoUnstable.CommandStatus>;
+    }) as Promise<Deno.CommandStatus>;
   }
 
-  #status: Promise<DenoUnstable.CommandStatus>;
+  #status: Promise<Deno.CommandStatus>;
 
   /** Get the status of the child. */
-  get status(): Promise<DenoUnstable.CommandStatus> {
+  get status(): Promise<Deno.CommandStatus> {
     return this.#status;
   }
 
   /** Waits for the child to exit completely, returning all its output and
    * status. */
-  async output(): Promise<DenoUnstable.CommandOutput> {
+  async output(): Promise<Deno.CommandOutput> {
     if (this.#stdout?.locked) {
       throw new TypeError(
         "Can't collect output because stdout is locked",
@@ -200,7 +200,7 @@ function collectOutput(readableStream) {
       this.#status,
       collectOutput(this.#stdout),
       collectOutput(this.#stderr),
-    ]) as [ DenoUnstable.CommandStatus, Uint8Array, Uint8Array ];
+    ]) as [ Deno.CommandStatus, Uint8Array, Uint8Array ];
 
     return {
       success: status.success,

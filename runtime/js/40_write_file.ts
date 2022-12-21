@@ -7,8 +7,6 @@ import * as ops from '../../ops/index.js';
 import * as abortSignal from '../../ext/web/03_abort_signal.js';
 import { pathFromURL } from './06_util.js';
 
-import type { Deno } from '../../types/index.js';
-
 /** Synchronously write `data` to the given `path`, by default creating a new
  * file if needed, else overwriting.
  *

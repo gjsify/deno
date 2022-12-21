@@ -4,9 +4,6 @@
 
 import { primordials } from '../../core/00_primordials.js';
 import * as ops from '../../ops/index.js';
-import type {
-  Deno,
-} from '../../types/index.js';
 import { Event, EventTarget } from '../../ext/web/02_event.js';
 const {
   Error,

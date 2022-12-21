@@ -9,20 +9,6 @@ import { read, readSync, write, writeSync } from './12_io.js';
 import { ftruncate, ftruncateSync, fstat, fstatSync } from './30_fs.js';
 import { pathFromURL } from './06_util.js';
 import { readableStreamForRid, writableStreamForRid, WritableStream, ReadableStream } from '../../ext/web/06_streams.js';
-import type {
-  // SeekMode,
-  // OpenOptions,
-  // Reader,
-  // ReaderSync,
-  // Writer,
-  // WriterSync,
-  // Seeker,
-  // SeekerSync,
-  // Closer,
-  // FileInfo,
-  // SetRawOptions,
-  Deno,
-} from '../../types/index.js';
 
 const {
   ArrayPrototypeFilter,

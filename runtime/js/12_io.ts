@@ -19,13 +19,6 @@ const {
   TypedArrayPrototypeSet,
 } = primordials;
 
-import type {
-  // ReaderSync,
-  // Reader,
-  // Writer,
-  Deno
-} from '../../types/index.js';
-
 const DEFAULT_BUFFER_SIZE = 32 * 1024;
 // Seek whence values.
 // https://golang.org/pkg/io/#pkg-constants

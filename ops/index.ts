@@ -3,6 +3,8 @@
 // Based on https://github.com/denoland/deno/blob/main/core/ops_builtin_v8.rs
 // Based on https://github.com/denoland/deno/blob/main/core/ops_metrics.rs
 
+/// <reference path="../ext/url/lib.deno_url.d.ts" />
+
 export * from './webstorage.js';
 export * from './crypto.js';
 export * from './node.js';
@@ -16,42 +18,11 @@ export * from '../ext/web/lib.js';
 export * from '../cli/ops/testing.js';
 export * from '../ext/url/lib.js'
 
-
 import type {
-  // DenoCore.PromiseRejectCallback,
-  UrlComponent,
-  UrlComponents,
-  URLPatternInput,
-  // PermissionState,
-  // PermissionDescriptor,
-  // Deno.MakeTempOptions,
-  // Deno.SeekMode,
-  // Deno.OpenOptions,
-  // CreateHttpClientOptions,
-  // DenoUnstable.ChildStatus,
-  // Deno.PermissionOptions,
-  // Deno.TestStepDefinition,
-  // DenoUnstable.PointerValue,
-  Deno,
-  DenoCore,
-  DenoUnstable,
-  DenoNet,
-  GPUSamplerDescriptor,
-  GPUBindGroupLayoutEntry,
-  GPUTextureDescriptor,
-  GPUExtent3DDict,
-  GPUVertexBufferLayout,
-  GPUPrimitiveState,
-  GPUMultisampleState,
-  GPUDepthStencilState,
-  GPURenderBundleEncoderDescriptor,
-  GPUQuerySetDescriptor,
   TypedArray,
   messagePort,
 } from '../types/index.js';
-
 import type { TestDescription } from '../cli/js/40_testing.js';
-
 import type { URL } from '../ext/url/00_url.js';
 import type { HeaderList } from '../ext/fetch/20_headers.js';
 
@@ -137,7 +108,7 @@ export const op_fetch = (method: string, url: string | URL, headers: [string, st
 export const op_fetch_send = (...args: any[]) => {
   console.warn("Not implemented: ops.op_fetch_send");
 }
-export const op_fetch_custom_client = (options: DenoUnstable.CreateHttpClientOptions) => {
+export const op_fetch_custom_client = (options: Deno.CreateHttpClientOptions) => {
   console.warn("Not implemented: ops.op_fetch_custom_client");
   const rid = 0;
   return rid;
@@ -562,66 +533,66 @@ export const op_ffi_buf_copy_into = (...args: any[]) => {
   console.warn("Not implemented: ops.op_ffi_buf_copy_into");
 }
 
-export const op_ffi_cstr_read = (pointer: DenoUnstable.PointerValue, offset: number): string => {
+export const op_ffi_cstr_read = (pointer: Deno.PointerValue, offset: number): string => {
   console.warn("Not implemented: ops.op_ffi_cstr_read");
   return "";
 }
 
-export const op_ffi_get_buf = (pointer: DenoUnstable.PointerValue, offset: number, byteLength: number): ArrayBuffer => {
+export const op_ffi_get_buf = (pointer: Deno.PointerValue, offset: number, byteLength: number): ArrayBuffer => {
   console.warn("Not implemented: ops.op_ffi_get_buf");
   return new ArrayBuffer(byteLength);
 }
 
-export const op_ffi_read_bool = (pointer: DenoUnstable.PointerValue, offset: number): boolean => {
+export const op_ffi_read_bool = (pointer: Deno.PointerValue, offset: number): boolean => {
   console.warn("Not implemented: ops.op_ffi_read_bool");
   return false;
 }
 
-export const op_ffi_read_u8 = (pointer: DenoUnstable.PointerValue, offset: number): number => {
+export const op_ffi_read_u8 = (pointer: Deno.PointerValue, offset: number): number => {
   console.warn("Not implemented: ops.op_ffi_read_u8");
   return 0;
 }
-export const op_ffi_read_i8 = (pointer: DenoUnstable.PointerValue, offset: number): number => {
+export const op_ffi_read_i8 = (pointer: Deno.PointerValue, offset: number): number => {
   console.warn("Not implemented: ops.op_ffi_read_i8");
   return 0;
 }
-export const op_ffi_read_u16 = (pointer: DenoUnstable.PointerValue, offset: number): number => {
+export const op_ffi_read_u16 = (pointer: Deno.PointerValue, offset: number): number => {
   console.warn("Not implemented: ops.op_ffi_read_u16");
   return 0;
 }
-export const op_ffi_read_i16 = (pointer: DenoUnstable.PointerValue, offset: number): number => {
+export const op_ffi_read_i16 = (pointer: Deno.PointerValue, offset: number): number => {
   console.warn("Not implemented: ops.op_ffi_read_i16");
   return 0;
 }
-export const op_ffi_read_u32 = (pointer: DenoUnstable.PointerValue, offset: number): number => {
+export const op_ffi_read_u32 = (pointer: Deno.PointerValue, offset: number): number => {
   console.warn("Not implemented: ops.op_ffi_read_u32");
   return 0;
 }
-export const op_ffi_read_i32 = (pointer: DenoUnstable.PointerValue, offset: number): number => {
+export const op_ffi_read_i32 = (pointer: Deno.PointerValue, offset: number): number => {
   console.warn("Not implemented: ops.op_ffi_read_i32");
   return 0;
 }
-export const op_ffi_read_u64 = (pointer: DenoUnstable.PointerValue, offset: number, buffer: Uint32Array): void => {
+export const op_ffi_read_u64 = (pointer: Deno.PointerValue, offset: number, buffer: Uint32Array): void => {
   console.warn("Not implemented: ops.op_ffi_read_u64");
 }
 
-export const op_ffi_read_i64 = (pointer: DenoUnstable.PointerValue, offset: number, buffer: Uint32Array): void => {
+export const op_ffi_read_i64 = (pointer: Deno.PointerValue, offset: number, buffer: Uint32Array): void => {
   console.warn("Not implemented: ops.op_ffi_read_i64");
 }
 
-export const op_ffi_read_f32 = (pointer: DenoUnstable.PointerValue, offset: number): number => {
+export const op_ffi_read_f32 = (pointer: Deno.PointerValue, offset: number): number => {
   console.warn("Not implemented: ops.op_ffi_read_f32");
   return 0;
 }
-export const op_ffi_read_f64 = (pointer: DenoUnstable.PointerValue, offset: number): number => {
+export const op_ffi_read_f64 = (pointer: Deno.PointerValue, offset: number): number => {
   console.warn("Not implemented: ops.op_ffi_read_f64");
   return 0;
 }
 
-export const op_ffi_unsafe_callback_create = (definition: any, callback: any): [number, DenoUnstable.PointerValue] => {
+export const op_ffi_unsafe_callback_create = (definition: any, callback: any): [number, Deno.PointerValue] => {
   console.warn("Not implemented: ops.op_ffi_unsafe_callback_create");
   const rid = 0;
-  const pointer: DenoUnstable.PointerValue = 0;
+  const pointer: Deno.PointerValue = 0;
   return [rid, pointer];
 }
 
@@ -683,12 +654,12 @@ export const op_spawn_wait = (...args: any[]) => {
   console.warn("Not implemented: ops.op_spawn_wait");
 }
 export const op_spawn_sync = (...args: any[]): {
-  status: DenoUnstable.CommandStatus;
+  status: Deno.CommandStatus;
   stdout: Uint8Array | null;
   stderr: Uint8Array | null;
 } => {
   console.warn("Not implemented: ops.op_spawn_sync");
-  const status: DenoUnstable.CommandStatus = {
+  const status: Deno.CommandStatus = {
     code: 0,
     signal: null,
     success: false,
@@ -1192,7 +1163,7 @@ export const op_event_loop_has_more_work = (): void => {
   console.warn("Not implemented: ops.op_event_loop_has_more_work");
 }
 
-export const op_set_promise_reject_callback = (fn: DenoCore.PromiseRejectCallback): void => {
+export const op_set_promise_reject_callback = (fn: Deno.core.PromiseRejectCallback): void => {
   console.warn("Not implemented: ops.op_set_promise_reject_callback");
 }
 

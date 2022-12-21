@@ -5,10 +5,6 @@
 import * as ops from '../../ops/index.js';
 import { HttpConn } from '../../ext/http/01_http.js';
 
-import type {
-  DenoNet,
-} from '../../types/index.js';
-
 /**
  * Provides an interface to handle HTTP request and responses over TCP or TLS
  * connections. The method returns an {@linkcode HttpConn} which yields up
@@ -56,7 +52,7 @@ import type {
  *
  * @category HTTP Server
  */
-export function serveHttp(conn: DenoNet.Conn): HttpConn {
+export function serveHttp(conn: Deno.Conn): HttpConn {
   const rid = ops.op_http_start(conn.rid);
   return new HttpConn(rid, conn.remoteAddr, conn.localAddr);
 }

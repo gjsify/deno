@@ -50,8 +50,6 @@ import {
 import { TcpConn, UnixConn } from '../net/01_net.js';
 import { TlsConn } from '../net/02_tls.js';
 
-import type { Deno } from '../../types/index.js';
-
 const {
   ArrayPrototypeIncludes,
   ArrayPrototypePush,

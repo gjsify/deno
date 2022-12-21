@@ -8,13 +8,6 @@ import { illegalConstructorKey } from './01_web_util.js';
 import { pathFromURL } from './06_util.js';
 import { Event, EventTarget } from '../../ext/web/02_event.js';
 
-import type {
-  // Deno.PermissionDescriptor,
-  // Deno.PermissionState,
-  // Deno.PermissionOptions,
-  Deno,
-} from '../../types/index.js';
-
 const {
   ArrayIsArray,
   ArrayPrototypeIncludes,

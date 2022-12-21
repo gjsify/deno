@@ -296,7 +296,7 @@ function runtimeStart(runtimeOptions: RuntimeOptions, source?: string) {
   build.setBuildInfo(runtimeOptions.target);
   util.setLogDebug(runtimeOptions.debugFlag, source);
   colors.setNoColor(runtimeOptions.noColor || !runtimeOptions.isTty);
-  // deno-lint-ignore prefer-primordials
+  // @ts-ignore
   Error.prepareStackTrace = core.prepareStackTrace;
   registerErrors();
 }

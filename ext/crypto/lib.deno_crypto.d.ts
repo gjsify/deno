@@ -131,7 +131,6 @@ interface RsaPssParams extends Algorithm {
 
 /** @category Web Crypto API */
 interface RsaOaepParams extends Algorithm {
-  // @ts-ignore
   label?: Uint8Array;
 }
 

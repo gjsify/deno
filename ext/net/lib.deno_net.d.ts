@@ -3,9 +3,7 @@
 /// <reference no-default-lib="true" />
 /// <reference lib="esnext" />
 
-import { Deno } from '../../cli/tsc/dts/lib.deno.ns.d.js'
-
-declare namespace DenoNet {
+declare namespace Deno {
   /** @category Network */
   export interface NetAddr {
     transport: "tcp" | "udp";
@@ -52,7 +50,7 @@ declare namespace DenoNet {
   }
 
   /** @category Network */
-  export interface Conn extends Deno.Reader, Deno.Writer, Deno.Closer {
+  export interface Conn extends Reader, Writer, Closer {
     /** The local address of the connection. */
     readonly localAddr: Addr;
     /** The remote address of the connection. */

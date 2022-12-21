@@ -18,7 +18,7 @@ and limitations under the License.
 /// <reference no-default-lib="true"/>
 
 
-/// <reference lib="es2020.intl" />
+/// <reference path="./lib.es2020.intl.d.ts" />
 
 interface Date {
     /**

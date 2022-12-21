@@ -19,7 +19,7 @@ declare interface URLPatternInit {
   baseURL?: string;
 }
 
-declare type URLPatternInput = string | URLPatternInit;
+// declare type URLPatternInput = string | URLPatternInit;
 
 declare interface URLPatternComponentResult {
   input: string;
@@ -77,71 +77,71 @@ declare interface URLPatternResult {
  * console.log(pattern.test("https://blog.example.com/article/123")); // false
  * ```
  */
-declare class URLPattern {
-  constructor(input: URLPatternInput, baseURL?: string);
+// declare class URLPattern {
+//   constructor(input: URLPatternInput, baseURL?: string);
 
-  /**
-   * Test if the given input matches the stored pattern.
-   *
-   * The input can either be provided as a url string (with an optional base),
-   * or as individual components in the form of an object.
-   *
-   * ```ts
-   * const pattern = new URLPattern("https://example.com/books/:id");
-   *
-   * // Test a url string.
-   * console.log(pattern.test("https://example.com/books/123")); // true
-   *
-   * // Test a relative url with a base.
-   * console.log(pattern.test("/books/123", "https://example.com")); // true
-   *
-   * // Test an object of url components.
-   * console.log(pattern.test({ pathname: "/books/123" })); // true
-   * ```
-   */
-  test(input: URLPatternInput, baseURL?: string): boolean;
+//   /**
+//    * Test if the given input matches the stored pattern.
+//    *
+//    * The input can either be provided as a url string (with an optional base),
+//    * or as individual components in the form of an object.
+//    *
+//    * ```ts
+//    * const pattern = new URLPattern("https://example.com/books/:id");
+//    *
+//    * // Test a url string.
+//    * console.log(pattern.test("https://example.com/books/123")); // true
+//    *
+//    * // Test a relative url with a base.
+//    * console.log(pattern.test("/books/123", "https://example.com")); // true
+//    *
+//    * // Test an object of url components.
+//    * console.log(pattern.test({ pathname: "/books/123" })); // true
+//    * ```
+//    */
+//   test(input: URLPatternInput, baseURL?: string): boolean;
 
-  /**
-   * Match the given input against the stored pattern.
-   *
-   * The input can either be provided as a url string (with an optional base),
-   * or as individual components in the form of an object.
-   *
-   * ```ts
-   * const pattern = new URLPattern("https://example.com/books/:id");
-   *
-   * // Match a url string.
-   * let match = pattern.exec("https://example.com/books/123");
-   * console.log(match.pathname.groups.id); // 123
-   *
-   * // Match a relative url with a base.
-   * match = pattern.exec("/books/123", "https://example.com");
-   * console.log(match.pathname.groups.id); // 123
-   *
-   * // Match an object of url components.
-   * match = pattern.exec({ pathname: "/books/123" });
-   * console.log(match.pathname.groups.id); // 123
-   * ```
-   */
-  exec(input: URLPatternInput, baseURL?: string): URLPatternResult | null;
+//   /**
+//    * Match the given input against the stored pattern.
+//    *
+//    * The input can either be provided as a url string (with an optional base),
+//    * or as individual components in the form of an object.
+//    *
+//    * ```ts
+//    * const pattern = new URLPattern("https://example.com/books/:id");
+//    *
+//    * // Match a url string.
+//    * let match = pattern.exec("https://example.com/books/123");
+//    * console.log(match.pathname.groups.id); // 123
+//    *
+//    * // Match a relative url with a base.
+//    * match = pattern.exec("/books/123", "https://example.com");
+//    * console.log(match.pathname.groups.id); // 123
+//    *
+//    * // Match an object of url components.
+//    * match = pattern.exec({ pathname: "/books/123" });
+//    * console.log(match.pathname.groups.id); // 123
+//    * ```
+//    */
+//   exec(input: URLPatternInput, baseURL?: string): URLPatternResult | null;
 
-  /** The pattern string for the `protocol`. */
-  readonly protocol: string;
-  /** The pattern string for the `username`. */
-  readonly username: string;
-  /** The pattern string for the `password`. */
-  readonly password: string;
-  /** The pattern string for the `hostname`. */
-  readonly hostname: string;
-  /** The pattern string for the `port`. */
-  readonly port: string;
-  /** The pattern string for the `pathname`. */
-  readonly pathname: string;
-  /** The pattern string for the `search`. */
-  readonly search: string;
-  /** The pattern string for the `hash`. */
-  readonly hash: string;
-}
+//   /** The pattern string for the `protocol`. */
+//   readonly protocol: string;
+//   /** The pattern string for the `username`. */
+//   readonly username: string;
+//   /** The pattern string for the `password`. */
+//   readonly password: string;
+//   /** The pattern string for the `hostname`. */
+//   readonly hostname: string;
+//   /** The pattern string for the `port`. */
+//   readonly port: string;
+//   /** The pattern string for the `pathname`. */
+//   readonly pathname: string;
+//   /** The pattern string for the `search`. */
+//   readonly search: string;
+//   /** The pattern string for the `hash`. */
+//   readonly hash: string;
+// }
 
 interface ErrorConstructor {
   /** See https://v8.dev/docs/stack-trace-api#stack-trace-collection-for-custom-exceptions. */

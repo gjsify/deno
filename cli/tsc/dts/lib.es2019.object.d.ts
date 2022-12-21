@@ -18,7 +18,7 @@ and limitations under the License.
 /// <reference no-default-lib="true"/>
 
 
-/// <reference lib="es2015.iterable" />
+/// <reference path="./lib.es2015.iterable.d.ts" />
 
 interface ObjectConstructor {
     /**

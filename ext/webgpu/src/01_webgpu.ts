@@ -16,38 +16,6 @@ import * as webidl from '../../webidl/00_webidl.js';
 import { EventTarget } from '../../web/02_event.js';
 import { DOMException } from '../../web/01_dom_exception.js';
 
-import type {
-  GPUExtent3DDict,
-  GPUOrigin3DDict,
-  GPUColor,
-  GPURequestAdapterOptions,
-  GPUBufferDescriptor,
-  GPURenderPassDescriptor,
-  GPUComputePassDescriptor,
-  GPUCommandBufferDescriptor,
-  GPURenderBundleDescriptor,
-  GPUIndexFormat,
-  GPUPipelineLayoutDescriptor,
-  GPUTextureViewDescriptor,
-  GPUExtent3D,
-  GPUImageCopyBuffer,
-  GPUImageCopyTexture,
-  GPUBindGroupDescriptor,
-  GPUBindGroupLayoutDescriptor,
-  GPUCommandEncoderDescriptor,
-  GPUComputePipelineDescriptor,
-  GPUDeviceDescriptor,
-  GPUBindGroupEntry,
-  GPUImageDataLayout,
-  GPUQuerySetDescriptor,
-  GPURenderBundleEncoderDescriptor,
-  GPURenderPipelineDescriptor,
-  GPUSamplerDescriptor,
-  GPUShaderModuleDescriptor,
-  GPUTextureDescriptor,
-  GPUErrorFilter,
-} from '../../../types/index.js';
-
 type GPUSize64 = number;
 
 const {

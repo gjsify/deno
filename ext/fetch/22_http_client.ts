@@ -9,15 +9,14 @@
 /// <reference path="./internal.d.ts" />
 /// <reference path="../web/06_streams_types.d.ts" />
 /// <reference path="./lib.deno_fetch.d.ts" />
+/// <reference path="../../cli/tsc/dts/lib.deno.unstable.d.ts" />
 /// <reference lib="esnext" />
 "use strict";
 
 import * as core from '../../core/01_core.js';
 import * as ops from '../../ops/index.js';
 
-import type { DenoUnstable } from '../../types/index.js';
-
-export function createHttpClient(options: DenoUnstable.CreateHttpClientOptions): HttpClient {
+export function createHttpClient(options: Deno.CreateHttpClientOptions): HttpClient {
   options.caCerts ??= [];
   return new HttpClient(
     ops.op_fetch_custom_client(

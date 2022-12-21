@@ -1,10 +1,9 @@
 // Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
 
 /// <reference no-default-lib="true" />
-/// <reference lib="esnext" />
+/// <reference path="./lib.esnext.d.ts"  />
 /// <reference path="../../../ext/net/lib.deno_net.d.ts" />
 
-import { DenoNet } from '../../../ext/net/lib.deno_net.d.js'
 
 /** Deno provides extra properties on `import.meta`. These are included here
  * to ensure that these are still available when using the Deno namespace in
@@ -12,7 +11,7 @@ import { DenoNet } from '../../../ext/net/lib.deno_net.d.js'
  *
  * @category ES Modules
  */
-export interface ImportMeta {
+declare interface ImportMeta {
   /** A string representation of the fully qualified module URL. When the
    * module is loaded locally, the value will be a file URL (e.g.
    * `file:///path/module.ts`).
@@ -61,7 +60,7 @@ export interface ImportMeta {
  *
  * @category Performance
  */
-export interface Performance {
+declare interface Performance {
   /** Stores a timestamp with the associated name (a "mark"). */
   mark(markName: string, options?: PerformanceMarkOptions): PerformanceMark;
 
@@ -81,7 +80,7 @@ export interface Performance {
  *
  * @category Performance
  */
-export interface PerformanceMarkOptions {
+declare interface PerformanceMarkOptions {
   /** Metadata to be included in the mark. */
   // deno-lint-ignore no-explicit-any
   detail?: any;
@@ -98,7 +97,7 @@ export interface PerformanceMarkOptions {
  *
  * @category Performance
  */
-export interface PerformanceMeasureOptions {
+declare interface PerformanceMeasureOptions {
   /** Metadata to be included in the measure. */
   // deno-lint-ignore no-explicit-any
   detail?: any;
@@ -816,7 +815,7 @@ declare namespace Deno {
   /** Register a test which will be run when `deno test` is used on the command
    * line and the containing module looks like a test module.
    *
-   * `fn` can be async if required. exportd function must have a name.
+   * `fn` can be async if required. Declared function must have a name.
    *
    * ```ts
    * import { assertEquals } from "https://deno.land/std/testing/asserts.ts";
@@ -904,7 +903,7 @@ declare namespace Deno {
   /** Register a test which will be run when `deno test` is used on the command
    * line and the containing module looks like a test module.
    *
-   * `fn` can be async if required. exportd function must have a name.
+   * `fn` can be async if required. Declared function must have a name.
    *
    * ```ts
    * import { assertEquals } from "https://deno.land/std/testing/asserts.ts";
@@ -4756,7 +4755,7 @@ declare namespace Deno {
    *
    * @category HTTP Server
    */
-  export function serveHttp(conn: DenoNet.Conn): HttpConn;
+  export function serveHttp(conn: Conn): HttpConn;
 
   /** The object that is returned from a {@linkcode Deno.upgradeWebSocket}
    * request.

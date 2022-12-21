@@ -2,6 +2,8 @@
 // Based on https://github.com/denoland/deno/blob/main/core/01_core.js
 "use strict";
 
+/// <reference path="../../core/lib.deno_core.d.ts" />
+
 import { primordials } from './00_primordials.js';
 const {
   Error,
@@ -32,8 +34,6 @@ const {
 
 import * as ops from '../ops/index.js';
 
-import type { DenoCore } from '../types/index.js';
-
 const errorMap = {};
 // Builtin v8 / JS errors
 registerErrorClass("Error", Error);
@@ -59,7 +59,7 @@ let opCallTracingEnabled = false;
  * Tracing only occurs when `Deno.core.enableOpCallTracing()` was previously
  * enabled.
  */
-export const opCallTraces: Map<number, DenoCore.OpCallTrace> = new Map();
+export const opCallTraces: Map<number, Deno.core.OpCallTrace> = new Map();
 
 /**
  * Enables collection of stack traces of all async ops. This allows for
@@ -526,7 +526,7 @@ export const eventLoopHasMoreWork = () => ops.op_event_loop_has_more_work();
  * Set a callback that will be called when a promise without a .catch
  * handler is rejected. Returns the old handler or undefined.
  */
-export const setPromiseRejectCallback = (fn: DenoCore.PromiseRejectCallback) => ops.op_set_promise_reject_callback(fn);
+export const setPromiseRejectCallback = (fn: Deno.core.PromiseRejectCallback) => ops.op_set_promise_reject_callback(fn);
 
 /**
  * Set a callback that will be called when an exception isn't caught
@@ -535,8 +535,8 @@ export const setPromiseRejectCallback = (fn: DenoCore.PromiseRejectCallback) => 
  * to change in the future. Returns the old handler or undefined.
  */
 export const setUncaughtExceptionCallback = (
-  cb: DenoCore.UncaughtExceptionCallback,
-): undefined | DenoCore.UncaughtExceptionCallback => {
+  cb: Deno.core.UncaughtExceptionCallback,
+): undefined | Deno.core.UncaughtExceptionCallback => {
   console.warn("Not implemented: core.setUncaughtExceptionCallback");
   return undefined;
 }

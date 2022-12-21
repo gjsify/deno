@@ -9,7 +9,7 @@
 /// <reference path="./internal.d.ts" />
 /// <reference path="../web/06_streams_types.d.ts" />
 /// <reference path="./lib.deno_fetch.d.ts" />
-/// <reference lib="esnext" />
+/// <reference path="../../cli/tsc/dts/lib.esnext.d.ts" />
 "use strict";
 
 import { primordials } from '../../core/00_primordials.js';
@@ -183,6 +183,7 @@ function initializeAResponse(response: Response, init: ResponseInit, bodyWithTyp
   /** @type {Headers} */
   const headers: Headers = response[_headers];
   if (init.headers) {
+    // @ts-ignore
     fillHeaders(headers, init.headers);
   }
 
@@ -199,6 +200,7 @@ function initializeAResponse(response: Response, init: ResponseInit, bodyWithTyp
 
     if (contentType !== null) {
       let hasContentType = false;
+      // @ts-ignore
       const list = headerListFromHeaders(headers);
       for (let i = 0; i < list.length; i++) {
         if (byteLowerCase(list[i][0]) === "content-type") {

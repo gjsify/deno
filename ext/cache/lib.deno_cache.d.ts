@@ -6,10 +6,10 @@
 /// <reference lib="esnext" />
 
 /** @category Cache API */
-export var caches: CacheStorage;
+declare var caches: CacheStorage;
 
 /** @category Cache API */
-export interface CacheStorage {
+declare interface CacheStorage {
   /** Open a cache storage for the provided name. */
   open(cacheName: string): Promise<Cache>;
   /** Check if cache already exists for the provided name. */
@@ -19,7 +19,7 @@ export interface CacheStorage {
 }
 
 /** @category Cache API */
-export interface Cache {
+declare interface Cache {
   /**
    * Put the provided request/response into the cache.
    *
@@ -53,13 +53,13 @@ export interface Cache {
 }
 
 /** @category Cache API */
-export var Cache: {
-  prototype: Cache;
-  new (name: string): Cache;
-};
+// declare var Cache: {
+//   prototype: Cache;
+//   new (name: string): Cache;
+// };
 
 /** @category Cache API */
-export var CacheStorage: {
+declare var CacheStorage: {
   prototype: CacheStorage;
   new (): CacheStorage;
 };

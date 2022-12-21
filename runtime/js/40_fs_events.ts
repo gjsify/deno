@@ -14,10 +14,6 @@ const {
   SymbolAsyncIterator,
 } = primordials;
 
-import type {
-  Deno,
-} from '../../types/index.js'
-
 interface FsWatcher extends AsyncIterable<Deno.FsEvent> {};
 
 class FsWatcher /*implements AsyncIterable<Deno.FsEvent>*/ {

@@ -5,9 +5,6 @@
 "use strict";
 
 import type { Buffer } from 'buffer';
-import type { clearImmediate, clearInterval, clearTimeout, setImmediate, setInterval, setTimeout } from 'timers';
-import type * as console from 'console';
-import type * as process from 'process';
 
 import { primordials } from '../../core/00_primordials.js';
 
@@ -34,13 +31,13 @@ function assert(cond: boolean) {
 let initialized = false;
 const nodeGlobals = {} as {
   Buffer: typeof Buffer;
-  clearImmediate: typeof clearImmediate;
+  clearImmediate: any; // TODO: typeof clearImmediate;
   clearInterval: typeof clearInterval;
   clearTimeout: typeof clearTimeout
   console: typeof console;
   global: any;
-  process: typeof process;
-  setImmediate: typeof setImmediate;
+  process: any;
+  setImmediate: any; // TODO: typeof setImmediate;
   setInterval: typeof setInterval;
   setTimeout: typeof setTimeout;
 };

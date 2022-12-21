@@ -1,4 +1,4 @@
-import { BufferSource } from "stream/web";
+/// <reference path="../cli/tsc/dts/lib.deno.shared_globals.d.ts" />
 
 export const op_sign_ed25519 = (keyData, data: BufferSource, signature: Uint8Array) => {
     console.warn("Not implemented: ops.op_sign_ed25519");

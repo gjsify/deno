@@ -26,7 +26,7 @@
 // the global proxy, which can be mutated by users.
 
 /// <reference no-default-lib="true" />
-/// <reference lib="esnext" />
+/// <reference path="../cli/tsc/dts/lib.esnext.d.ts" />
 
 type UncurryThis<T extends (this: unknown, ...args: unknown[]) => unknown> =
   (self: ThisParameterType<T>, ...args: Parameters<T>) => ReturnType<T>;
@@ -501,7 +501,7 @@ export interface Primordials {
   ErrorName: typeof Error.name;
   ErrorPrototype: typeof Error.prototype;
   ErrorCaptureStackTrace: typeof Error.captureStackTrace;
-  ErrorStackTraceLimit: typeof Error.stackTraceLimit;
+  ErrorStackTraceLimit: number; // typeof Error.stackTraceLimit;
   ErrorPrototypeToString: UncurryThis<
     typeof Error.prototype.toString
   >;

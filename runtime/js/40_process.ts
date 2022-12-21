@@ -10,8 +10,6 @@ import { pathFromURL } from './06_util.js';
 import { FsFile } from './40_files.js';
 import { assert } from '../../ext/web/00_infra.js';
 
-import type { Deno } from '../../types/index.js';
-
 const {
   ArrayPrototypeMap,
   ArrayPrototypeSlice,
