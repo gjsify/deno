@@ -17,6 +17,7 @@ const {
   ArrayPrototypeSlice,
   TypeError,
   ObjectEntries,
+  SafeArrayIterator,
   String,
 } = primordials;
 
@@ -120,7 +121,10 @@ export function run({
   stdin = "inherit",
 }) {
   if (cmd[0] != null) {
-    cmd = [pathFromURL(cmd[0]), ...ArrayPrototypeSlice(cmd, 1)];
+    cmd = [
+      pathFromURL(cmd[0]),
+      ...new SafeArrayIterator(ArrayPrototypeSlice(cmd, 1)),
+    ];
   }
   const res = opRun({
     cmd: ArrayPrototypeMap(cmd, String),

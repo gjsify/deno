@@ -481,7 +481,7 @@ function defineEnumerableProps(
   Ctor,
   props,
 ) {
-  for (const prop of props) {
+  for (const prop of new SafeArrayIterator(props)) {
     ReflectDefineProperty(Ctor.prototype, prop, { enumerable: true });
   }
 }
@@ -1051,7 +1051,7 @@ export class EventTarget {
       listeners[type] = [];
     }
 
-    for (const listener of listeners[type]) {
+    for (const listener of new SafeArrayIterator(listeners[type])) {
       if (
         ((typeof listener.options === "boolean" &&
           listener.options === (options as AddEventListenerOptions).capture) ||
@@ -1457,9 +1457,12 @@ export class PromiseRejectionEvent extends Event {
   [SymbolFor("Deno.privateCustomInspect")](inspect) {
     return inspect(consoleInternal.createFilteredInspectProxy({
       object: this,
-      evaluate: this instanceof PromiseRejectionEvent,
+      evaluate: ObjectPrototypeIsPrototypeOf(
+        PromiseRejectionEvent.prototype,
+        this,
+      ),
       keys: [
-        ...EVENT_PROPS,
+        ...new SafeArrayIterator(EVENT_PROPS),
         "promise",
         "reason",
       ] as any,
@@ -1575,7 +1578,7 @@ export function reportException(error) {
     colno = jsError.frames[0].columnNumber;
   } else {
     const jsError = core.destructureError(new Error());
-    for (const frame of jsError.frames) {
+    for (const frame of new SafeArrayIterator(jsError.frames)) {
       if (
         typeof frame.fileName == "string" &&
         !StringPrototypeStartsWith(frame.fileName, "deno:")

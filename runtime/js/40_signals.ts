@@ -9,7 +9,9 @@ import * as ops from '../../ops/index.js';
 import type { Deno } from '../../types/index.js';
 
 const {
+  SafeSetIterator,
   Set,
+  SetPrototypeDelete,
   SymbolFor,
   TypeError,
 } = primordials;
@@ -64,7 +66,7 @@ export function removeSignalListener(signo: Deno.Signal, listener) {
   checkSignalListenerType(listener);
 
   const sigData = getSignalData(signo);
-  sigData.listeners.delete(listener);
+  SetPrototypeDelete(sigData.listeners, listener);
 
   if (sigData.listeners.size === 0 && sigData.rid) {
     unbindSignal(sigData.rid);
@@ -77,7 +79,7 @@ async function loop(sigData) {
     if (await pollSignal(sigData.rid)) {
       return;
     }
-    for (const listener of sigData.listeners) {
+    for (const listener of new SafeSetIterator(sigData.listeners)) {
       listener();
     }
   }

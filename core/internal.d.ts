@@ -76,6 +76,12 @@ export interface Primordials {
   setQueueMicrotask: (value: any) => void;
   indirectEval: typeof eval;
   SafeArrayIterator: any; // TODO
+  SafeSetIterator: any; // TODO
+  SetPrototypeSymbolIterator: any; // TODO
+  SetIteratorPrototypeNext: any; // TODO
+  SafeMapIterator: any; // TODO
+  MapPrototypeSymbolIterator: any; // TODO
+  MapIteratorPrototypeNext: any; // TODO
   ArrayPrototypeSymbolIterator: any; // TODO
   ArrayIteratorPrototypeNext: any; // TODO
   SafeStringIterator: any; // TODO

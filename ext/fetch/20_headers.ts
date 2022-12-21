@@ -2,13 +2,13 @@
 // Based on https://github.com/denoland/deno/blob/main/ext/fetch/20_headers.js
 
 // @ts-check
-// <reference path="../webidl/internal.d.ts" />
-// <reference path="../web/internal.d.ts" />
-// <reference path="../web/lib.deno_web.d.ts" />
-// <reference path="./internal.d.ts" />
-// <reference path="../web/06_streams_types.d.ts" />
-// <reference path="./lib.deno_fetch.d.ts" />
-// <reference lib="esnext" />
+/// <reference path="../webidl/internal.d.ts" />
+/// <reference path="../web/internal.d.ts" />
+/// <reference path="../web/lib.deno_web.d.ts" />
+/// <reference path="./internal.d.ts" />
+/// <reference path="../web/06_streams_types.d.ts" />
+/// <reference path="./lib.deno_fetch.d.ts" />
+/// <reference lib="esnext" />
 
 "use strict";
 
@@ -57,8 +57,7 @@ function normalizeHeaderValue(potentialValue: string): string {
 
 export function fillHeaders(headers: Headers, object: HeadersInit) {
   if (ArrayIsArray(object)) {
-    // @ts-ignore
-    for (const header of object) {
+    for (const header of new SafeArrayIterator(object)) {
       if (header.length !== 2) {
         throw new TypeError(
           `Invalid header. Length must be 2, but is ${header.length}`,
@@ -220,7 +219,7 @@ export class Headers {
     // spec but produce the same result.
     const headers = {};
     const cookies = [];
-    for (const entry of list) {
+    for (const entry of new SafeArrayIterator(list)) {
       const name = byteLowerCase(entry[0]);
       const value = entry[1];
       if (value === null) throw new TypeError("Unreachable");
@@ -415,7 +414,7 @@ export class Headers {
 
   [SymbolFor("Deno.privateCustomInspect")](inspect) {
     const headers = {};
-    // @ts-ignore
+    // deno-lint-ignore prefer-primordials
     for (const header of this) {
       headers[header[0]] = header[1];
     }

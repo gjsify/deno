@@ -11,18 +11,20 @@ import type {
 } from '../../types/index.js';
 
 const {
-  ObjectDefineProperty,
   ArrayPrototypeMap,
+  ArrayPrototypeJoin,
+  ObjectDefineProperty,
+  ObjectPrototypeHasOwnProperty,
+  ObjectPrototypeIsPrototypeOf,
   Number,
   NumberIsSafeInteger,
-  ArrayPrototypeJoin,
-  ObjectPrototypeIsPrototypeOf,
   TypeError,
   Int32Array,
   Uint32Array,
   BigInt64Array,
   BigUint64Array,
   Function,
+  ReflectHas,
 } = primordials;
 
 const U32_BUFFER = new Uint32Array(2);
@@ -403,7 +405,11 @@ class DynamicLibrary<S extends DenoUnstable.ForeignLibraryInterface> {
     // @ts-ignore
     [this.#rid, this.symbols] = ops.op_ffi_load({ path, symbols });
     for (const symbol in symbols) {
-      if ("type" in symbols[symbol]) {
+        if (!ObjectPrototypeHasOwnProperty(symbols, symbol)) {
+          continue;
+        }
+
+        if (ReflectHas(symbols[symbol], "type")) {
         // @ts-ignore
         const type = symbols[symbol].type;
         if (type === "void") {

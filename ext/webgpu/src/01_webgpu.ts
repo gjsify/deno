@@ -2,10 +2,10 @@
 // Based on https://github.com/denoland/deno/blob/main/ext/webgpu/src/01_webgpu.js
 
 // @ts-check
-// <reference path="../../core/lib.deno_core.d.ts" />
-// <reference path="../web/internal.d.ts" />
-// <reference path="../web/lib.deno_web.d.ts" />
-// <reference path="./lib.deno_webgpu.d.ts" />
+/// <reference path="../../../core/lib.deno_core.d.ts" />
+/// <reference path="../../web/internal.d.ts" />
+/// <reference path="../../web/lib.deno_web.d.ts" />
+/// <reference path="../../../cli/tsc/dts/lib.deno_webgpu.d.ts" />
 
 "use strict";
 
@@ -363,7 +363,7 @@ export class GPUAdapter {
       context: "Argument 1",
     });
     const requiredFeatures = descriptor.requiredFeatures ?? [];
-    for (const feature of requiredFeatures) {
+    for (const feature of new SafeArrayIterator(requiredFeatures)) {
       if (!SetPrototypeHas(this[_adapter].features[_features], feature)) {
         throw new TypeError(
           `${prefix}: nonGuaranteedFeatures must be a subset of the adapter features.`,
@@ -1131,7 +1131,7 @@ export class GPUDevice extends EventTarget {
       context: "Argument 1",
     });
     const device = assertDevice(this, { prefix, context: "this" });
-    for (const entry of descriptor.entries) {
+    for (const entry of new SafeArrayIterator(descriptor.entries)) {
       let i = 0;
       if (entry.buffer) i++;
       if (entry.sampler) i++;
@@ -1689,7 +1689,7 @@ export class GPUQueue {
       device.rid,
       commandBufferRids,
     );
-    for (const commandBuffer of commandBuffers) {
+    for (const commandBuffer of new SafeArrayIterator(commandBuffers)) {
       commandBuffer[_rid] = undefined;
     }
     device.pushError(err);
@@ -2039,7 +2039,7 @@ export class GPUBuffer {
     if (!mappedRanges) {
       throw new DOMException(`${prefix}: invalid state.`, "OperationError");
     }
-    for (const [buffer, _rid, start] of mappedRanges) {
+    for (const [buffer, _rid, start] of new SafeArrayIterator(mappedRanges)) {
       // TODO(lucacasonato): is this logic correct?
       const end = start + buffer.byteLength;
       if (
@@ -2107,7 +2107,7 @@ export class GPUBuffer {
       if (!mappedRanges) {
         throw new DOMException(`${prefix}: invalid state.`, "OperationError");
       }
-      for (const [buffer, mappedRid] of mappedRanges) {
+      for (const [buffer, mappedRid] of new SafeArrayIterator(mappedRanges)) {
         const { err } = ops.op_webgpu_buffer_unmap(
           bufferRid,
           mappedRid,

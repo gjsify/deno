@@ -2,10 +2,10 @@
 // Based on https://github.com/denoland/deno/blob/main/ext/web/01_mimesniff.js
 
 // @ts-check
-// <reference path="../../core/internal.d.ts" />
-// <reference path="../../core/lib.deno_core.d.ts" />
-// <reference path="../web/internal.d.ts" />
-// <reference path="../web/lib.deno_web.d.ts" />
+/// <reference path="../../core/internal.d.ts" />
+/// <reference path="../../core/lib.deno_core.d.ts" />
+/// <reference path="../web/internal.d.ts" />
+/// <reference path="../web/lib.deno_web.d.ts" />
 
 "use strict";
 
@@ -27,6 +27,8 @@ const {
   MapPrototypeHas,
   MapPrototypeSet,
   RegExpPrototypeTest,
+  SafeArrayIterator,
+  SafeMapIterator,
   StringPrototypeReplaceAll,
   StringPrototypeToLowerCase,
 } = primordials;
@@ -184,7 +186,7 @@ export function essence(mimeType: MimeType): string {
 
 export function serializeMimeType(mimeType: MimeType): string {
   let serialization = essence(mimeType);
-  for (const param of mimeType.parameters) {
+  for (const param of new SafeMapIterator(mimeType.parameters)) {
     serialization += `;${param[0]}=`;
     let value = param[1];
     if (!RegExpPrototypeTest(HTTP_TOKEN_CODE_POINT_RE, value)) {
@@ -209,7 +211,7 @@ export function extractMimeType(headerValues: string[] | null): MimeType | null 
   let charset = null;
   let essence_ = null;
   let mimeType = null;
-  for (const value of headerValues) {
+  for (const value of new SafeArrayIterator(headerValues)) {
     const temporaryMimeType = parseMimeType(value);
     if (
       temporaryMimeType === null ||

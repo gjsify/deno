@@ -28,6 +28,7 @@ const {
   PromiseResolve,
   PromiseReject,
   ReflectHas,
+  SafeArrayIterator,
   SymbolFor,
   TypeError,
 } = primordials;
@@ -206,7 +207,9 @@ export const permissions = new Permissions(illegalConstructorKey);
 export function serializePermissions(permissions: Deno.PermissionOptions) {
   if (typeof permissions == "object" && permissions != null) {
     const serializedPermissions = {};
-    for (const key of ["read", "write", "run", "ffi"]) {
+    for (
+      const key of new SafeArrayIterator(["read", "write", "run", "ffi"])
+    ) {
       if (ArrayIsArray(permissions[key])) {
         serializedPermissions[key] = ArrayPrototypeMap(
           permissions[key],
@@ -216,7 +219,9 @@ export function serializePermissions(permissions: Deno.PermissionOptions) {
         serializedPermissions[key] = permissions[key];
       }
     }
-    for (const key of ["env", "hrtime", "net", "sys"]) {
+    for (
+      const key of new SafeArrayIterator(["env", "hrtime", "net", "sys"])
+    ) {
       if (ArrayIsArray(permissions[key])) {
         serializedPermissions[key] = ArrayPrototypeSlice(permissions[key]);
       } else {

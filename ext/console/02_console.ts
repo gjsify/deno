@@ -58,6 +58,7 @@ const {
   RegExpPrototypeTest,
   RegExpPrototypeToString,
   SafeArrayIterator,
+  SafeStringIterator,
   SafeSet,
   SetPrototype,
   SetPrototypeEntries,
@@ -208,7 +209,7 @@ function getStringWidth(str: string) {
   str = StringPrototypeNormalize(colors.stripColor(str), "NFC");
   let width = 0;
 
-  for (const ch of str) {
+  for (const ch of new SafeStringIterator(str)) {
     width += isFullWidthCodePoint(StringPrototypeCodePointAt(ch, 0)) ? 2 : 1;
   }
 
@@ -278,7 +279,7 @@ function cliTable(head, columns) {
     }` +
     `${tableChars.rightMiddle}\n`;
 
-  for (const row of rows) {
+    for (const row of new SafeArrayIterator(rows)) {
     result += `${renderRow(row, columnWidths, columnRightAlign)}\n`;
   }
 
@@ -996,7 +997,7 @@ function inspectError(value, cyan) {
   }
 
   const refMap = new Map();
-  for (const cause of causes) {
+  for (const cause of new SafeArrayIterator(causes)) {
     if (circular !== undefined) {
       const index = MapPrototypeGet(circular, cause);
       if (index !== undefined) {
@@ -1173,7 +1174,7 @@ function inspectRawObject(
 
   inspectOptions.indentLevel++;
 
-  for (const key of stringKeys) {
+  for (const key of new SafeArrayIterator(stringKeys)) {
     if (inspectOptions.getters) {
       let propertyValue;
       let error = null;
@@ -1209,7 +1210,7 @@ function inspectRawObject(
     }
   }
 
-  for (const key of symbolKeys) {
+  for (const key of new SafeArrayIterator(symbolKeys)) {
     if (
       !inspectOptions.showHidden &&
       !propertyIsEnumerable(value, key)
@@ -1641,7 +1642,7 @@ export function parseCss(cssString: string) {
     currentPart = "";
   }
 
-  for (const [key, value] of rawEntries) {
+  for (const [key, value] of new SafeArrayIterator(rawEntries)) {
     if (key == "background-color") {
       if (value != null) {
         css.backgroundColor = value;
@@ -1662,7 +1663,11 @@ export function parseCss(cssString: string) {
       }
     } else if (key == "text-decoration-line") {
       css.textDecorationLine = [];
-      for (const lineType of StringPrototypeSplit(value, /\s+/g)) {
+      for (
+        const lineType of new SafeArrayIterator(
+          StringPrototypeSplit(value, /\s+/g),
+        )
+      ) {
         if (
           ArrayPrototypeIncludes(
             ["line-through", "overline", "underline"],
@@ -1680,7 +1685,11 @@ export function parseCss(cssString: string) {
     } else if (key == "text-decoration") {
       css.textDecorationColor = null;
       css.textDecorationLine = [];
-      for (const arg of StringPrototypeSplit(value, /\s+/g)) {
+      for (
+        const arg of new SafeArrayIterator(
+          StringPrototypeSplit(value, /\s+/g),
+        )
+      ) {
         const maybeColor = parseCssColor(arg);
         if (maybeColor != null) {
           css.textDecorationColor = maybeColor;
@@ -2143,7 +2152,7 @@ export class Console {
       } else {
         const valueObj = value || {};
         const keys = properties || ObjectKeys(valueObj);
-        for (const k of keys) {
+        for (const k of new SafeArrayIterator(keys)) {
           if (!primitive && ReflectHas(valueObj, k)) {
             if (!(ReflectHas(objectValues, k))) {
               objectValues[k] = ArrayPrototypeFill(new Array(numRows), "");
@@ -2344,7 +2353,7 @@ export function wrapConsole(consoleFromDeno, consoleFromV8) {
   // @ts-ignore
   const callConsole = core.callConsole;
 
-  for (const key of ObjectKeys(consoleFromV8)) {
+  for (const key of new SafeArrayIterator(ObjectKeys(consoleFromV8))) {
     if (ObjectPrototypeHasOwnProperty(consoleFromDeno, key)) {
       consoleFromDeno[key] = FunctionPrototypeBind(
         callConsole,

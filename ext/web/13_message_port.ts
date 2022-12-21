@@ -2,10 +2,10 @@
 // Based on https://github.com/denoland/deno/blob/main/ext/web/13_message_port.js
 
 // @ts-check
-// <reference path="../../core/lib.deno_core.d.ts" />
-// <reference path="../webidl/internal.d.ts" />
-// <reference path="./internal.d.ts" />
-// <reference path="./lib.deno_web.d.ts" />
+/// <reference path="../../core/lib.deno_core.d.ts" />
+/// <reference path="../webidl/internal.d.ts" />
+/// <reference path="./internal.d.ts" />
+/// <reference path="./lib.deno_web.d.ts" />
 
 "use strict";
 import { primordials } from '../../core/00_primordials.js';
@@ -23,6 +23,7 @@ const {
   ArrayPrototypePush,
   ObjectPrototypeIsPrototypeOf,
   ObjectSetPrototypeOf,
+  SafeArrayIterator,
   Symbol,
   SymbolFor,
   SymbolIterator,
@@ -245,7 +246,9 @@ export function deserializeJsMessageData(messageData: messagePort.MessageData): 
   const arrayBufferIdsInTransferables = [];
   const transferredArrayBuffers = [];
 
-  for (const transferable of messageData.transferables) {
+  for (
+    const transferable of new SafeArrayIterator(messageData.transferables)
+  ) {
     switch (transferable.kind) {
       case "messagePort": {
         const port = createMessagePort(transferable.data);
@@ -306,7 +309,7 @@ export function serializeJsMessageData(data: any, transferables: object[]): mess
   const serializedTransferables: messagePort.Transferable[] = [];
 
   let arrayBufferI = 0;
-  for (const transferable of transferables) {
+  for (const transferable of new SafeArrayIterator(transferables)) {
     if (ObjectPrototypeIsPrototypeOf(MessagePortPrototype, transferable)) {
       webidl.assertBranded(transferable, MessagePortPrototype);
       const id = transferable[_id];

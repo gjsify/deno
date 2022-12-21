@@ -1,7 +1,7 @@
 // Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
-// Based on https://github.com/denoland/deno/blob/main/core/00__primordials.js
+// Based on https://github.com/denoland/deno/blob/main/core/00_primordials.js
 
-// Based on https://github.com/nodejs/node/blob/889ad35d3d41e376870f785b0c1b669cb732013d/lib/internal/per_context/_primordials.js
+// Based on https://github.com/nodejs/node/blob/889ad35d3d41e376870f785b0c1b669cb732013d/lib/internal/per_context/primordials.js
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -34,7 +34,7 @@
 
 import type { Primordials } from '../types/index.js';
 
-const _primordials: Partial<Primordials> = {};
+const primordials: Partial<Primordials> = {};
 
 const {
   defineProperty: ReflectDefineProperty,
@@ -47,13 +47,13 @@ const {
 // and `Function.prototype.call` after it may have been mutated by users.
 const { apply, bind, call } = Function.prototype;
 const uncurryThis = bind.bind(call);
-_primordials.uncurryThis = uncurryThis;
+primordials.uncurryThis = uncurryThis;
 
 // `applyBind` is equivalent to `func => Function.prototype.apply.bind(func)`.
 // It is using `bind.bind(apply)` to avoid using `Function.prototype.bind`
 // and `Function.prototype.apply` after it may have been mutated by users.
 const applyBind = bind.bind(apply);
-_primordials.applyBind = applyBind;
+primordials.applyBind = applyBind;
 
 // Methods that accept a variable number of arguments, and thus it's useful to
 // also create `${prefix}${key}Apply`, which uses `Function.prototype.apply`,
@@ -166,11 +166,11 @@ function copyPrototype(src, dest, prefix) {
   "Proxy",
   "globalThis",
 ].forEach((name) => {
-  _primordials[name] = globalThis[name];
+  primordials[name] = globalThis[name];
 });
 
 // Create copy of isNaN
-_primordials[isNaN.name] = isNaN;
+primordials[isNaN.name] = isNaN;
 
 // Create copies of URI handling functions
 [
@@ -179,7 +179,7 @@ _primordials[isNaN.name] = isNaN;
   encodeURI,
   encodeURIComponent,
 ].forEach((fn) => {
-  _primordials[fn.name] = fn;
+  primordials[fn.name] = fn;
 });
 
 // Create copies of the namespace objects
@@ -189,7 +189,7 @@ _primordials[isNaN.name] = isNaN;
   "Proxy",
   "Reflect",
 ].forEach((name) => {
-  copyPropsRenamed(globalThis[name], _primordials, name);
+  copyPropsRenamed(globalThis[name], primordials, name);
 });
 
 // Create copies of intrinsic objects
@@ -233,9 +233,9 @@ _primordials[isNaN.name] = isNaN;
   "WeakSet",
 ].forEach((name) => {
   const original = globalThis[name];
-  _primordials[name] = original;
-  copyPropsRenamed(original, _primordials, name);
-  copyPrototype(original.prototype, _primordials, `${name}Prototype`);
+  primordials[name] = original;
+  copyPropsRenamed(original, primordials, name);
+  copyPrototype(original.prototype, primordials, `${name}Prototype`);
 });
 
 // Create copies of intrinsic objects that require a valid `this` to call
@@ -245,34 +245,9 @@ _primordials[isNaN.name] = isNaN;
   "Promise",
 ].forEach((name) => {
   const original = globalThis[name];
-  _primordials[name] = original;
-  copyPropsRenamedBound(original, _primordials, name);
-  copyPrototype(original.prototype, _primordials, `${name}Prototype`);
-});
-
-// Create copies of abstract intrinsic objects that are not directly exposed
-// on the global object.
-// Refs: https://tc39.es/ecma262/#sec-%typedarray%-intrinsic-object
-[
-  { name: "TypedArray", original: Reflect.getPrototypeOf(Uint8Array) },
-  {
-    name: "ArrayIterator",
-    original: {
-      prototype: Reflect.getPrototypeOf(Array.prototype[Symbol.iterator]()),
-    },
-  },
-  {
-    name: "StringIterator",
-    original: {
-      prototype: Reflect.getPrototypeOf(String.prototype[Symbol.iterator]()),
-    },
-  },
-].forEach(({ name, original }: {name: string, original: object & { prototype?: object}}) => {
-  _primordials[name] = original;
-  // The static %TypedArray% methods require a valid `this`, but can't be bound,
-  // as they need a subclass constructor as the receiver:
-  copyPrototype(original, _primordials, name);
-  copyPrototype(original.prototype, _primordials, `${name}Prototype`);
+  primordials[name] = original;
+  copyPropsRenamedBound(original, primordials, name);
+  copyPrototype(original.prototype, primordials, `${name}Prototype`);
 });
 
 const {
@@ -291,7 +266,45 @@ const {
   SymbolIterator,
   WeakMap,
   WeakSet,
-} = _primordials;
+} = primordials;
+
+
+// Create copies of abstract intrinsic objects that are not directly exposed
+// on the global object.
+// Refs: https://tc39.es/ecma262/#sec-%typedarray%-intrinsic-object
+[
+  { name: "TypedArray", original: Reflect.getPrototypeOf(Uint8Array) },
+  {
+    name: "ArrayIterator",
+    original: {
+      prototype: Reflect.getPrototypeOf(Array.prototype[Symbol.iterator]()),
+    },
+  },
+  {
+    name: "SetIterator",
+    original: {
+      prototype: Reflect.getPrototypeOf(new Set()[Symbol.iterator]()),
+    },
+  },
+  {
+    name: "MapIterator",
+    original: {
+      prototype: Reflect.getPrototypeOf(new Map()[Symbol.iterator]()),
+    },
+  },
+  {
+    name: "StringIterator",
+    original: {
+      prototype: Reflect.getPrototypeOf(String.prototype[Symbol.iterator]()),
+    },
+  },
+].forEach(({ name, original }: {name: string, original: object & { prototype?: object}}) => {
+  primordials[name] = original;
+  // The static %TypedArray% methods require a valid `this`, but can't be bound,
+  // as they need a subclass constructor as the receiver:
+  copyPrototype(original, primordials, name);
+  copyPrototype(original.prototype, primordials, `${name}Prototype`);
+});
 
 // Because these functions are used by `makeSafe`, which is exposed
 // on the `primordials` object, it's important to use const references
@@ -318,13 +331,21 @@ const createSafeIterator = (factory, next) => {
   return SafeIterator;
 };
 
-_primordials.SafeArrayIterator = createSafeIterator(
-  _primordials.ArrayPrototypeSymbolIterator,
-  _primordials.ArrayIteratorPrototypeNext,
+primordials.SafeArrayIterator = createSafeIterator(
+  primordials.ArrayPrototypeSymbolIterator,
+  primordials.ArrayIteratorPrototypeNext,
 );
-_primordials.SafeStringIterator = createSafeIterator(
-  _primordials.StringPrototypeSymbolIterator,
-  _primordials.StringIteratorPrototypeNext,
+primordials.SafeSetIterator = createSafeIterator(
+  primordials.SetPrototypeSymbolIterator,
+  primordials.SetIteratorPrototypeNext,
+);
+primordials.SafeMapIterator = createSafeIterator(
+  primordials.MapPrototypeSymbolIterator,
+  primordials.MapIteratorPrototypeNext,
+);
+primordials.SafeStringIterator = createSafeIterator(
+  primordials.StringPrototypeSymbolIterator,
+  primordials.StringIteratorPrototypeNext,
 );
 
 const copyProps = (src: any, dest: any) => {
@@ -340,7 +361,7 @@ const copyProps = (src: any, dest: any) => {
 };
 
 /**
- * @type {typeof _primordials.makeSafe}
+ * @type {typeof primordials.makeSafe}
  */
 const makeSafe = (unsafe, safe) => {
   if (SymbolIterator in unsafe.prototype) {
@@ -375,13 +396,13 @@ const makeSafe = (unsafe, safe) => {
   ObjectFreeze(safe);
   return safe;
 };
-_primordials.makeSafe = makeSafe;
+primordials.makeSafe = makeSafe;
 
 // Subclass the constructors because we need to use their prototype
 // methods later.
 // Defining the `constructor` is necessary here to avoid the default
 // constructor which uses the user-mutable `%ArrayIteratorPrototype%.next`.
-_primordials.SafeMap = makeSafe(
+primordials.SafeMap = makeSafe(
   Map,
   class SafeMap extends (Map as any) {
     constructor(i) {
@@ -389,7 +410,7 @@ _primordials.SafeMap = makeSafe(
     }
   },
 );
-_primordials.SafeWeakMap = makeSafe(
+primordials.SafeWeakMap = makeSafe(
   WeakMap,
   class SafeWeakMap extends WeakMap {
     constructor(i) {
@@ -398,7 +419,7 @@ _primordials.SafeWeakMap = makeSafe(
   },
 );
 
-_primordials.SafeSet = makeSafe(
+primordials.SafeSet = makeSafe(
   Set,
   class SafeSet extends Set {
     constructor(i) {
@@ -406,7 +427,7 @@ _primordials.SafeSet = makeSafe(
     }
   },
 );
-_primordials.SafeWeakSet = makeSafe(
+primordials.SafeWeakSet = makeSafe(
   WeakSet,
   class SafeWeakSet extends WeakSet {
     constructor(i) {
@@ -415,7 +436,7 @@ _primordials.SafeWeakSet = makeSafe(
   },
 );
 
-_primordials.SafeFinalizationRegistry = makeSafe(
+primordials.SafeFinalizationRegistry = makeSafe(
   FinalizationRegistry,
   // TODO type FinalizationRegistry
   class SafeFinalizationRegistry extends (FinalizationRegistry as any) {
@@ -425,7 +446,7 @@ _primordials.SafeFinalizationRegistry = makeSafe(
   },
 );
 
-_primordials.SafeWeakRef = makeSafe(
+primordials.SafeWeakRef = makeSafe(
   WeakRef,
   // TODO WeakRef type
   class SafeWeakRef extends (WeakRef as any) {
@@ -445,7 +466,7 @@ const SafePromise = makeSafe(
   },
 );
 
-_primordials.PromisePrototypeCatch = (thisPromise, onRejected) =>
+primordials.PromisePrototypeCatch = (thisPromise, onRejected) =>
   PromisePrototypeThen(thisPromise, undefined, onRejected);
 
 /**
@@ -454,7 +475,7 @@ _primordials.PromisePrototypeCatch = (thisPromise, onRejected) =>
  * @param {unknown[]} values An array of Promises.
  * @returns A new Promise.
  */
-_primordials.SafePromiseAll = <T = unknown>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>[]> =>
+primordials.SafePromiseAll = <T = unknown>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>[]> =>
   // Wrapping on a new Promise is necessary to not expose the SafePromise
   // prototype to user-land.
   new Promise((a, b) =>
@@ -480,7 +501,7 @@ _primordials.SafePromiseAll = <T = unknown>(values: Iterable<T | PromiseLike<T>>
  *        when the Promise is settled (fulfilled or rejected).
  * @returns A Promise for the completion of the callback.
  */
-_primordials.SafePromisePrototypeFinally = (thisPromise: Promise<any>, onFinally: (() => void) | undefined | null) =>
+primordials.SafePromisePrototypeFinally = (thisPromise: Promise<any>, onFinally: (() => void) | undefined | null) =>
   // Wrapping on a new Promise is necessary to not expose the SafePromise
   // prototype to user-land.
   new Promise((a, b) =>
@@ -491,12 +512,12 @@ _primordials.SafePromisePrototypeFinally = (thisPromise: Promise<any>, onFinally
 
 // Create getter and setter for `queueMicrotask`, it hasn't been bound yet.
 let queueMicrotask = undefined;
-ObjectDefineProperty(_primordials, "queueMicrotask", {
+ObjectDefineProperty(primordials, "queueMicrotask", {
   get() {
     return queueMicrotask;
   },
 });
-_primordials.setQueueMicrotask = (value) => {
+primordials.setQueueMicrotask = (value) => {
   if (queueMicrotask !== undefined) {
     throw new Error("queueMicrotask is already defined");
   }
@@ -506,10 +527,10 @@ _primordials.setQueueMicrotask = (value) => {
 // Renaming from `eval` is necessary because otherwise it would perform direct
 // evaluation, allowing user-land access to local variables.
 // This is because the identifier `eval` is somewhat treated as a keyword
-_primordials.indirectEval = eval;
+primordials.indirectEval = eval;
 
-ObjectSetPrototypeOf(_primordials, null);
-ObjectFreeze(_primordials);
+ObjectSetPrototypeOf(primordials, null);
+ObjectFreeze(primordials);
 
-export const primordials = _primordials as Primordials;
+export { primordials };
 export default primordials;

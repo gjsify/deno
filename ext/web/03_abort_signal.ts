@@ -4,13 +4,15 @@
 "use strict";
 
 // @ts-check
-// <reference path="../../core/internal.d.ts" />
+/// <reference path="../../core/internal.d.ts" />
 
 import { primordials } from '../../core/00_primordials.js';
 import * as webidl from '../webidl/00_webidl.js';
 import { Event, setIsTrusted, defineEventHandler, EventTarget, listenerCount } from './02_event.js';
 
 const {
+  SafeArrayIterator,
+  SafeSetIterator,
   Set,
   SetPrototypeAdd,
   SetPrototypeDelete,
@@ -79,7 +81,7 @@ export class AbortSignal extends EventTarget {
     }
     this[abortReason] = reason;
     if (this[abortAlgos] !== null) {
-      for (const algorithm of this[abortAlgos]) {
+      for (const algorithm of new SafeSetIterator(this[abortAlgos])) {
         algorithm();
       }
       this[abortAlgos] = null;
@@ -128,7 +130,7 @@ export class AbortSignal extends EventTarget {
   // ops which would block the event loop.
   addEventListener(...args: any[]) {
     // @ts-ignore
-    super.addEventListener(...args);
+    super.addEventListener(...new SafeArrayIterator(args));
     if (this[timerId] !== null && listenerCount(this, "abort") > 0) {
       refTimer(this[timerId]);
     }
@@ -136,7 +138,7 @@ export class AbortSignal extends EventTarget {
 
   removeEventListener(...args: any[]) {
     // @ts-ignore
-    super.removeEventListener(...args);
+    super.removeEventListener(...new SafeArrayIterator(args));
     if (this[timerId] !== null && listenerCount(this, "abort") === 0) {
       unrefTimer(this[timerId]);
     }

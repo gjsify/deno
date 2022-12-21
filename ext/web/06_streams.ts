@@ -42,6 +42,7 @@ const {
   queueMicrotask,
   RangeError,
   ReflectHas,
+  SafeArrayIterator,
   SafePromiseAll,
   SharedArrayBuffer,
   Symbol,
@@ -634,7 +635,7 @@ export function readableStreamForRidUnrefable(rid: number): ReadableStream<Uint8
 }
 
 function readableStreamIsUnrefable(stream) {
-  return _isUnref in stream;
+  return ReflectHas(stream, _isUnref);
 }
 
 export function readableStreamForRidUnrefableRef(stream) {
@@ -720,7 +721,7 @@ export async function readableStreamCollectIntoUint8Array(stream) {
 
   const finalBuffer = new Uint8Array(totalLength);
   let i = 0;
-  for (const chunk of chunks) {
+  for (const chunk of new SafeArrayIterator(chunks)) {
     TypedArrayPrototypeSet(finalBuffer, chunk, i);
     i += chunk.byteLength;
   }
@@ -1109,7 +1110,7 @@ function readableStreamCancel<R>(stream: ReadableStream<R>, reason?: any): Promi
   if (reader !== undefined && isReadableStreamBYOBReader(reader)) {
     const readIntoRequests = reader[_readIntoRequests];
     reader[_readIntoRequests] = [];
-    for (const readIntoRequest of readIntoRequests) {
+    for (const readIntoRequest of new SafeArrayIterator(readIntoRequests)) {
       readIntoRequest.closeSteps(undefined);
     }
   }
@@ -1127,7 +1128,7 @@ export function readableStreamClose<R>(stream: ReadableStream<R>): void {
   if (isReadableStreamDefaultReader(reader)) {
     const readRequests: Array<ReadRequest<R>> = reader[_readRequests];
     reader[_readRequests] = [];
-    for (const readRequest of readRequests) {
+    for (const readRequest of new SafeArrayIterator(readRequests)) {
       readRequest.closeSteps();
     }
   }
@@ -1305,7 +1306,7 @@ function readableStreamBYOBReaderRelease(reader: ReadableStreamBYOBReader) {
 function readableStreamDefaultReaderErrorReadRequests(reader: ReadableStreamBYOBReader, e: any) {
   const readRequests = reader[_readRequests];
   reader[_readRequests] = [];
-  for (const readRequest of readRequests) {
+  for (const readRequest of new SafeArrayIterator(readRequests)) {
     readRequest.errorSteps(e);
   }
 }
@@ -2156,7 +2157,7 @@ function readableStreamReaderGenericRelease<R>(reader: ReadableStreamGenericRead
 function readableStreamBYOBReaderErrorReadIntoRequests(reader: ReadableStreamBYOBReader, e: any) {
   const readIntoRequests = reader[_readIntoRequests];
   reader[_readIntoRequests] = [];
-  for (const readIntoRequest of readIntoRequests) {
+  for (const readIntoRequest of new SafeArrayIterator(readIntoRequests)) {
     readIntoRequest.errorSteps(e);
   }
 }
@@ -3510,7 +3511,7 @@ function writableStreamFinishErroring(stream: WritableStream) {
   stream[_state] = "errored";
   stream[_controller][_errorSteps]();
   const storedError = stream[_storedError];
-  for (const writeRequest of stream[_writeRequests]) {
+  for (const writeRequest of new SafeArrayIterator(stream[_writeRequests])) {
     writeRequest.reject(storedError);
   }
   stream[_writeRequests] = [];

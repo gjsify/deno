@@ -2,19 +2,18 @@
 // Based on https://github.com/denoland/deno/blob/main/ext/web/10_filereader.js
 
 // @ts-check
-// <reference no-default-lib="true" />
-// <reference path="../../core/lib.deno_core.d.ts" />
-// <reference path="../../core/internal.d.ts" />
-// <reference path="../webidl/internal.d.ts" />
-// <reference path="../web/internal.d.ts" />
-// <reference path="../web/lib.deno_web.d.ts" />
-// <reference path="./internal.d.ts" />
-// <reference lib="esnext" />
+/// <reference no-default-lib="true" />
+/// <reference path="../../core/lib.deno_core.d.ts" />
+/// <reference path="../../core/internal.d.ts" />
+/// <reference path="../webidl/internal.d.ts" />
+/// <reference path="../web/internal.d.ts" />
+/// <reference path="../web/lib.deno_web.d.ts" />
+/// <reference path="./internal.d.ts" />
+/// <reference lib="esnext" />
 
 "use strict";
 
 import { primordials } from '../../core/00_primordials.js';
-import * as core from '../../core/01_core.js';
 import * as ops from '../../ops/index.js';
 import * as webidl from '../webidl/00_webidl.js';
 import { forgivingBase64Encode } from './00_infra.js';
@@ -159,7 +158,7 @@ export class FileReader extends EventTarget {
               ) as number;
               const bytes = new Uint8Array(size);
               let offs = 0;
-              for (const chunk of chunks) {
+              for (const chunk of new SafeArrayIterator(chunks)) {
                 TypedArrayPrototypeSet(bytes, chunk, offs);
                 offs += chunk.byteLength;
               }

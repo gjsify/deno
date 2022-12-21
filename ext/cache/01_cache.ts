@@ -9,6 +9,7 @@ import * as core from '../../core/01_core.js';
 import * as webidl from '../webidl/00_webidl.js';
 const {
   Symbol,
+  SafeArrayIterator,
   TypeError,
   ObjectPrototypeIsPrototypeOf,
 } = primordials;
@@ -117,7 +118,7 @@ export class Cache {
     const varyHeader = getHeader(innerResponse.headerList, "vary");
     if (varyHeader) {
       const fieldValues = varyHeader.split(",");
-      for (const field of fieldValues) {
+      for (const field of new SafeArrayIterator(fieldValues)) {
         if (field.trim() === "*") {
           throw new TypeError("Vary header must not contain '*'");
         }

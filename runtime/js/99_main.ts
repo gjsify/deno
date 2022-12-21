@@ -61,6 +61,7 @@ const {
   ArrayPrototypeMap,
   DateNow,
   Error,
+  ErrorPrototype,
   FunctionPrototypeCall,
   FunctionPrototypeBind,
   ObjectAssign,
@@ -74,6 +75,7 @@ const {
   SymbolFor,
   SymbolIterator,
   PromisePrototypeThen,
+  SafeArrayIterator,
   SafeWeakMap,
   TypeError,
   WeakMapPrototypeDelete,
@@ -252,7 +254,7 @@ function importScripts(...urls: Array<string|URL>) {
   );
   loadedMainWorkerScript = true;
 
-  for (const { url, script } of scripts) {
+  for (const { url, script } of new SafeArrayIterator(scripts)) {
     const err = core.evalContext(script, url)[1];
     if (err !== null) {
       throw err.thrown;
@@ -265,7 +267,7 @@ function opMainModule() {
 }
 
 function formatException(error: Error | string) {
-  if (error instanceof Error) {
+  if (ObjectPrototypeIsPrototypeOf(ErrorPrototype, error)) {
     return null;
   } else if (typeof error == "string") {
     return `Uncaught ${

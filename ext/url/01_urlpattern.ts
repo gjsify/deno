@@ -2,18 +2,18 @@
 // Based on https://github.com/denoland/deno/blob/main/ext/url/01_urlpattern.js
 
 // @ts-check
-// <reference path="../../core/internal.d.ts" />
-// <reference path="../../core/lib.deno_core.d.ts" />
-// <reference path="../webidl/internal.d.ts" />
-// <reference path="./internal.d.ts" />
-// <reference path="./lib.deno_url.d.ts" />
+/// <reference path="../../core/internal.d.ts" />
+/// <reference path="../../core/lib.deno_core.d.ts" />
+/// <reference path="../webidl/internal.d.ts" />
+/// <reference path="./internal.d.ts" />
+/// <reference path="./lib.deno_url.d.ts" />
 
 "use strict";
 
 import { primordials } from '../../core/00_primordials.js';
 import * as ops from '../../ops/index.js';
 import * as webidl from '../webidl/00_webidl.js';
-import type { URLPatternInput, UrlComponents, URLPatternResult } from '../../types/index.js';
+import type { URLPatternInput, UrlComponent, UrlComponents, URLPatternResult } from '../../types/index.js';
 
 const {
   ArrayPrototypeMap,
@@ -22,6 +22,7 @@ const {
   RegExp,
   RegExpPrototypeExec,
   RegExpPrototypeTest,
+  SafeArrayIterator,
   Symbol,
   SymbolFor,
   TypeError,
@@ -60,7 +61,7 @@ const _components = Symbol("components");
  * @category Web APIs
  */
 export class URLPattern {
-  /** @type {Components} */
+  /** @type {UrlComponents} */
   [_components: symbol]: UrlComponents;
 
   // @ts-ignore
@@ -84,7 +85,7 @@ export class URLPattern {
 
     const components = ops.op_urlpattern_parse(input, baseURL);
 
-    for (const key of ObjectKeys(components)) {
+    for (const key of new SafeArrayIterator(ObjectKeys(components))) {
       try {
         components[key].regexp = new RegExp(
           components[key].regexpString,
@@ -190,7 +191,7 @@ export class URLPattern {
 
     const [values] = res;
 
-    for (const key of ObjectKeys(values)) {
+    for (const key of new SafeArrayIterator(ObjectKeys(values))) {
       if (!RegExpPrototypeTest(this[_components][key].regexp, values[key])) {
         return false;
       }
@@ -252,9 +253,9 @@ export class URLPattern {
     const result = { inputs } as any as URLPatternResult;
 
     /** @type {string} */
-    for (const key of ObjectKeys(values)) {
-      /** @type {Component} */
-      const component = this[_components][key];
+    for (const key of new SafeArrayIterator(ObjectKeys(values)) as string[]) {
+      /** @type {UrlComponent} */
+      const component: UrlComponent = this[_components][key];
       const input = values[key];
       const match = RegExpPrototypeExec(component.regexp, input);
       if (match === null) {

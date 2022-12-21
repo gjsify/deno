@@ -2,10 +2,10 @@
 // Based on https://github.com/denoland/deno/blob/main/ext/web/05_base64.js
 
 // @ts-check
-// <reference path="../../core/internal.d.ts" />
-// <reference path="../webidl/internal.d.ts" />
-// <reference path="../web/internal.d.ts" />
-// <reference lib="esnext" />
+/// <reference path="../../core/internal.d.ts" />
+/// <reference path="../webidl/internal.d.ts" />
+/// <reference path="../web/internal.d.ts" />
+/// <reference lib="esnext" />
 
 "use strict";
 
@@ -13,7 +13,7 @@ import { primordials } from '../../core/00_primordials.js';
 import * as ops from '../../ops/index.js';
 import * as webidl from '../webidl/00_webidl.js';
 import { DOMException } from './01_dom_exception.js';
-const { TypeError } = primordials;
+const { ObjectPrototypeIsPrototypeOf, TypeErrorPrototype } = primordials;
 
 /** Decodes a string of data which has been encoded using base-64 encoding.
  *
@@ -33,7 +33,7 @@ export function atob(data: string): string {
   try {
     return ops.op_base64_atob(data);
   } catch (e) {
-    if (e instanceof TypeError) {
+    if (ObjectPrototypeIsPrototypeOf(TypeErrorPrototype, e)) {
       throw new DOMException(
         "Failed to decode base64: invalid character",
         "InvalidCharacterError",
@@ -61,7 +61,7 @@ export function btoa(data: string): string {
   try {
     return ops.op_base64_btoa(data);
   } catch (e) {
-    if (e instanceof TypeError) {
+    if (ObjectPrototypeIsPrototypeOf(TypeErrorPrototype, e)) {
       throw new DOMException(
         "The string to be encoded contains characters outside of the Latin1 range.",
         "InvalidCharacterError",

@@ -7,13 +7,12 @@
 // Copyright Domenic Denicola. Licensed under BSD-2-Clause License.
 // Original license at https://github.com/jsdom/webidl-conversions/blob/master/LICENSE.md.
 
-// <reference path="../../core/internal.d.ts" />
+/// <reference path="../../core/internal.d.ts" />
 
 "use strict";
 
 import { primordials } from '../../core/00_primordials.js';
 import * as core from '../../core/01_core.js';
-import * as ops from '../../ops/index.js';
 import type { webidl } from '../../types/index.js';
 
 const {
@@ -66,6 +65,7 @@ const {
   ReflectHas,
   ReflectOwnKeys,
   RegExpPrototypeTest,
+  SafeArrayIterator,
   Set,
   // TODO(lucacasonato): add SharedArrayBuffer to primordials
   // SharedArrayBuffer,
@@ -651,8 +651,8 @@ export function requiredArguments(length: number, required: number, opts: Partia
 export function createDictionaryConverter<T>(name: string, ...dictionaries: webidl.Dictionary[]): (v: any, opts: Partial<webidl.ValueConverterOpts>) => T {
   let hasRequiredKey = false;
   const allMembers = [];
-  for (const members of dictionaries) {
-    for (const member of members) {
+  for (const members of new SafeArrayIterator(dictionaries)) {
+    for (const member of new SafeArrayIterator(members)) {
       if (member.required) {
         hasRequiredKey = true;
       }
@@ -667,7 +667,7 @@ export function createDictionaryConverter<T>(name: string, ...dictionaries: webi
   });
 
   const defaultValues = {};
-  for (const member of allMembers) {
+  for (const member of new SafeArrayIterator(allMembers)) {
     if (ReflectHas(member, "defaultValue")) {
       const idlMemberValue = member.defaultValue;
       const imvType = typeof idlMemberValue;
@@ -713,7 +713,7 @@ export function createDictionaryConverter<T>(name: string, ...dictionaries: webi
       return idlDict;
     }
 
-    for (const member of allMembers) {
+    for (const member of new SafeArrayIterator(allMembers)) {
       const key = member.key;
 
       let esMemberValue;
@@ -857,7 +857,7 @@ export function createRecordConverter<
     }
     // Slow path if Proxy (e.g: in WPT tests)
     const keys = ReflectOwnKeys(V);
-    for (const key of keys) {
+    for (const key of new SafeArrayIterator(keys)) {
       const desc = ObjectGetOwnPropertyDescriptor(V, key);
       if (desc !== undefined && desc.enumerable === true) {
         const typedKey = keyConverter(key, opts);
@@ -952,7 +952,7 @@ export function illegalConstructor(): never {
 }
 
 function define(target: any, source: any) {
-  for (const key of ReflectOwnKeys(source)) {
+  for (const key of new SafeArrayIterator(ReflectOwnKeys(source))) {
     const descriptor = ReflectGetOwnPropertyDescriptor(source, key);
     if (descriptor && !ReflectDefineProperty(target, key, descriptor)) {
       throw new TypeError(`Cannot redefine property: ${String(key)}`);

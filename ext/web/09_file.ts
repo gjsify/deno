@@ -2,14 +2,14 @@
 // Based on https://github.com/denoland/deno/blob/main/ext/web/09_file.js
 
 // @ts-check
-// <reference no-default-lib="true" />
-// <reference path="../../core/lib.deno_core.d.ts" />
-// <reference path="../../core/internal.d.ts" />
-// <reference path="../webidl/internal.d.ts" />
-// <reference path="../web/internal.d.ts" />
-// <reference path="../web/lib.deno_web.d.ts" />
-// <reference path="./internal.d.ts" />
-// <reference lib="esnext" />
+/// <reference no-default-lib="true" />
+/// <reference path="../../core/lib.deno_core.d.ts" />
+/// <reference path="../../core/internal.d.ts" />
+/// <reference path="../webidl/internal.d.ts" />
+/// <reference path="../web/internal.d.ts" />
+/// <reference path="../web/lib.deno_web.d.ts" />
+/// <reference path="./internal.d.ts" />
+/// <reference lib="esnext" />
 "use strict";
 
 import { primordials } from '../../core/00_primordials.js';
@@ -33,6 +33,7 @@ const {
   MathMin,
   ObjectPrototypeIsPrototypeOf,
   RegExpPrototypeTest,
+  SafeArrayIterator,
   StringPrototypeCharAt,
   StringPrototypeToLowerCase,
   StringPrototypeSlice,
@@ -90,7 +91,7 @@ function convertLineEndingsToNative(s: string): string {
 }
 
 async function* toIterator(parts: (BlobReference | Blob)[]) {
-  for (const part of parts) {
+  for (const part of new SafeArrayIterator(parts)) {
     yield* part.stream() as AsyncGenerator<any, void, unknown>;
   }
 }
@@ -100,7 +101,7 @@ type BlobPart = BufferSource | Blob | string;
 function processBlobParts(parts: BlobPart[], endings: string): { parts: (BlobReference|Blob)[], size: number } {
   const processedParts: (BlobReference|Blob)[] = [];
   let size = 0;
-  for (const element of parts) {
+  for (const element of new SafeArrayIterator(parts)) {
     if (ObjectPrototypeIsPrototypeOf(ArrayBufferPrototype, element)) {
       const chunk = new Uint8Array(ArrayBufferPrototypeSlice(element, 0));
       ArrayPrototypePush(processedParts, BlobReference.fromUint8Array(chunk));
@@ -142,7 +143,7 @@ function normalizeType(str: string): string {
  * Get all Parts as a flat array containing all references
  */
 export function getParts(blob: Blob, bag: string[] = []): string[] {
-  for (const part of blob[_parts]) {
+  for (const part of new SafeArrayIterator(blob[_parts])) {
     if (ObjectPrototypeIsPrototypeOf(BlobPrototype, part)) {
       getParts(part, bag);
     } else {
@@ -256,7 +257,7 @@ export class Blob {
     const blobParts = [];
     let added = 0;
 
-    for (const part of this[_parts]) {
+    for (const part of new SafeArrayIterator(this[_parts])) {
       // don't add the overflow to new blobParts
       if (added >= span) {
         // Could maybe be possible to remove variable `added`
@@ -323,6 +324,7 @@ export class Blob {
     const bytes = new Uint8Array(size);
     const partIterator = toIterator(this[_parts]);
     let offset = 0;
+    // deno-lint-ignore prefer-primordials
     for await (const chunk of partIterator) {
       const byteLength = chunk.byteLength;
       if (byteLength > 0) {
@@ -556,7 +558,7 @@ export function blobFromObjectUrl(url: string): Blob | null {
   const parts: BlobReference[] = [];
   let totalSize = 0;
 
-  for (const { uuid, size } of blobData.parts) {
+  for (const { uuid, size } of new SafeArrayIterator(blobData.parts)) {
     ArrayPrototypePush(parts, new BlobReference(uuid, size));
     totalSize += size;
   }

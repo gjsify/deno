@@ -13,6 +13,7 @@ import type { Deno, DenoUnstable, AbortSignal } from '../../types/index.js';
 const {
   ArrayPrototypeMap,
   ObjectEntries,
+  ObjectPrototypeIsPrototypeOf,
   String,
   TypeError,
   PromisePrototypeThen,
@@ -25,6 +26,7 @@ import {
   readableStreamForRidUnrefable,
   readableStreamForRidUnrefableRef,
   readableStreamForRidUnrefableUnref,
+  ReadableStreamPrototype,
   writableStreamForRid,
   ReadableStream,
   WritableStream,
@@ -71,7 +73,9 @@ export function createSpawnChild(opFn) {
 }
 
 function collectOutput(readableStream) {
-  if (!(readableStream instanceof ReadableStream)) {
+  if (
+    !(ObjectPrototypeIsPrototypeOf(ReadableStreamPrototype, readableStream))
+  ) {
     return null;
   }
 

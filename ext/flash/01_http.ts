@@ -35,11 +35,11 @@ import { _ws } from '../http/01_http.js';
 import type { InnerBodyStatic } from '../fetch/22_body.js';
 
 const {
-  Function,
   ObjectPrototypeIsPrototypeOf,
-  Promise,
+  PromisePrototype,
   PromisePrototypeCatch,
   PromisePrototypeThen,
+  SafeArrayIterator,
   SafePromiseAll,
   TypedArrayPrototypeSubarray,
   TypeError,
@@ -148,7 +148,7 @@ function http1Response(
   // status-line = HTTP-version SP status-code SP reason-phrase CRLF
   // Date header: https://datatracker.ietf.org/doc/html/rfc7231#section-7.1.1.2
   let str = `HTTP/1.1 ${status} ${statusCodes[status]}\r\nDate: ${date}\r\n`;
-  for (const [name, value] of headerList) {
+  for (const [name, value] of new SafeArrayIterator(headerList)) {
     // header-field   = field-name ":" OWS field-value OWS
     str += `${name}: ${value}\r\n`;
   }
@@ -437,10 +437,10 @@ export function createServe(opFn) {
   return async function serve(arg1, arg2) {
     let options = undefined;
     let handler = undefined;
-    if (arg1 instanceof Function) {
+    if (typeof arg1 === "function") {
       handler = arg1;
       options = arg2;
-    } else if (arg2 instanceof Function) {
+    } else if (typeof arg2 === "function") {
       handler = arg2;
       options = arg1;
     } else {
@@ -454,7 +454,7 @@ export function createServe(opFn) {
       }
       handler = options.handler;
     }
-    if (!(handler instanceof Function)) {
+    if (typeof handler !== "function") {
       throw new TypeError("A handler function must be provided.");
     }
     if (options === undefined) {
@@ -574,7 +574,7 @@ export function createServe(opFn) {
             let resp;
             try {
               resp = handler(req);
-              if (resp instanceof Promise) {
+              if (ObjectPrototypeIsPrototypeOf(PromisePrototype, resp)) {
                 PromisePrototypeCatch(
                   PromisePrototypeThen(
                     resp,

@@ -3,13 +3,17 @@ import GLib from '@gjsify/types/GLib-2.0';
 import { getLocale, getPid, getPpid, existsTty, getArgs, parseArgv } from '@gjsify/utils';
 import { mainRuntime } from './runtime/js/99_main.js';
 
-const args = getArgs();
-const argsObj = parseArgv(args.slice(2));
-const hasTty = existsTty();
-
+import type {  windowOrWorkerGlobalScope,
+  unstableWindowOrWorkerGlobalScope,
+  workerRuntimeGlobalProperties,
+  mainRuntimeGlobalProperties,} from './runtime/js/98_global_scope.js';
 declare global {
   type Deno = any; // TODO
 }
+
+const args = getArgs();
+const argsObj = parseArgv(args.slice(2));
+const hasTty = existsTty();
 
 mainRuntime({
   args,

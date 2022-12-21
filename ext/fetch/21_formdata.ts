@@ -2,13 +2,13 @@
 // Based on https://github.com/denoland/deno/blob/main/ext/fetch/21_formdata.js
 
 // @ts-check
-// <reference path="../webidl/internal.d.ts" />
-// <reference path="../web/internal.d.ts" />
-// <reference path="../web/lib.deno_web.d.ts" />
-// <reference path="./internal.d.ts" />
-// <reference path="../web/06_streams_types.d.ts" />
-// <reference path="./lib.deno_fetch.d.ts" />
-// <reference lib="esnext" />
+/// <reference path="../webidl/internal.d.ts" />
+/// <reference path="../web/internal.d.ts" />
+/// <reference path="../web/lib.deno_web.d.ts" />
+/// <reference path="./internal.d.ts" />
+/// <reference path="../web/06_streams_types.d.ts" />
+/// <reference path="./lib.deno_fetch.d.ts" />
+/// <reference lib="esnext" />
 
 "use strict";
 
@@ -26,6 +26,7 @@ const {
   MathRandom,
   ObjectPrototypeIsPrototypeOf,
   Symbol,
+  SafeArrayIterator,
   StringFromCharCode,
   StringPrototypeTrim,
   StringPrototypeSlice,
@@ -174,7 +175,7 @@ export class FormData {
       context: "Argument 1",
     });
 
-    for (const entry of this[entryList]) {
+    for (const entry of new SafeArrayIterator(this[entryList])) {
       if (entry.name === name) return entry.value;
     }
     return null;
@@ -191,7 +192,7 @@ export class FormData {
     });
 
     const returnList = [];
-    for (const entry of this[entryList]) {
+    for (const entry of new SafeArrayIterator(this[entryList])) {
       if (entry.name === name) ArrayPrototypePush(returnList, entry.value);
     }
     return returnList;
@@ -207,7 +208,7 @@ export class FormData {
       context: "Argument 1",
     });
 
-    for (const entry of this[entryList]) {
+    for (const entry of new SafeArrayIterator(this[entryList])) {
       if (entry.name === name) return true;
     }
     return false;
@@ -295,7 +296,7 @@ export function formDataToBlob(formData: FormData) {
   const chunks = [];
   const prefix = `--${boundary}\r\nContent-Disposition: form-data; name="`;
 
-  // @ts-ignore
+  // deno-lint-ignore prefer-primordials
   for (const [name, value] of formData) {
     if (typeof value === "string") {
       ArrayPrototypePush(
@@ -363,7 +364,7 @@ class MultipartParser {
   #parseHeaders(headersText: string): { headers: Headers, disposition: Map<string, string> } {
     const headers = new Headers();
     const rawHeaders = StringPrototypeSplit(headersText, "\r\n" as any);
-    for (const rawHeader of rawHeaders) {
+    for (const rawHeader of new SafeArrayIterator(rawHeaders)) {
       const sepIndex = StringPrototypeIndexOf(rawHeader, ":");
       if (sepIndex < 0) {
         continue; // Skip this header
