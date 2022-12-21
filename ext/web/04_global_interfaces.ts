@@ -4,7 +4,7 @@
 "use strict";
 
 // @ts-check
-// <reference path="../../core/internal.d.ts" />
+/// <reference path="../../core/internal.d.ts" />
 import { primordials } from '../../core/00_primordials.js';
 import { EventTarget } from './02_event.js';
 const {

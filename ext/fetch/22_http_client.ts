@@ -2,14 +2,14 @@
 // Based on https://github.com/denoland/deno/blob/main/ext/fetch/22_http_client.js
 
 // @ts-check
-// <reference path="../webidl/internal.d.ts" />
-// <reference path="../web/internal.d.ts" />
-// <reference path="../url/internal.d.ts" />
-// <reference path="../web/lib.deno_web.d.ts" />
-// <reference path="./internal.d.ts" />
-// <reference path="../web/06_streams_types.d.ts" />
-// <reference path="./lib.deno_fetch.d.ts" />
-// <reference lib="esnext" />
+/// <reference path="../webidl/internal.d.ts" />
+/// <reference path="../web/internal.d.ts" />
+/// <reference path="../url/internal.d.ts" />
+/// <reference path="../web/lib.deno_web.d.ts" />
+/// <reference path="./internal.d.ts" />
+/// <reference path="../web/06_streams_types.d.ts" />
+/// <reference path="./lib.deno_fetch.d.ts" />
+/// <reference lib="esnext" />
 "use strict";
 
 import * as core from '../../core/01_core.js';

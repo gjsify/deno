@@ -3,7 +3,7 @@
 
 "use strict";
 
-// <reference path="../../core/internal.d.ts" />
+/// <reference path="../../core/internal.d.ts" />
 import { primordials } from '../../core/00_primordials.js';
 import { URL } from '../url/00_url.js';
 import { DOMException } from './01_dom_exception.js';

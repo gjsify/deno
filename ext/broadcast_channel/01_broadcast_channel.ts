@@ -1,7 +1,7 @@
 // Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
 // Based on https://github.com/denoland/deno/blob/main/ext/broadcast_channel/01_broadcast_channel.js
 
-// <reference path="../../core/internal.d.ts" />
+/// <reference path="../../core/internal.d.ts" />
 
 "use strict";
 import { primordials } from '../../core/00_primordials.js'

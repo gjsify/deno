@@ -2,15 +2,15 @@
 // Based on https://github.com/denoland/deno/blob/main/ext/web/11_blob_url.js
 
 // @ts-check
-// <reference no-default-lib="true" />
-// <reference path="../../core/lib.deno_core.d.ts" />
-// <reference path="../webidl/internal.d.ts" />
-// <reference path="../web/internal.d.ts" />
-// <reference path="../web/lib.deno_web.d.ts" />
-// <reference path="../url/internal.d.ts" />
-// <reference path="../url/lib.deno_url.d.ts" />
-// <reference path="./internal.d.ts" />
-// <reference lib="esnext" />
+/// <reference no-default-lib="true" />
+/// <reference path="../../core/lib.deno_core.d.ts" />
+/// <reference path="../webidl/internal.d.ts" />
+/// <reference path="../web/internal.d.ts" />
+/// <reference path="../web/lib.deno_web.d.ts" />
+/// <reference path="../url/internal.d.ts" />
+/// <reference path="../url/lib.deno_url.d.ts" />
+/// <reference path="./internal.d.ts" />
+/// <reference lib="esnext" />
 "use strict";
 
 import * as ops from '../../ops/index.js';

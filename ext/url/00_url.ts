@@ -4,9 +4,9 @@
 // - https://github.com/denoland/deno/blob/main/ext/url/lib.deno_url.d.ts
 
 // @ts-check
-// <reference path="../../core/internal.d.ts" />
-// <reference path="../../core/lib.deno_core.d.ts" />
-// <reference path="../webidl/internal.d.ts" />
+/// <reference path="../../core/internal.d.ts" />
+/// <reference path="../../core/lib.deno_core.d.ts" />
+/// <reference path="../webidl/internal.d.ts" />
 
 "use strict";
 

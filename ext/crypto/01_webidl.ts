@@ -2,7 +2,7 @@
 // Based on https://github.com/denoland/deno/blob/main/ext/crypto/01_webidl.js
 
 // @ts-check
-// <reference path="../../core/lib.deno_core.d.ts" />
+/// <reference path="../../core/lib.deno_core.d.ts" />
 /// <reference path="../webidl/internal.d.ts" />
 
 "use strict";

@@ -2,10 +2,10 @@
 // Based on https://github.com/denoland/deno/blob/main/ext/web/06_streams.js
 
 // @ts-check
-// <reference path="../webidl/internal.d.ts" />
-// <reference path="./06_streams_types.ts" />
-// <reference path="./lib.deno_web.d.ts" />
-// <reference lib="esnext" />
+/// <reference path="../webidl/internal.d.ts" />
+/// <reference path="../../ext/web/06_streams_types.d.ts" />
+/// <reference path="./lib.deno_web.d.ts" />
+/// <reference lib="esnext" />
 "use strict";
 
 import { primordials } from '../../core/00_primordials.js';

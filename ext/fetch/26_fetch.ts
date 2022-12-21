@@ -2,11 +2,11 @@
 // Based on https://github.com/denoland/deno/blob/main/ext/fetch/26_fetch.js
 
 // @ts-check
-// <reference path="../../core/lib.deno_core.d.ts" />
+/// <reference path="../../core/lib.deno_core.d.ts" />
 /// <reference path="../web/internal.d.ts" />
 /// <reference path="../url/internal.d.ts" />
 /// <reference path="../web/lib.deno_web.d.ts" />
-// <reference path="../web/06_streams_types.d.ts" />
+/// <reference path="../web/06_streams_types.d.ts" />
 /// <reference path="./internal.d.ts" />
 /// <reference path="./lib.deno_fetch.d.ts" />
 /// <reference lib="esnext" />

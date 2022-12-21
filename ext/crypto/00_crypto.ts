@@ -2,8 +2,8 @@
 // Based on https://github.com/denoland/deno/blob/main/ext/crypto/00_crypto.js
 
 // @ts-check
-// <reference path="../../core/internal.d.ts" />
-// <reference path="../../core/lib.deno_core.d.ts" />
+/// <reference path="../../core/internal.d.ts" />
+/// <reference path="../../core/lib.deno_core.d.ts" />
 /// <reference path="../webidl/internal.d.ts" />
 /// <reference path="../web/lib.deno_web.d.ts" />
 

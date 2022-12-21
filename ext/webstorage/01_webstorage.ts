@@ -1,7 +1,7 @@
 // Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
 // Based on https://github.com/denoland/deno/blob/main/ext/webstorage/01_webstorage.js
 
-// <reference path="../../core/internal.d.ts" />
+/// <reference path="../../core/internal.d.ts" />
 
 import { primordials } from '../../core/00_primordials.js';
 import * as core from '../../core/01_core.js';

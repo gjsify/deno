@@ -2,9 +2,9 @@
 // Based on https://github.com/denoland/deno/blob/main/ext/web/14_compression.js
 
 // @ts-check
-// <reference path="../../core/lib.deno_core.d.ts" />
-// <reference path="./internal.d.ts" />
-// <reference path="./lib.deno_web.d.ts" />
+/// <reference path="../../core/lib.deno_core.d.ts" />
+/// <reference path="./internal.d.ts" />
+/// <reference path="./lib.deno_web.d.ts" />
 
 "use strict";
 
