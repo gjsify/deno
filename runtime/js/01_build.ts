@@ -3,9 +3,11 @@
 "use strict";
 
 import { primordials } from '../../core/00_primordials.js';
+import { target } from '@gjsify/utils';
 
 const { ObjectFreeze, StringPrototypeSplit } = primordials;
 
+// Test this in deno with: `console.log(Deno.build)`
 export const build = {
   target: "unknown",
   arch: "unknown",
@@ -14,6 +16,10 @@ export const build = {
   env: undefined as string | undefined
 };
 
+/**
+ *
+ * @param target E.g. `"x86_64-gjsify-linux-gnu"`
+ */
 export function setBuildInfo(target: string) {
   const [arch, vendor, os, env] = StringPrototypeSplit(target, "-" as any, 4);
   build.target = target;
@@ -23,3 +29,6 @@ export function setBuildInfo(target: string) {
   build.env = env;
   ObjectFreeze(build);
 }
+
+// Gjsify
+setBuildInfo(target);
