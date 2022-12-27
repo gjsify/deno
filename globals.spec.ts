@@ -42,4 +42,19 @@ export default async () => {
 			expect(location.search).toBe("");
 		});
 	});
+
+	await describe('btoa', async () => {
+		await it('should return "aGVsbG8gd29ybGQ=" for "hello world"', async () => {
+      const text = "hello world";
+      const encoded = btoa(text);
+			expect(encoded).toBe("aGVsbG8gd29ybGQ=");
+		});
+	});
+	await describe('atob', async () => {
+		await it('should return "hello world" for "aGVsbG8gd29ybGQ="', async () => {
+      const encoded = "aGVsbG8gd29ybGQ=";
+      const decoded = atob(encoded);
+			expect(decoded).toBe("hello world");
+		});
+	});
 }

@@ -1,22 +1,22 @@
+import GLib from '@gjsify/types/GLib-2.0';
 
 export const op_base64_decode = (data: string): Uint8Array => {
-  console.warn("Not implemented: ops.op_base64_decode");
-  return new Uint8Array();
+  return GLib.base64_decode(data)
 }
 
 export const op_base64_encode = (data: Uint8Array): string => {
-  console.warn("Not implemented: ops.op_base64_encode");
-  return "";
+  return GLib.base64_encode(data)
 }
 
 export const op_base64_atob = (data: string): string => {
-  console.warn("Not implemented: ops.op_base64_atob");
-  return "";
+  const decoder = new TextDecoder();
+  return decoder.decode(op_base64_decode(data));
 }
 
 export const op_base64_btoa = (data: string): string => {
-  console.warn("Not implemented: ops.op_base64_btoa");
-  return "";
+  const encoder = new TextEncoder();
+  const utf8Arr = encoder.encode(data);
+  return op_base64_encode(utf8Arr)
 }
 
 export const op_encoding_normalize_label = (label: string): string => {
