@@ -1,6 +1,6 @@
 import '@gjsify/types/index';
 import GLib from '@gjsify/types/GLib-2.0';
-import { getLocale, getPid, getPpid, existsTty, getArgs, parseArgv, target } from '@gjsify/utils';
+import { getLocale, getPid, getPpid, existsTty, getArgs, parseArgv } from '@gjsify/utils';
 import { mainRuntime } from './runtime/js/99_main.js';
 
 const args = getArgs();
@@ -22,7 +22,6 @@ mainRuntime({
   debugFlag: argsObj.debug as boolean || false,
   denoVersion: "",
   isTty: hasTty,
-  target,
   tsVersion: "0.0.0",
   v8Version: "0.0.0.0",
 });
