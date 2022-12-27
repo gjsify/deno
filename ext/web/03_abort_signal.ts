@@ -22,6 +22,8 @@ const {
 
 import { setTimeout, refTimer, unrefTimer } from './02_timers.js';
 
+import { DOMException } from '../../ext/web/01_dom_exception.js'
+
 export const add = Symbol("[[add]]");
 export const signalAbort = Symbol("[[signalAbort]]");
 export const remove = Symbol("[[remove]]");

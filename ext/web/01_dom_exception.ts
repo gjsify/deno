@@ -129,10 +129,12 @@ export class DOMException {
     // `DOMException` isn't a native error, so `Error.prepareStackTrace()` is
     // not called when accessing `.stack`, meaning our structured stack trace
     // hack doesn't apply. This patches it in.
-    ObjectDefineProperty(this, "__callSiteEvals", {
-      value: ArrayPrototypeSlice((error as any).__callSiteEvals, 1),
-      configurable: true,
-    });
+
+    // TODO: Gjsify: Gjs Errors do not have the __callSiteEvals property
+    // ObjectDefineProperty(this, "__callSiteEvals", {
+    //   value: ArrayPrototypeSlice((error as any).__callSiteEvals, 1),
+    //   configurable: true,
+    // });
   }
 
   get message(): string {
