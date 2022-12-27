@@ -912,13 +912,7 @@ export const op_exec_path = (...args: any[]) => {
 export const op_exit = (...args: any[]) => {
   console.warn("Not implemented: ops.op_exit");
 }
-export const op_delete_env = (key: string): void => {
-  console.warn("Not implemented: ops.op_delete_env");
-}
-export const op_get_env = (key: string): string | undefined => {
-  console.warn("Not implemented: ops.op_get_env");
-  return undefined;
-}
+
 export const op_getuid = (...args: any[]) => {
   console.warn("Not implemented: ops.op_getuid");
 }

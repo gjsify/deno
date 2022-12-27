@@ -97,7 +97,7 @@ function parseUrl(
   const hostStart = schemeEnd + 3;
   const hostEnd = url.indexOf("/", hostStart);
   if (schemeEnd < 0 || hostEnd < 0) {
-    console.error(new Error(`Invalid url: ${url}`));
+    // console.error(new Error(`Invalid url: ${url}`));
     return ParseStatus.Err;
   }
 
