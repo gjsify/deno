@@ -560,11 +560,7 @@ function bootstrapMainRuntime(runtimeOptions: RuntimeOptions) {
     // the op function that needs to be passed will be invalidated by creating
     // a snapshot
     ObjectAssign(finalDenoNs, {
-      Command: __bootstrap.spawn.createCommand(
-        __bootstrap.spawn.createSpawn(ops.op_spawn_child),
-        __bootstrap.spawn.createSpawnSync(ops.op_spawn_sync),
-        __bootstrap.spawn.createSpawnChild(ops.op_spawn_child),
-      ),
+      Command: __bootstrap.spawn.Command,
       serve: __bootstrap.flash.createServe(ops.op_flash_serve),
       listenDatagram: __bootstrap.net.createListenDatagram(
         ops.op_net_listen_udp,
@@ -699,11 +695,7 @@ function bootstrapWorkerRuntime(
     // the op function that needs to be passed will be invalidated by creating
     // a snapshot
     ObjectAssign(finalDenoNs, {
-      Command: __bootstrap.spawn.createCommand(
-        __bootstrap.spawn.createSpawn(ops.op_spawn_child),
-        __bootstrap.spawn.createSpawnSync(ops.op_spawn_sync),
-        __bootstrap.spawn.createSpawnChild(ops.op_spawn_child),
-      ),
+      Command: __bootstrap.spawn.Command,
       serve: __bootstrap.flash.createServe(ops.op_flash_serve),
       listenDatagram: __bootstrap.net.createListenDatagram(
         ops.op_net_listen_udp,

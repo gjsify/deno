@@ -218,3 +218,7 @@ export const env: Deno.Env = {
 export function execPath() {
   return ops.op_exec_path();
 }
+
+export function memoryUsage(): Deno.MemoryUsage {
+  return ops.op_runtime_memory_usage();
+}

@@ -133,7 +133,7 @@ export const denoNs = {
 
 export const denoNsUnstable = {
   DiagnosticCategory: __bootstrap.diagnostics.DiagnosticCategory,
-  // TODO: listenDatagram: __bootstrap.net.listenDatagram,
+  listenDatagram: __bootstrap.net.listenDatagram,
   umask: __bootstrap.fs.umask,
   HttpClient: __bootstrap.fetch.HttpClient,
   createHttpClient: __bootstrap.fetch.createHttpClient,

@@ -392,6 +392,11 @@ export function createListenDatagram(udpOpFn, unixOpFn) {
   };
 }
 
+export const listenDatagram = createListenDatagram(
+  ops.op_node_unstable_net_listen_udp,
+  ops.op_node_unstable_net_listen_unixpacket,
+)
+
 export async function connect(args) {
   switch (args.transport ?? "tcp") {
     case "tcp": {

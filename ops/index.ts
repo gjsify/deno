@@ -12,11 +12,12 @@ export * from '../runtime/ops/os/mod.js';
 export * from '../runtime/ops/fs.js';
 export * from '../runtime/ops/io.js';
 export * from '../runtime/ops/spawn.js';
+export * from '../runtime/ops/tty.js';
 export * from '../ext/node/lib.js';
 export * from '../ext/napi/lib.js';
 export * from '../ext/web/lib.js';
 export * from '../cli/ops/testing.js';
-export * from '../ext/url/lib.js'
+export * from '../ext/url/lib.js';
 
 import type {
   TypedArray,
@@ -906,9 +907,7 @@ export const op_env = (): { [index: string]: string } => {
   console.warn("Not implemented: ops.op_env");
   return {};
 }
-export const op_exec_path = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_exec_path");
-}
+
 export const op_exit = (...args: any[]) => {
   console.warn("Not implemented: ops.op_exit");
 }
@@ -969,12 +968,7 @@ export const op_signal_poll = (...args: any[]) => {
 export const op_set_raw = (...args: any[]) => {
   console.warn("Not implemented: ops.op_set_raw");
 }
-export const op_isatty = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_isatty");
-}
-export const op_console_size = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_console_size");
-}
+
 export const op_http_accept = (...args: any[]) => {
   console.warn("Not implemented: ops.op_http_accept");
 }
@@ -1174,10 +1168,6 @@ export const op_url_get_serialization = () => {
 export const op_arraybuffer_was_detached = (O: ArrayBufferLike): boolean => {
   console.warn("Not implemented: ops.op_arraybuffer_was_detached");
   return false;
-}
-
-export const op_stdin_set_raw = (mode: boolean, cbreak: boolean): void => {
-  console.warn("Not implemented: ops.op_stdin_set_raw");
 }
 
 export const op_pledge_test_permissions = (permissions: Deno.PermissionOptions) => {

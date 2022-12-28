@@ -350,6 +350,12 @@ export function createCommand(spawn, spawnSync, spawnChild) {
   };
 }
 
+export const Command = createCommand(
+  createSpawn(ops.op_spawn_child),
+  createSpawnSync(ops.op_spawn_sync),
+  createSpawnChild(ops.op_spawn_child),
+)
+
 // window.__bootstrap.spawn = {
 //   Child,
 //   ChildProcess: Child,

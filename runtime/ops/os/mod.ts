@@ -2,9 +2,20 @@ import GLib from '@gjsify/types/GLib-2.0'
 
 const startTime = new Date().getTime();
 
-export const op_runtime_memory_usage = (): number => {
+export const op_exec_path = (...args: any[]) => {
+  console.warn("Not tested: ops.op_exec_path");
+  const [__filename] = GLib.filename_from_uri(import.meta.url);
+  return __filename;
+}
+
+export const op_runtime_memory_usage = (): Deno.MemoryUsage => {
   console.warn("Not implemented: ops.op_runtime_memory_usage");
-  return -1;
+  return {
+    external: 0,
+    heapTotal: 0,
+    heapUsed: 0,
+    rss: 0,
+  }
 }
 
 export const op_delete_env = (key: string): void => {
