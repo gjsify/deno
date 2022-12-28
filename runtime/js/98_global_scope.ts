@@ -78,8 +78,8 @@ export const windowOrWorkerGlobalScope = {
   ),
   Request: util.nonEnumerable(fetch.Request),
   Response: util.nonEnumerable(fetch.Response),
-  // Already defined by Gjs: TextDecoder: util.nonEnumerable(encoding.TextDecoder),
-  // Already defined by Gjs: TextEncoder: util.nonEnumerable(encoding.TextEncoder),
+  // Gjsify: already defined by Gjs: TextDecoder: util.nonEnumerable(encoding.TextDecoder),
+  // Gjsify: already defined by Gjs: TextEncoder: util.nonEnumerable(encoding.TextEncoder),
   TextDecoderStream: util.nonEnumerable(encoding.TextDecoderStream),
   TextEncoderStream: util.nonEnumerable(encoding.TextEncoderStream),
   TransformStream: util.nonEnumerable(streams.TransformStream),
@@ -114,8 +114,8 @@ export const windowOrWorkerGlobalScope = {
   ),
   atob: util.writable(base64.atob),
   btoa: util.writable(base64.btoa),
-  // Already defined by Gjs:clearInterval: util.writable(timers.clearInterval),
-  // Already defined by Gjs:clearTimeout: util.writable(timers.clearTimeout),
+  // Gjsify: already defined by Gjs:clearInterval: util.writable(timers.clearInterval),
+  // Gjsify: already defined by Gjs:clearTimeout: util.writable(timers.clearTimeout),
   caches: {
     enumerable: true,
     configurable: true,
@@ -123,7 +123,7 @@ export const windowOrWorkerGlobalScope = {
   },
   CacheStorage: util.nonEnumerable(caches.CacheStorage),
   Cache: util.nonEnumerable(caches.Cache),
-  // Already defined by Gjs:
+  // Gjsify: already defined by Gjs:
   // console: util.nonEnumerable(
   //   new Console((msg, level) => core.print(msg, level > 1)),
   // ),
@@ -133,8 +133,8 @@ export const windowOrWorkerGlobalScope = {
   fetch: util.writable(fetch.fetch),
   performance: util.writable(performance.performance),
   reportError: util.writable(event.reportError),
-  // Already defined by Gjs: setInterval: util.writable(timers.setInterval),
-  // Already defined by Gjs: setTimeout: util.writable(timers.setTimeout),
+  // Gjsify: already defined by Gjs: setInterval: util.writable(timers.setInterval),
+  // Gjsify: already defined by Gjs: setTimeout: util.writable(timers.setTimeout),
   structuredClone: util.writable(messagePort.structuredClone),
   // Branding as a WebIDL object
   [webidl.brand]: util.nonEnumerable(webidl.brand),
@@ -299,7 +299,7 @@ export const mainRuntimeGlobalProperties = {
   Location: location.locationConstructorDescriptor,
   location: location.locationDescriptor,
   Window: globalInterfaces.windowConstructorDescriptor,
-  // Already defined by Gjs: window: util.readOnly(globalThis),
+  // Gjsify: already defined by Gjs: window: util.readOnly(globalThis),
   self: util.writable(globalThis),
   Navigator: util.nonEnumerable(Navigator),
   navigator: {

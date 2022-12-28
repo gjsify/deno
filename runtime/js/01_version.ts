@@ -3,6 +3,7 @@
 "use strict";
 
 import { primordials } from '../../core/00_primordials.js';
+import { getGjsVersion } from '@gjsify/utils'
 
 const { ObjectFreeze } = primordials;
 
@@ -10,6 +11,7 @@ export const version = {
   deno: "",
   v8: "",
   typescript: "",
+  gjs: getGjsVersion(),
 };
 
 export function setVersions(

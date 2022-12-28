@@ -1,6 +1,10 @@
-import GLib from '@gjsify/types/GLib-2.0'
+import GLib from '@gjsify/types/GLib-2.0';
+
+const System = imports.system;
 
 const startTime = new Date().getTime();
+
+let exitCode = 0;
 
 export const op_exec_path = (...args: any[]) => {
   console.warn("Not tested: ops.op_exec_path");
@@ -12,10 +16,14 @@ export const op_runtime_memory_usage = (): Deno.MemoryUsage => {
   console.warn("Not implemented: ops.op_runtime_memory_usage");
   return {
     external: 0,
-    heapTotal: 0,
+    heapTotal: Number.MAX_SAFE_INTEGER,
     heapUsed: 0,
     rss: 0,
   }
+}
+
+export const op_set_env = (key: string, value: string): void => {
+  GLib.setenv(key, value, true);
 }
 
 export const op_delete_env = (key: string): void => {
@@ -24,6 +32,24 @@ export const op_delete_env = (key: string): void => {
 
 export const op_get_env = (key: string): string | undefined => {
   return GLib.getenv(key);
+}
+
+export const op_env = (): { [index: string]: string } => {
+  return GLib.listenv().reduce(
+    (env, key) => {
+      env[key] = GLib.getenv(key);
+      return env;
+    },
+    {}
+  );
+}
+
+export const op_set_exit_code = (code: number) => {
+  exitCode = code;
+}
+
+export const op_exit = () => {
+  System.exit(exitCode);
 }
 
 export const op_os_release = (): string => {

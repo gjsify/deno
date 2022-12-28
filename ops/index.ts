@@ -838,10 +838,7 @@ export const op_make_temp_file_sync = (...args: any[]) => {
 export const op_make_temp_file_async = async (...args: any[]) => {
   console.warn("Not implemented: ops.op_make_temp_file_async");
 }
-export const op_cwd = (): string => {
-  console.warn("Not implemented: ops.op_cwd");
-  return "";
-}
+
 export const op_futime_sync = (...args: any[]) => {
   console.warn("Not implemented: ops.op_futime_sync");
 }
@@ -903,14 +900,6 @@ export const op_tls_accept = (...args: any[]) => {
 export const op_tls_handshake = (...args: any[]) => {
   console.warn("Not implemented: ops.op_tls_handshake");
 }
-export const op_env = (): { [index: string]: string } => {
-  console.warn("Not implemented: ops.op_env");
-  return {};
-}
-
-export const op_exit = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_exit");
-}
 
 export const op_getuid = (...args: any[]) => {
   console.warn("Not implemented: ops.op_getuid");
@@ -925,13 +914,6 @@ export const op_loadavg = (): number[] => {
 }
 export const op_network_interfaces = (...args: any[]) => {
   console.warn("Not implemented: ops.op_network_interfaces");
-}
-
-export const op_set_env = (key: string, value: string): void => {
-  console.warn("Not implemented: ops.op_set_env");
-}
-export const op_set_exit_code = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_set_exit_code");
 }
 
 export const op_query_permission = (desc: Deno.PermissionDescriptor): PermissionState => {
