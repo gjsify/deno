@@ -9,7 +9,12 @@ import { primordials } from '../../core/00_primordials.js';
 import * as core from '../../core/01_core.js';
 import * as ops from '../../ops/index.js';
 const { BadResourcePrototype, InterruptedPrototype } = core;
-import { readableStreamForRid, writableStreamForRid  } from '../../ext//web/06_streams.js'
+import {
+  readableStreamForRidUnrefable,
+  readableStreamForRidUnrefableRef,
+  readableStreamForRidUnrefableUnref,
+  writableStreamForRid,
+} from '../../ext//web/06_streams.js'
 const {
   Error,
   ObjectPrototypeIsPrototypeOf,
@@ -24,17 +29,6 @@ const {
 import type { ReadableStream, WritableStream } from '../web/06_streams.js';
 
 const promiseIdSymbol = SymbolFor("Deno.core.internalPromiseId");
-
-async function read(
-  rid: number,
-  buffer,
-) {
-  if (buffer.length === 0) {
-    return 0;
-  }
-  const nread = await core.read(rid, buffer);
-  return nread === 0 ? null : nread;
-}
 
 async function write(rid: number, data) {
   return await core.write(rid, data);
@@ -52,6 +46,8 @@ export class Conn implements Deno.Reader, Deno.Writer, Deno.Closer  {
   #rid: number = 0;
   #remoteAddr: Deno.Addr = null;
   #localAddr: Deno.Addr = null;
+  #unref = false;
+  #pendingReadPromiseIds = [];
 
   #readable: ReadableStream<Uint8Array>;
   #writable: WritableStream<Uint8Array>;
@@ -81,8 +77,26 @@ export class Conn implements Deno.Reader, Deno.Writer, Deno.Closer  {
     return write(this.rid, p);
   }
 
-  read(p) {
-    return read(this.rid, p);
+
+  async read(buffer) {
+    if (buffer.length === 0) {
+      return 0;
+    }
+    const promise = core.read(this.rid, buffer);
+    const promiseId = promise[promiseIdSymbol];
+    if (this.#unref) core.unrefOp(promiseId);
+    this.#pendingReadPromiseIds.push(promiseId);
+    let nread;
+    try {
+      nread = await promise;
+    } catch (e) {
+      throw e;
+    } finally {
+      this.#pendingReadPromiseIds = this.#pendingReadPromiseIds.filter((id) =>
+        id !== promiseId
+      );
+    }
+    return nread === 0 ? null : nread;
   }
 
   close() {
@@ -97,7 +111,10 @@ export class Conn implements Deno.Reader, Deno.Writer, Deno.Closer  {
 
   get readable() {
     if (this.#readable === undefined) {
-      this.#readable = readableStreamForRid(this.rid);
+      this.#readable = readableStreamForRidUnrefable(this.rid);
+      if (this.#unref) {
+        readableStreamForRidUnrefableUnref(this.#readable);
+      }
     }
     return this.#readable;
   }
@@ -107,6 +124,22 @@ export class Conn implements Deno.Reader, Deno.Writer, Deno.Closer  {
       this.#writable = writableStreamForRid(this.rid);
     }
     return this.#writable;
+  }
+
+  ref() {
+    this.#unref = false;
+    if (this.#readable) {
+      readableStreamForRidUnrefableRef(this.#readable);
+    }
+    this.#pendingReadPromiseIds.forEach((id) => core.refOp(id));
+  }
+
+  unref() {
+    this.#unref = true;
+    if (this.#readable) {
+      readableStreamForRidUnrefableUnref(this.#readable);
+    }
+    this.#pendingReadPromiseIds.forEach((id) => core.unrefOp(id));
   }
 }
 

@@ -927,19 +927,14 @@ export const op_loadavg = (): number[] => {
 export const op_network_interfaces = (...args: any[]) => {
   console.warn("Not implemented: ops.op_network_interfaces");
 }
-export const op_os_release = (): string => {
-  console.warn("Not implemented: ops.op_os_release");
-  return "";
-}
+
 export const op_set_env = (key: string, value: string): void => {
   console.warn("Not implemented: ops.op_set_env");
 }
 export const op_set_exit_code = (...args: any[]) => {
   console.warn("Not implemented: ops.op_set_exit_code");
 }
-export const op_system_memory_info = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_system_memory_info");
-}
+
 export const op_query_permission = (desc: Deno.PermissionDescriptor): PermissionState => {
   console.warn("Not implemented: ops.op_query_permission");
   return "denied";
@@ -1179,16 +1174,6 @@ export const op_url_get_serialization = () => {
 export const op_arraybuffer_was_detached = (O: ArrayBufferLike): boolean => {
   console.warn("Not implemented: ops.op_arraybuffer_was_detached");
   return false;
-}
-
-export const op_gid = (): number => {
-  console.warn("Not implemented: ops.op_gid");
-  return 0;
-}
-
-export const op_uid = (): number => {
-  console.warn("Not implemented: ops.op_uid");
-  return 0;
 }
 
 export const op_stdin_set_raw = (mode: boolean, cbreak: boolean): void => {

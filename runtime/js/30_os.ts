@@ -66,6 +66,10 @@ export function osRelease(): string {
   return ops.op_os_release();
 }
 
+export function osUptime() {
+  return ops.op_os_uptime();
+}
+
 export function systemMemoryInfo() {
   return ops.op_system_memory_info();
 }
