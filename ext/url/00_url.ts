@@ -405,11 +405,13 @@ export class URL {
     this.#updateComponents();
   }
 
-  /**
-   * @param {string} url
-   * @param {string} base
-   */
-  constructor(url: string, base?: string) {
+  constructor(url: string | URL, base?: string | URL) {
+    if(typeof url !== 'string') {
+      url = url.toString();
+    }
+    if(typeof base !== 'string') {
+      base = base.toString();
+    }
     const prefix = "Failed to construct 'URL'";
     url = webidl.converters.DOMString(url, { prefix, context: "Argument 1" });
     if (base !== undefined) {

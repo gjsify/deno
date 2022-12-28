@@ -2,6 +2,7 @@
 
 /// <reference no-default-lib="true" />
 /// <reference lib="esnext" />
+/// <reference path="../../cli/tsc/dts/lib.deno.ns.d.ts" />
 
 declare namespace Deno {
   /** @category Network */

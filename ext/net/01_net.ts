@@ -1,3 +1,5 @@
+/// <reference path="../../ext/net/lib.deno_net.d.ts" />
+
 // Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
 // Based on https://github.com/denoland/deno/blob/main/ext/net/01_net.js
 
