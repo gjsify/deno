@@ -406,10 +406,10 @@ export class URL {
   }
 
   constructor(url: string | URL, base?: string | URL) {
-    if(typeof url !== 'string') {
+    if(typeof url === 'object') {
       url = url.toString();
     }
-    if(typeof base !== 'string') {
+    if(typeof base === 'object') {
       base = base.toString();
     }
     const prefix = "Failed to construct 'URL'";

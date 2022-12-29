@@ -4,7 +4,7 @@ import { getLocale, getPid, getPpid, existsTty, getArgs, parseArgv } from '@gjsi
 import { mainRuntime } from './runtime/js/99_main.js';
 
 const args = getArgs();
-const argsObj = parseArgv(args.slice(2));
+const argsObj = parseArgv(args);
 const hasTty = existsTty();
 
 mainRuntime({
