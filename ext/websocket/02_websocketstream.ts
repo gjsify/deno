@@ -14,6 +14,7 @@ import { writableStreamClose, Deferred, WritableStream } from '../web/06_streams
 import { DOMException } from '../web/01_dom_exception.js';
 import { add, remove } from '../web/03_abort_signal.js';
 import { headersFromHeaderList, headerListFromHeaders, fillHeaders } from '../fetch/20_headers.js';
+import { URL } from '../url/00_url.js';
 
 const {
   ArrayPrototypeJoin,

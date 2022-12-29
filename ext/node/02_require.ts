@@ -44,6 +44,7 @@ const {
 } = primordials;
 
 import * as node from './01_node.js';
+import { URL } from '../url/00_url.js';
 
 // Map used to store CJS parsing data.
 export const cjsParseCache = new SafeWeakMap();

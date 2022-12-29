@@ -8,7 +8,7 @@ import {
   runWithTestUtil,
   TestCaseResult,
   TestResult,
-} from "./wpt/runner.ts";
+} from "./wpt/runner.js";
 import {
   assert,
   autoConfig,
@@ -30,10 +30,10 @@ import {
   runPy,
   updateManifest,
   wptreport,
-} from "./wpt/utils.ts";
+} from "./wpt/utils.js";
 import { blue, bold, green, red, yellow } from "../test_util/std/fmt/colors.ts";
 import { writeAll, writeAllSync } from "../test_util/std/streams/conversion.ts";
-import { saveExpectation } from "./wpt/utils.ts";
+import { saveExpectation } from "./wpt/utils.js";
 
 const command = Deno.args[0];
 

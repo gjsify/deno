@@ -299,7 +299,8 @@ export const mainRuntimeGlobalProperties = {
   Location: location.locationConstructorDescriptor,
   location: location.locationDescriptor,
   Window: globalInterfaces.windowConstructorDescriptor,
-  // Gjsify: already defined by Gjs: window: util.readOnly(globalThis),
+  // Gjsify: already defined by Gjs
+  // window: util.readOnly(globalThis),
   self: util.writable(globalThis),
   Navigator: util.nonEnumerable(Navigator),
   navigator: {

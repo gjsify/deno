@@ -994,7 +994,7 @@ webidl.converters.AddEventListenerOptions = (V, opts) => {
  *
  * @category DOM Events
  */
-export class EventTarget {
+export class EventTarget implements globalThis.EventTarget {
   constructor() {
     this[eventTargetData] = getDefaultTargetData();
     this[webidl.brand] = webidl.brand;
