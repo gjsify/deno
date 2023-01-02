@@ -34,6 +34,8 @@ const {
 
 import * as ops from '../ops/index.js';
 
+export { callConsole } from './bindings.js'
+
 const errorMap = {};
 // Builtin v8 / JS errors
 registerErrorClass("Error", Error);

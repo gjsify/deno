@@ -6,6 +6,7 @@
 /// <reference path="../ext/url/lib.deno_url.d.ts" />
 
 export * from '../core/ops_builtin_v8.js';
+export * from '../core/ops_builtin.js';
 export * from './webstorage.js';
 export * from './crypto.js';
 export * from './node.js';
@@ -28,52 +29,12 @@ import type { TestDescription } from '../cli/js/40_testing.js';
 import type { URL } from '../ext/url/00_url.js';
 import type { HeaderList } from '../ext/fetch/20_headers.js';
 
-export const op_close = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_close");
-}
-export const op_try_close = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_try_close");
-}
-export const op_print = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_print");
-}
-export const op_resources = () => {
-  console.warn("Not implemented: ops.op_resources");
-}
-export const op_wasm_streaming_feed = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_wasm_streaming_feed");
-}
-export const op_wasm_streaming_set_url = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_wasm_streaming_set_url");
-}
-export const op_void_sync = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_void_sync");
-}
-export const op_void_async = async (...args: any[]) => {
-  console.warn("Not implemented: ops.op_void_async");
-}
-export const op_read = async (rid: number, buffer: Uint8Array): Promise<number> => {
-  console.warn("Not implemented: ops.op_read");
-  return 0;
-}
-export const op_read_all = async (rid: number): Promise<Uint8Array> => {
-  console.warn("Not implemented: ops.op_read_all");
-  return new Uint8Array();
-}
-export const op_write = async (rid: number, buffer: Uint8Array): Promise<number> => {
-  console.warn("Not implemented: ops.op_write");
-  return 0;
-}
-export const op_write_all = async (rid: number, buffer: Uint8Array | ArrayBufferView): Promise<void> => {
-  console.warn("Not implemented: ops.op_write_all");
-}
-export const op_shutdown = async (rid: number): Promise<void> => {
-  console.warn("Not implemented: ops.op_shutdown");
-}
-export const op_metrics = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_metrics");
-  return [];
-}
+
+
+
+
+
+
 
 export const op_urlpattern_parse = (input: URLPatternInput, baseURL: string): UrlComponents => {
   console.warn("Not implemented: ops.op_urlpattern_parse");
@@ -987,9 +948,7 @@ export const op_http_upgrade = (...args: any[]) => {
 export const op_format_diagnostic = (...args: any[]) => {
   console.warn("Not implemented: ops.op_format_diagnostic");
 }
-export const op_format_file_name = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_format_file_name");
-}
+
 export const op_emit = (...args: any[]) => {
   console.warn("Not implemented: ops.op_emit");
 }
@@ -997,16 +956,6 @@ export const op_emit = (...args: any[]) => {
 export const asyncOpsInfo = () => {
   console.warn("Not implemented: ops.asyncOpsInfo");
   return {}
-}
-
-export const op_is_proxy = (value): boolean => {
-  console.warn("Not implemented: ops.op_is_proxy");
-  return false;
-}
-
-export const op_str_byte_length = (str: string): number => {
-  console.warn("Not implemented: ops.op_str_byte_length");
-  return str.length;
 }
 
 export const op_url_get_serialization = () => {

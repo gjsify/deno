@@ -6,7 +6,7 @@
 "use strict";
 
 import { primordials } from '../../core/00_primordials.js';
-import * as core from '../../core/01_core.js';
+import { getProxyDetails, getPromiseDetails, callConsole } from '../../core/01_core.js';
 import * as colors from './01_colors.js';
 
 const {
@@ -664,7 +664,7 @@ function _inspectValue(
   value,
   inspectOptions,
 ) {
-  const proxyDetails = core.getProxyDetails(value);
+  const proxyDetails = getProxyDetails(value);
   if (proxyDetails != null && inspectOptions.showProxy) {
     return inspectProxy(proxyDetails, inspectOptions);
   }
@@ -1100,7 +1100,7 @@ function inspectPromise(
   const cyan = maybeColor(colors.cyan, inspectOptions);
   const red = maybeColor(colors.red, inspectOptions);
 
-  const [state, result] = core.getPromiseDetails(value);
+  const [state, result] = getPromiseDetails(value);
 
   if (state === PromiseState.Pending) {
     return `Promise { ${cyan("<pending>")} }`;
@@ -2337,21 +2337,26 @@ export function createFilteredInspectProxy<TObject>(
   }
 }
 
-// A helper function that will bind our own console implementation
-// with default implementation of Console from V8. This will cause
-// console messages to be piped to inspector console.
-//
-// We are using `Deno.core.callConsole` binding to preserve proper stack
-// frames in inspector console. This has to be done because V8 considers
-// the last JS stack frame as gospel for the inspector. In our case we
-// specifically want the latest user stack frame to be the one that matters
-// though.
-//
-// Inspired by:
-// https://github.com/nodejs/node/blob/1317252dfe8824fd9cfee125d2aaa94004db2f3b/lib/internal/util/inspector.js#L39-L61
-export function wrapConsole(consoleFromDeno, consoleFromV8) {
-  // @ts-ignore
-  const callConsole = core.callConsole;
+
+
+/**
+ * A helper function that will bind our own console implementation
+ * with default implementation of Console from V8. This will cause
+ * console messages to be piped to inspector console.
+ *
+ * We are using `Deno.core.callConsole` binding to preserve proper stack
+ * frames in inspector console. This has to be done because V8 considers
+ * the last JS stack frame as gospel for the inspector. In our case we
+ * specifically want the latest user stack frame to be the one that matters
+ * though.
+ *
+ * Inspired by:
+ * https://github.com/nodejs/node/blob/1317252dfe8824fd9cfee125d2aaa94004db2f3b/lib/internal/util/inspector.js#L39-L61
+ * @param consoleFromDeno
+ * @param consoleFromV8
+ */
+export function wrapConsole(consoleFromDeno: Console | globalThis.Console, consoleFromV8: Console | globalThis.Console) {
+  // const callConsole = core.callConsole;
 
   for (const key of new SafeArrayIterator(ObjectKeys(consoleFromV8))) {
     if (ObjectPrototypeHasOwnProperty(consoleFromDeno, key)) {
