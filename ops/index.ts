@@ -637,189 +637,19 @@ export const op_fs_events_open = (options: { recursive: boolean, paths: string[]
   console.warn("Not implemented: ops.op_fs_events_open");
   return 0;
 }
+
 export const op_fs_events_poll = (...args: any[]) => {
   console.warn("Not implemented: ops.op_fs_events_poll");
-}
-export const op_open_sync = (path: string, options: Deno.OpenOptions, mode: number): number => {
-  console.warn("Not implemented: ops.op_open_sync");
-  return 0;
-}
-export const op_open_async = async (path: string, options: Deno.OpenOptions, mode: number): Promise<number> => {
-  console.warn("Not implemented: ops.op_open_async");
-  return 0;
-}
-export const op_write_file_sync = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_write_file_sync");
-}
-export const op_write_file_async = async (...args: any[]) => {
-  console.warn("Not implemented: ops.op_write_file_async");
-}
-export const op_seek_sync = (options: { rid: number, offset: number, whence: Deno.SeekMode }): number => {
-  console.warn("Not implemented: ops.op_seek_sync");
-  return 0;
-}
-export const op_seek_async = async (options: { rid: number, offset: number, whence: Deno.SeekMode }): Promise<number> => {
-  console.warn("Not implemented: ops.op_seek_async");
-  return 0;
-}
-export const op_fdatasync_sync = (rid: number): void => {
-  console.warn("Not implemented: ops.op_fdatasync_sync");
-}
-export const op_fdatasync_async = async (rid: number): Promise<void> => {
-  console.warn("Not implemented: ops.op_fdatasync_async");
-}
-export const op_fsync_sync = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_fsync_sync");
-}
-export const op_fsync_async = async (...args: any[]) => {
-  console.warn("Not implemented: ops.op_fsync_async");
-}
-export const op_fstat_sync = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_fstat_sync");
-}
-export const op_fstat_async = async (...args: any[]) => {
-  console.warn("Not implemented: ops.op_fstat_async");
-}
-export const op_flock_sync = (rid: number, exclusive: boolean) => {
-  console.warn("Not implemented: ops.op_flock_sync");
-}
-export const op_flock_async = async (rid: number, exclusive: boolean) => {
-  console.warn("Not implemented: ops.op_flock_async");
-}
-export const op_funlock_sync = (rid: number) => {
-  console.warn("Not implemented: ops.op_funlock_sync");
-}
-export const op_funlock_async = async (rid: number) => {
-  console.warn("Not implemented: ops.op_funlock_async");
-}
-export const op_umask = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_umask");
-}
-export const op_chdir = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_chdir");
-}
-export const op_mkdir_sync = (args: { path: string; recursive: boolean; mode?: number; }): void => {
-  console.warn("Not implemented: ops.op_mkdir_sync");
-}
-export const op_mkdir_async = async (...args: any[]) => {
-  console.warn("Not implemented: ops.op_mkdir_async");
-}
-export const op_chmod_sync = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_chmod_sync");
-}
-export const op_chmod_async = async (...args: any[]) => {
-  console.warn("Not implemented: ops.op_chmod_async");
-}
-export const op_chown_sync = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_chown_sync");
-}
-export const op_chown_async = async (...args: any[]) => {
-  console.warn("Not implemented: ops.op_chown_async");
-}
-export const op_remove_sync = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_remove_sync");
-}
-export const op_remove_async = async (...args: any[]) => {
-  console.warn("Not implemented: ops.op_remove_async");
-}
-export const op_copy_file_sync = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_copy_file_sync");
-}
-export const op_copy_file_async = async (...args: any[]) => {
-  console.warn("Not implemented: ops.op_copy_file_async");
-}
-export const op_stat_sync = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_stat_sync");
-}
-export const op_stat_async = async (...args: any[]) => {
-  console.warn("Not implemented: ops.op_stat_async");
-}
-export const op_realpath_sync = (path: string): string => {
-  console.warn("Not implemented: ops.op_realpath_sync");
-  return "";
-}
-export const op_realpath_async = async (path: string): Promise<string> => {
-  console.warn("Not implemented: ops.op_realpath_async");
-  return "";
-}
-export const op_read_dir_sync = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_read_dir_sync");
-}
-export const op_read_dir_async = async (...args: any[]) => {
-  console.warn("Not implemented: ops.op_read_dir_async");
-}
-export const op_rename_sync = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_rename_sync");
-}
-export const op_rename_async = async (...args: any[]) => {
-  console.warn("Not implemented: ops.op_rename_async");
-}
-export const op_link_sync = (oldpath: string, newpath: string): void => {
-  console.warn("Not implemented: ops.op_link_sync");
-}
-export const op_link_async = async (oldpath: string, newpath: string): Promise<void> => {
-  console.warn("Not implemented: ops.op_link_async");
-}
-export const op_symlink_sync = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_symlink_sync");
-}
-export const op_symlink_async = async (...args: any[]) => {
-  console.warn("Not implemented: ops.op_symlink_async");
-}
-export const op_read_link_sync = (path: string): string => {
-  console.warn("Not implemented: ops.op_read_link_sync");
-  return "";
-}
-export const op_read_link_async = async (path: string): Promise<string> => {
-  console.warn("Not implemented: ops.op_read_link_async");
-  return "";
-}
-export const op_ftruncate_sync = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_ftruncate_sync");
-}
-export const op_ftruncate_async = async (...args: any[]) => {
-  console.warn("Not implemented: ops.op_ftruncate_async");
-}
-export const op_truncate_sync = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_truncate_sync");
-}
-export const op_truncate_async = async (...args: any[]) => {
-  console.warn("Not implemented: ops.op_truncate_async");
-}
-export const op_make_temp_dir_sync = (options: Deno.MakeTempOptions): string => {
-  console.warn("Not implemented: ops.op_make_temp_dir_sync");
-  return "";
-}
-export const op_make_temp_dir_async = async (options: Deno.MakeTempOptions): Promise<string> => {
-  console.warn("Not implemented: ops.op_make_temp_dir_async");
-  return "";
-}
-export const op_make_temp_file_sync = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_make_temp_file_sync");
-}
-export const op_make_temp_file_async = async (...args: any[]) => {
-  console.warn("Not implemented: ops.op_make_temp_file_async");
-}
-
-export const op_futime_sync = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_futime_sync");
-}
-export const op_futime_async = async (...args: any[]) => {
-  console.warn("Not implemented: ops.op_futime_async");
-}
-export const op_utime_sync = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_utime_sync");
-}
-export const op_utime_async = async (...args: any[]) => {
-  console.warn("Not implemented: ops.op_utime_async");
 }
 
 export const op_net_accept = (...args: any[]) => {
   console.warn("Not implemented: ops.op_net_accept");
 }
+
 export const op_net_connect = (...args: any[]) => {
   console.warn("Not implemented: ops.op_net_connect");
 }
+
 export const op_net_listen = (...args: any[]) => {
   console.warn("Not implemented: ops.op_net_listen");
 }

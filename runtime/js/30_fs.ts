@@ -646,12 +646,12 @@ export async function rename(oldpath: string | URL, newpath: string | URL): Prom
 //  high u32 | low u32
 //
 // 4. ?u64 converts a zero u64 value to JS null on Windows.
-function createByteStruct(types) {
+function createByteStruct(types): [(statBuf: Uint32Array) => Deno.FileInfo, Uint32Array] {
   // types can be "date", "bool" or "u64".
   // `?` prefix means optional on windows.
   let offset = 0;
   let str =
-    'const unix = Deno.build.os === "darwin" || Deno.build.os === "linux"; return {';
+    `const unix = "${build.os}" === "darwin" || "${build.os}" === "linux"; return {`;
   for (let [name, type] of new SafeArrayIterator(ObjectEntries<string>(types))) {
     const optional = type.startsWith("?");
     if (optional) type = type.slice(1);
@@ -678,7 +678,7 @@ function createByteStruct(types) {
   }
   str += "};";
   // ...so you don't like eval huh? don't worry, it only executes during snapshot :)
-  return [new Function("view", str), new Uint32Array(offset)];
+  return [new Function("view", str) as (statBuf: Uint32Array) => Deno.FileInfo, new Uint32Array(offset)];
 }
 
 const [statStruct, statBuf] = createByteStruct({
@@ -741,7 +741,7 @@ function parseFileInfo(response): Deno.FileInfo {
  */
 export function fstatSync(rid: number): Deno.FileInfo {
   ops.op_fstat_sync(rid, statBuf);
-  return (statStruct as Function)(statBuf) as Deno.FileInfo;
+  return statStruct(statBuf) as Deno.FileInfo;
 }
 
 /**
@@ -800,12 +800,11 @@ export async function lstat(path: string | URL): Promise<Deno.FileInfo> {
  * @category File System
  */
 export function lstatSync(path: string | URL): Deno.FileInfo {
-  ops.op_stat_sync(
+  const res = ops.op_stat_sync(
     pathFromURL(path),
     true,
-    statBuf,
   );
-  return (statStruct as Function)(statBuf);
+  return parseFileInfo(res);
 }
 
 /** Resolves to a {@linkcode Deno.FileInfo} for the specified `path`. Will
@@ -845,12 +844,12 @@ export async function stat(path: string | URL): Promise<Deno.FileInfo> {
  * @category File System
  */
 export function statSync(path: string | URL): Deno.FileInfo {
-  ops.op_stat_sync(
+  const res = ops.op_stat_sync(
     pathFromURL(path),
     false,
-    statBuf,
   );
-  return (statStruct as Function)(statBuf);
+
+  return parseFileInfo(res);
 }
 
 function coerceLen(len) {
