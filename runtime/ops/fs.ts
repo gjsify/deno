@@ -1,3 +1,10 @@
+import { primordials } from '../../core/00_primordials.js';
+
+const {
+  SymbolIterator,
+  Uint32Array,
+} = primordials;
+
 import GLib from '@gjsify/types/GLib-2.0';
 import Gio from '@gjsify/types/Gio-2.0';
 import { ExtFile } from '@gjsify/gio-2.0';
@@ -317,12 +324,54 @@ export const op_realpath_async = async (path: string): Promise<string> => {
   return path;
 }
 
-export const op_read_dir_sync = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_read_dir_sync");
+function readdirSync(path: string) {
+  const dir = ExtFile.newForPath(path);
+  const fileList = dir.enumerateChildren();
+  let result: Deno.DirEntry[] = [];
+
+  for (const child of fileList) {
+    const name = child.get_basename();
+    const fileType = child.query_file_type(Gio.FileQueryInfoFlags.NONE, null);
+    result.push({
+      name,
+      isFile: fileType === Gio.FileType.REGULAR,
+      isDirectory: fileType === Gio.FileType.DIRECTORY,
+      isSymlink: fileType === Gio.FileType.SYMBOLIC_LINK
+    });
+  }
+
+  return result;
 }
 
-export const op_read_dir_async = async (...args: any[]) => {
-  console.warn("Not implemented: ops.op_read_dir_async");
+async function readdirAsync(path: string) {
+  const dir = ExtFile.newForPath(path);
+  const fileList = await dir.enumerateChildrenAsync();
+  let result: Deno.DirEntry[] = [];
+
+  for (const child of fileList) {
+    const name = child.get_basename();
+    const fileType = child.query_file_type(Gio.FileQueryInfoFlags.NONE, null);
+    result.push({
+      name,
+      isFile: fileType === Gio.FileType.REGULAR,
+      isDirectory: fileType === Gio.FileType.DIRECTORY,
+      isSymlink: fileType === Gio.FileType.SYMBOLIC_LINK
+    });
+  }
+
+  return result;
+}
+
+export const op_read_dir_sync = (path: string) => {
+  return {
+    [SymbolIterator]: (): Iterable<Deno.DirEntry> => {
+      return readdirSync(path)
+    }
+  }
+}
+
+export const op_read_dir_async = async (path: string) => {
+  return readdirAsync(path)
 }
 
 export const op_rename_sync = (...args: any[]) => {
