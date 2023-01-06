@@ -1,3 +1,4 @@
+import GLib from "@gjsify/types/GLib-2.0";
 
 export const op_ref_op = (promiseId: number) => {
   console.warn("Not implemented: ops.op_ref_op");
@@ -43,8 +44,10 @@ export const op_eval_context = (source: string, specifier: string) => {
 }
 
 export const op_queue_microtask = (cb: () => void) => {
-  console.warn("Not implemented: ops.op_queue_microtask");
-  cb();
+  GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+    cb();
+    return GLib.SOURCE_REMOVE;
+  });
 }
 
 export const op_create_host_object = (): object => {

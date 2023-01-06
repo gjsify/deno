@@ -81,6 +81,7 @@ const {
   WeakMapPrototypeDelete,
   WeakMapPrototypeGet,
   WeakMapPrototypeSet,
+  setQueueMicrotask,
 } = primordials;
 
 import { __bootstrap } from './80_bootstrap.js';

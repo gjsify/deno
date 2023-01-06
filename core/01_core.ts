@@ -549,3 +549,9 @@ export const byteLength = (str: string) => ops.op_str_byte_length(str);
 export { prepareStackTrace } from './02_error.js';
 // ObjectAssign(globalThis.__bootstrap.core, { prepareStackTrace });
 // ObjectFreeze(globalThis.__bootstrap.core);
+
+// Direct bindings on `globalThis`
+if(!globalThis.queueMicrotask) {
+  ObjectAssign(globalThis, { queueMicrotask });
+  setQueueMicrotask(queueMicrotask);
+}
