@@ -1,4 +1,4 @@
-// Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 // Based on https://github.com/denoland/deno/blob/main/ext/cache/01_cache.js
 
 "use strict";
@@ -9,7 +9,6 @@ import * as core from '../../core/01_core.js';
 import * as webidl from '../webidl/00_webidl.js';
 const {
   Symbol,
-  SafeArrayIterator,
   TypeError,
   ObjectPrototypeIsPrototypeOf,
 } = primordials;
@@ -118,7 +117,8 @@ export class Cache {
     const varyHeader = getHeader(innerResponse.headerList, "vary");
     if (varyHeader) {
       const fieldValues = varyHeader.split(",");
-      for (const field of new SafeArrayIterator(fieldValues)) {
+      for (let i = 0; i < fieldValues.length; ++i) {
+        const field = fieldValues[i];
         if (field.trim() === "*") {
           throw new TypeError("Vary header must not contain '*'");
         }

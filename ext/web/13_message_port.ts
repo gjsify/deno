@@ -1,4 +1,4 @@
-// Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 // Based on https://github.com/denoland/deno/blob/main/ext/web/13_message_port.js
 
 // @ts-check
@@ -23,7 +23,6 @@ const {
   ArrayPrototypePush,
   ObjectPrototypeIsPrototypeOf,
   ObjectSetPrototypeOf,
-  SafeArrayIterator,
   Symbol,
   SymbolFor,
   SymbolIterator,
@@ -246,9 +245,8 @@ export function deserializeJsMessageData(messageData: messagePort.MessageData): 
   const arrayBufferIdsInTransferables = [];
   const transferredArrayBuffers = [];
 
-  for (
-    const transferable of new SafeArrayIterator(messageData.transferables)
-  ) {
+  for (let i = 0; i < messageData.transferables.length; ++i) {
+    const transferable = messageData.transferables[i];
     switch (transferable.kind) {
       case "messagePort": {
         const port = createMessagePort(transferable.data);
@@ -258,8 +256,8 @@ export function deserializeJsMessageData(messageData: messagePort.MessageData): 
       }
       case "arrayBuffer": {
         ArrayPrototypePush(transferredArrayBuffers, transferable.data);
-        const i = ArrayPrototypePush(transferables, null);
-        ArrayPrototypePush(arrayBufferIdsInTransferables, i);
+        const index = ArrayPrototypePush(transferables, null);
+        ArrayPrototypePush(arrayBufferIdsInTransferables, index);
         break;
       }
       default:
@@ -309,7 +307,8 @@ export function serializeJsMessageData(data: any, transferables: object[]): mess
   const serializedTransferables: messagePort.Transferable[] = [];
 
   let arrayBufferI = 0;
-  for (const transferable of new SafeArrayIterator(transferables)) {
+  for (let i = 0; i < transferables.length; ++i) {
+    const transferable = transferables[i];
     if (ObjectPrototypeIsPrototypeOf(MessagePortPrototype, transferable)) {
       webidl.assertBranded(transferable, MessagePortPrototype);
       const id = transferable[_id];

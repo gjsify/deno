@@ -1,4 +1,4 @@
-// Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 // Based on https://github.com/denoland/deno/blob/main/ext/fetch/21_formdata.js
 
 // @ts-check
@@ -26,7 +26,6 @@ const {
   MathRandom,
   ObjectPrototypeIsPrototypeOf,
   Symbol,
-  SafeArrayIterator,
   StringFromCharCode,
   StringPrototypeTrim,
   StringPrototypeSlice,
@@ -39,8 +38,6 @@ const {
   TypeError,
   TypedArrayPrototypeSubarray,
 } = primordials;
-
-import type { BodyInit } from './lib.deno_fetch.js';
 
 const entryList = Symbol("entry list");
 
@@ -175,7 +172,9 @@ export class FormData {
       context: "Argument 1",
     });
 
-    for (const entry of new SafeArrayIterator(this[entryList])) {
+    const entries = this[entryList];
+    for (let i = 0; i < entries.length; ++i) {
+        const entry = entries[i];
       if (entry.name === name) return entry.value;
     }
     return null;
@@ -192,7 +191,9 @@ export class FormData {
     });
 
     const returnList = [];
-    for (const entry of new SafeArrayIterator(this[entryList])) {
+    const entries = this[entryList];
+    for (let i = 0; i < entries.length; ++i) {
+      const entry = entries[i];
       if (entry.name === name) ArrayPrototypePush(returnList, entry.value);
     }
     return returnList;
@@ -208,7 +209,9 @@ export class FormData {
       context: "Argument 1",
     });
 
-    for (const entry of new SafeArrayIterator(this[entryList])) {
+    const entries = this[entryList];
+    for (let i = 0; i < entries.length; ++i) {
+      const entry = entries[i];
       if (entry.name === name) return true;
     }
     return false;
@@ -364,7 +367,8 @@ class MultipartParser {
   #parseHeaders(headersText: string): { headers: Headers, disposition: Map<string, string> } {
     const headers = new Headers();
     const rawHeaders = StringPrototypeSplit(headersText, "\r\n" as any);
-    for (const rawHeader of new SafeArrayIterator(rawHeaders)) {
+    for (let i = 0; i < rawHeaders.length; ++i) {
+      const rawHeader = rawHeaders[i];
       const sepIndex = StringPrototypeIndexOf(rawHeader, ":");
       if (sepIndex < 0) {
         continue; // Skip this header

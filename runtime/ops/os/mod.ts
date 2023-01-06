@@ -76,3 +76,7 @@ export const op_os_uptime = (): number => {
   const seconds = new Date().getTime() - startTime / 1000;
   return seconds;
 }
+
+export const op_node_unstable_os_uptime = (): number => {
+  return op_os_uptime();
+}

@@ -1,4 +1,4 @@
-// Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 // Based on
 // - https://github.com/denoland/deno/blob/main/ext/url/00_url.js
 // - https://github.com/denoland/deno/blob/main/ext/url/lib.deno_url.d.ts
@@ -226,7 +226,9 @@ export class URLSearchParams {
       context: "Argument 1",
     });
     const values = [];
-    for (const entry of new SafeArrayIterator(this[_list])) {
+    const entries = this[_list];
+    for (let i = 0; i < entries.length; ++i) {
+      const entry = entries[i];
       if (entry[0] === name) {
         ArrayPrototypePush(values, entry[1]);
       }
@@ -248,7 +250,9 @@ export class URLSearchParams {
       prefix,
       context: "Argument 1",
     });
-    for (const entry of new SafeArrayIterator(this[_list])) {
+    const entries = this[_list];
+    for (let i = 0; i < entries.length; ++i) {
+      const entry = entries[i];
       if (entry[0] === name) {
         return entry[1];
       }

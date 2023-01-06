@@ -1,4 +1,4 @@
-// Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 // Based on https://github.com/denoland/deno/blob/main/ext/web/01_mimesniff.js
 
 // @ts-check
@@ -27,7 +27,6 @@ const {
   MapPrototypeHas,
   MapPrototypeSet,
   RegExpPrototypeTest,
-  SafeArrayIterator,
   SafeMapIterator,
   StringPrototypeReplaceAll,
   StringPrototypeToLowerCase,
@@ -211,7 +210,8 @@ export function extractMimeType(headerValues: string[] | null): MimeType | null 
   let charset = null;
   let essence_ = null;
   let mimeType = null;
-  for (const value of new SafeArrayIterator(headerValues)) {
+  for (let i = 0; i < headerValues.length; ++i) {
+    const value = headerValues[i];
     const temporaryMimeType = parseMimeType(value);
     if (
       temporaryMimeType === null ||

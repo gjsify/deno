@@ -1,4 +1,4 @@
-// Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 // Based on https://raw.githubusercontent.com/denoland/deno/main/runtime/js/10_permissions.js
 "use strict";
 
@@ -32,7 +32,7 @@ interface StatusCacheValue {
 }
 
 /** @type {ReadonlyArray<"read" | "write" | "net" | "env" | "sys" | "run" | "ffi" | "hrtime">} */
-const permissionNames = [
+const permissionNames: ReadonlyArray<"read" | "write" | "net" | "env" | "sys" | "run" | "ffi" | "hrtime"> = [
   "read",
   "write",
   "net",
@@ -81,7 +81,7 @@ export class PermissionStatus extends EventTarget {
     return dispatched;
   }
 
-  [SymbolFor("Deno.privateCustomInspect")](inspect) {
+  [SymbolFor("Deno.privateCustomInspect")](inspect: (arg0: { state: Deno.PermissionState; onchange: (this: PermissionStatus, event: Event) => any; }) => any) {
     return `${this.constructor.name} ${
       inspect({ state: this.state, onchange: this.onchange })
     }`;
@@ -127,6 +127,22 @@ function isValidDescriptor(desc: unknown): desc is Deno.PermissionDescriptor {
     ArrayPrototypeIncludes(permissionNames, (desc as any).name);
 }
 
+/**
+ * @param {Deno.PermissionDescriptor} desc
+ * @returns {desc is Deno.PermissionDescriptor}
+ */
+function formDescriptor(desc: Deno.PermissionDescriptor): desc is Deno.PermissionDescriptor {
+  if (
+    desc.name === "read" || desc.name === "write" || desc.name === "ffi"
+  ) {
+    desc.path = pathFromURL(desc.path);
+  } else if (desc.name === "run") {
+    desc.command = pathFromURL(desc.command);
+  }
+
+  return true;
+}
+
 export class Permissions {
   constructor(key = null) {
     if (key != illegalConstructorKey) {
@@ -143,19 +159,13 @@ export class Permissions {
       );
     }
 
-    if (
-      desc.name === "read" || desc.name === "write" || desc.name === "ffi"
-    ) {
-      desc.path = pathFromURL(desc.path);
-    } else if (desc.name === "run") {
-      desc.command = pathFromURL(desc.command);
-    }
+    formDescriptor(desc);
 
     const state = opQuery(desc);
     return PromiseResolve(cache(desc, state));
   }
 
-  revoke(desc) {
+  revoke(desc: { name: string}) {
     if (!isValidDescriptor(desc)) {
       return PromiseReject(
         new TypeError(
@@ -164,17 +174,13 @@ export class Permissions {
       );
     }
 
-    if (desc.name === "read" || desc.name === "write") {
-      desc.path = pathFromURL(desc.path);
-    } else if (desc.name === "run") {
-      desc.command = pathFromURL(desc.command);
-    }
+    formDescriptor(desc);
 
     const state = opRevoke(desc);
     return PromiseResolve(cache(desc, state));
   }
 
-  request(desc) {
+  request(desc: { name: string}) {
     if (!isValidDescriptor(desc)) {
       return PromiseReject(
         new TypeError(
@@ -183,11 +189,7 @@ export class Permissions {
       );
     }
 
-    if (desc.name === "read" || desc.name === "write") {
-      desc.path = pathFromURL(desc.path);
-    } else if (desc.name === "run") {
-      desc.command = pathFromURL(desc.command);
-    }
+    formDescriptor(desc);
 
     const state = opRequest(desc);
     return PromiseResolve(cache(desc, state));

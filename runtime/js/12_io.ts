@@ -1,4 +1,4 @@
-// Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 // Based on https://raw.githubusercontent.com/denoland/deno/main/runtime/js/12_io.js
 
 // Interfaces 100% copied from Go.
@@ -14,7 +14,6 @@ const {
   Uint8Array,
   ArrayPrototypePush,
   MathMin,
-  SafeArrayIterator,
   TypedArrayPrototypeSubarray,
   TypedArrayPrototypeSet,
 } = primordials;
@@ -326,14 +325,15 @@ export function readAllSync(r: Deno.ReaderSync): Uint8Array {
 
 function concatBuffers(buffers) {
   let totalLen = 0;
-  for (const buf of new SafeArrayIterator(buffers)) {
-    totalLen += buf.byteLength;
+  for (let i = 0; i < buffers.length; ++i) {
+    totalLen += buffers[i].byteLength;
   }
 
   const contents = new Uint8Array(totalLen);
 
   let n = 0;
-  for (const buf of new SafeArrayIterator(buffers)) {
+  for (let i = 0; i < buffers.length; ++i) {
+    const buf = buffers[i];
     TypedArrayPrototypeSet(contents, buf, n);
     n += buf.byteLength;
   }

@@ -1,4 +1,4 @@
-// Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 "use strict";
 
 export interface RuntimeOptions {
@@ -75,13 +75,11 @@ const {
   SymbolFor,
   SymbolIterator,
   PromisePrototypeThen,
-  SafeArrayIterator,
   SafeWeakMap,
   TypeError,
   WeakMapPrototypeDelete,
   WeakMapPrototypeGet,
   WeakMapPrototypeSet,
-  setQueueMicrotask,
 } = primordials;
 
 import { __bootstrap } from './80_bootstrap.js';
@@ -255,7 +253,8 @@ function importScripts(...urls: Array<string|URL>) {
   );
   loadedMainWorkerScript = true;
 
-  for (const { url, script } of new SafeArrayIterator(scripts)) {
+  for (let i = 0; i < scripts.length; ++i) {
+    const { url, script } = scripts[i];
     const err = core.evalContext(script, url)[1];
     if (err !== null) {
       throw err.thrown;
@@ -536,6 +535,7 @@ function bootstrapMainRuntime(runtimeOptions: RuntimeOptions) {
         ops.op_node_unstable_net_listen_udp,
         ops.op_node_unstable_net_listen_unixpacket,
       ),
+      osUptime: __bootstrap.os.createOsUptime(ops.op_node_unstable_os_uptime),
     },
   });
 
@@ -567,6 +567,7 @@ function bootstrapMainRuntime(runtimeOptions: RuntimeOptions) {
         ops.op_net_listen_udp,
         ops.op_net_listen_unixpacket,
       ),
+      osUptime: __bootstrap.os.createOsUptime(ops.op_os_uptime),
     });
   }
 
@@ -671,6 +672,7 @@ function bootstrapWorkerRuntime(
         ops.op_node_unstable_net_listen_udp,
         ops.op_node_unstable_net_listen_unixpacket,
       ),
+      osUptime: __bootstrap.os.createOsUptime(ops.op_node_unstable_os_uptime),
     },
   });
 
@@ -702,6 +704,7 @@ function bootstrapWorkerRuntime(
         ops.op_net_listen_udp,
         ops.op_net_listen_unixpacket,
       ),
+      osUptime: __bootstrap.os.createOsUptime(ops.op_os_uptime),
     });
   }
   ObjectDefineProperties(finalDenoNs, {

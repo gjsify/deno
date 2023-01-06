@@ -1,4 +1,4 @@
-// Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 // Based on https://github.com/denoland/deno/blob/main/runtime/js/30_os.js
 "use strict";
 
@@ -66,8 +66,10 @@ export function osRelease(): string {
   return ops.op_os_release();
 }
 
-export function osUptime() {
-  return ops.op_os_uptime();
+export function createOsUptime(opFn) {
+  return function osUptime() {
+    return opFn();
+  };
 }
 
 export function systemMemoryInfo() {

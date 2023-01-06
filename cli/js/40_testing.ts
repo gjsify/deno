@@ -1,4 +1,4 @@
-// Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 "use strict";
 
 import { primordials } from '../../core/00_primordials.js';
@@ -1142,7 +1142,7 @@ export async function runTests({
   if (shuffle !== null) {
     // http://en.wikipedia.org/wiki/Linear_congruential_generator
     // Use BigInt for everything because the random seed is u64.
-    const nextInt = (function (state) {
+    const nextInt = function (state) {
       const m = 0x80000000n;
       const a = 1103515245n;
       const c = 12345n;
@@ -1150,7 +1150,7 @@ export async function runTests({
       return function (max) {
         return state = ((a * state + c) % m) % BigInt(max);
       };
-    }(BigInt(shuffle)));
+    }(BigInt(shuffle));
 
     for (let i = filtered.length - 1; i > 0; i--) {
       const j = nextInt(i);

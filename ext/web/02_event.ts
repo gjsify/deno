@@ -1,4 +1,4 @@
-// Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 // Based on https://github.com/denoland/deno/blob/main/ext/web/02_event.js
 
 // This module follows most of the WHATWG Living Standard for the DOM logic.
@@ -481,7 +481,8 @@ function defineEnumerableProps(
   Ctor,
   props,
 ) {
-  for (const prop of new SafeArrayIterator(props)) {
+  for (let i = 0; i < props.length; ++i) {
+    const prop = props[i];
     ReflectDefineProperty(Ctor.prototype, prop, { enumerable: true });
   }
 }
@@ -1051,7 +1052,9 @@ export class EventTarget implements globalThis.EventTarget {
       listeners[type] = [];
     }
 
-    for (const listener of new SafeArrayIterator(listeners[type])) {
+    const listenerList = listeners[type];
+    for (let i = 0; i < listenerList.length; ++i) {
+      const listener = listenerList[i];
       if (
         ((typeof listener.options === "boolean" &&
           listener.options === (options as AddEventListenerOptions).capture) ||
@@ -1578,7 +1581,9 @@ export function reportException(error) {
     colno = jsError.frames[0].columnNumber;
   } else {
     const jsError = core.destructureError(new Error());
-    for (const frame of new SafeArrayIterator(jsError.frames)) {
+    const frames = jsError.frames;
+    for (let i = 0; i < frames.length; ++i) {
+      const frame = frames[i];
       if (
         typeof frame.fileName == "string" &&
         !StringPrototypeStartsWith(frame.fileName, "deno:")

@@ -1,4 +1,4 @@
-// Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 // Based on https://github.com/denoland/deno/blob/main/ext/flash/01_http.js
 
 "use strict";
@@ -39,7 +39,6 @@ const {
   PromisePrototype,
   PromisePrototypeCatch,
   PromisePrototypeThen,
-  SafeArrayIterator,
   SafePromiseAll,
   TypedArrayPrototypeSubarray,
   TypeError,
@@ -148,7 +147,8 @@ function http1Response(
   // status-line = HTTP-version SP status-code SP reason-phrase CRLF
   // Date header: https://datatracker.ietf.org/doc/html/rfc7231#section-7.1.1.2
   let str = `HTTP/1.1 ${status} ${statusCodes[status]}\r\nDate: ${date}\r\n`;
-  for (const [name, value] of new SafeArrayIterator(headerList)) {
+  for (let i = 0; i < headerList.length; ++i) {
+    const [name, value] = headerList[i];
     // header-field   = field-name ":" OWS field-value OWS
     str += `${name}: ${value}\r\n`;
   }

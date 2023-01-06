@@ -1,4 +1,4 @@
-// Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 // Based on https://github.com/denoland/deno/blob/main/ext/url/01_urlpattern.js
 
 // @ts-check
@@ -84,7 +84,9 @@ export class URLPattern {
 
     const components = ops.op_urlpattern_parse(input, baseURL);
 
-    for (const key of new SafeArrayIterator(ObjectKeys(components))) {
+    const keys = ObjectKeys(components);
+    for (let i = 0; i < keys.length; ++i) {
+      const key = keys[i];
       try {
         components[key].regexp = new RegExp(
           components[key].regexpString,
@@ -190,7 +192,9 @@ export class URLPattern {
 
     const [values] = res;
 
-    for (const key of new SafeArrayIterator(ObjectKeys(values))) {
+    const keys = ObjectKeys(values);
+    for (let i = 0; i < keys.length; ++i) {
+      const key = keys[i];
       if (!RegExpPrototypeTest(this[_components][key].regexp, values[key])) {
         return false;
       }
@@ -251,8 +255,9 @@ export class URLPattern {
 
     const result = { inputs } as any as URLPatternResult;
 
-    /** @type {string} */
-    for (const key of new SafeArrayIterator(ObjectKeys(values)) as string[]) {
+    const keys = ObjectKeys(values);
+    for (let i = 0; i < keys.length; ++i) {
+      const key = keys[i];
       /** @type {UrlComponent} */
       const component: UrlComponent = this[_components][key];
       const input = values[key];

@@ -1,4 +1,4 @@
-// Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 "use strict";
 
 import * as core from '../../core/01_core.js';
@@ -120,7 +120,8 @@ export const denoNs = {
   refTimer: __bootstrap.timers.refTimer,
   unrefTimer: __bootstrap.timers.unrefTimer,
   osRelease: __bootstrap.os.osRelease,
-  osUptime: __bootstrap.os.osUptime,
+  osUptime: __bootstrap.os.createOsUptime(ops.op_os_uptime),
+  createOsUptime: __bootstrap.os.createOsUptime,
   hostname: __bootstrap.os.hostname,
   systemMemoryInfo: __bootstrap.os.systemMemoryInfo,
   networkInterfaces: __bootstrap.os.networkInterfaces,

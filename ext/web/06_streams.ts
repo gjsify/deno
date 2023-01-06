@@ -1,4 +1,4 @@
-// Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 // Based on https://github.com/denoland/deno/blob/main/ext/web/06_streams.js
 
 // @ts-check
@@ -42,7 +42,6 @@ const {
   queueMicrotask,
   RangeError,
   ReflectHas,
-  SafeArrayIterator,
   SafePromiseAll,
   SharedArrayBuffer,
   Symbol,
@@ -73,8 +72,7 @@ import type {
   ReadableStreamGenericReader,
   ReadableStreamGetReaderOptions,
   ReadableStreamIteratorOptions,
-  ValueWithSize,
-  VoidFunction
+  ValueWithSize
 } from './06_streams_types.js';
 import type { ReadableStreamBYOBReadResult, PipeOptions } from '../../types/index.js';
 
@@ -720,10 +718,11 @@ export async function readableStreamCollectIntoUint8Array(stream) {
   }
 
   const finalBuffer = new Uint8Array(totalLength);
-  let i = 0;
-  for (const chunk of new SafeArrayIterator(chunks)) {
-    TypedArrayPrototypeSet(finalBuffer, chunk, i);
-    i += chunk.byteLength;
+  let offset = 0;
+  for (let i = 0; i < chunks.length; ++i) {
+    const chunk = chunks[i];
+    TypedArrayPrototypeSet(finalBuffer, chunk, offset);
+    offset += chunk.byteLength;
   }
   return finalBuffer;
 }
@@ -1110,7 +1109,8 @@ function readableStreamCancel<R>(stream: ReadableStream<R>, reason?: any): Promi
   if (reader !== undefined && isReadableStreamBYOBReader(reader)) {
     const readIntoRequests = reader[_readIntoRequests];
     reader[_readIntoRequests] = [];
-    for (const readIntoRequest of new SafeArrayIterator(readIntoRequests)) {
+    for (let i = 0; i < readIntoRequests.length; ++i) {
+      const readIntoRequest = readIntoRequests[i];
       readIntoRequest.closeSteps(undefined);
     }
   }
@@ -1128,7 +1128,8 @@ export function readableStreamClose<R>(stream: ReadableStream<R>): void {
   if (isReadableStreamDefaultReader(reader)) {
     const readRequests: Array<ReadRequest<R>> = reader[_readRequests];
     reader[_readRequests] = [];
-    for (const readRequest of new SafeArrayIterator(readRequests)) {
+    for (let i = 0; i < readRequests.length; ++i) {
+      const readRequest = readRequests[i];
       readRequest.closeSteps();
     }
   }
@@ -1306,7 +1307,8 @@ function readableStreamBYOBReaderRelease(reader: ReadableStreamBYOBReader) {
 function readableStreamDefaultReaderErrorReadRequests(reader: ReadableStreamBYOBReader, e: any) {
   const readRequests = reader[_readRequests];
   reader[_readRequests] = [];
-  for (const readRequest of new SafeArrayIterator(readRequests)) {
+  for (let i = 0; i < readRequests.length; ++i) {
+    const readRequest = readRequests[i];
     readRequest.errorSteps(e);
   }
 }
@@ -2157,7 +2159,8 @@ function readableStreamReaderGenericRelease<R>(reader: ReadableStreamGenericRead
 function readableStreamBYOBReaderErrorReadIntoRequests(reader: ReadableStreamBYOBReader, e: any) {
   const readIntoRequests = reader[_readIntoRequests];
   reader[_readIntoRequests] = [];
-  for (const readIntoRequest of new SafeArrayIterator(readIntoRequests)) {
+  for (let i = 0; i < readIntoRequests.length; ++i) {
+    const readIntoRequest = readIntoRequests[i];
     readIntoRequest.errorSteps(e);
   }
 }
@@ -3511,7 +3514,9 @@ function writableStreamFinishErroring(stream: WritableStream) {
   stream[_state] = "errored";
   stream[_controller][_errorSteps]();
   const storedError = stream[_storedError];
-  for (const writeRequest of new SafeArrayIterator(stream[_writeRequests])) {
+  const writeRequests = stream[_writeRequests];
+  for (let i = 0; i < writeRequests.length; ++i) {
+    const writeRequest = writeRequests[i];
     writeRequest.reject(storedError);
   }
   stream[_writeRequests] = [];

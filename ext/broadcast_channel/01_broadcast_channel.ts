@@ -1,4 +1,4 @@
-// Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 // Based on https://github.com/denoland/deno/blob/main/ext/broadcast_channel/01_broadcast_channel.js
 
 /// <reference path="../../core/internal.d.ts" />
@@ -16,7 +16,6 @@ const {
   ArrayPrototypeIndexOf,
   ArrayPrototypeSplice,
   ArrayPrototypePush,
-  SafeArrayIterator,
   Symbol,
   Uint8Array,
 } = primordials;
@@ -44,7 +43,9 @@ async function recv() {
 }
 
 function dispatch(source, name, data) {
-  for (const channel of new SafeArrayIterator(channels)) {
+  for (let i = 0; i < channels.length; ++i) {
+    const channel = channels[i];
+
     if (channel === source) continue; // Don't self-send.
     if (channel[_name] !== name) continue;
     if (channel[_closed]) continue;

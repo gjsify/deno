@@ -1,4 +1,4 @@
-// Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 // Based on https://github.com/denoland/deno/blob/main/runtime/js/30_fs.js
 "use strict";
 
@@ -652,7 +652,9 @@ function createByteStruct(types): [(statBuf: Uint32Array) => Deno.FileInfo, Uint
   let offset = 0;
   let str =
     `const unix = "${build.os}" === "darwin" || "${build.os}" === "linux"; return {`;
-  for (let [name, type] of new SafeArrayIterator(ObjectEntries<string>(types))) {
+  const typeEntries = ObjectEntries<string>(types);
+  for (let i = 0; i < typeEntries.length; ++i) {
+    let [name, type] = typeEntries[i];
     const optional = type.startsWith("?");
     if (optional) type = type.slice(1);
 

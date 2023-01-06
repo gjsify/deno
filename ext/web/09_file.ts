@@ -1,4 +1,4 @@
-// Copyright 2018-2022 the Deno authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 // Based on https://github.com/denoland/deno/blob/main/ext/web/09_file.js
 
 // @ts-check
@@ -33,7 +33,6 @@ const {
   MathMin,
   ObjectPrototypeIsPrototypeOf,
   RegExpPrototypeTest,
-  SafeArrayIterator,
   StringPrototypeCharAt,
   StringPrototypeToLowerCase,
   StringPrototypeSlice,
@@ -91,8 +90,8 @@ function convertLineEndingsToNative(s: string): string {
 }
 
 async function* toIterator(parts: (BlobReference | Blob)[]) {
-  for (const part of new SafeArrayIterator(parts)) {
-    yield* part.stream() as AsyncGenerator<any, void, unknown>;
+  for (let i = 0; i < parts.length; ++i) {
+    yield* parts[i].stream() as AsyncGenerator<any, void, unknown>;
   }
 }
 
@@ -101,7 +100,8 @@ type BlobPart = BufferSource | Blob | string;
 function processBlobParts(parts: BlobPart[], endings: string): { parts: (BlobReference|Blob)[], size: number } {
   const processedParts: (BlobReference|Blob)[] = [];
   let size = 0;
-  for (const element of new SafeArrayIterator(parts)) {
+  for (let i = 0; i < parts.length; ++i) {
+    const element = parts[i];
     if (ObjectPrototypeIsPrototypeOf(ArrayBufferPrototype, element)) {
       const chunk = new Uint8Array(ArrayBufferPrototypeSlice(element, 0));
       ArrayPrototypePush(processedParts, BlobReference.fromUint8Array(chunk));
@@ -143,7 +143,9 @@ function normalizeType(str: string): string {
  * Get all Parts as a flat array containing all references
  */
 export function getParts(blob: Blob, bag: string[] = []): string[] {
-  for (const part of new SafeArrayIterator(blob[_parts])) {
+  const parts = blob[_parts];
+  for (let i = 0; i < parts.length; ++i) {
+    const part = parts[i];
     if (ObjectPrototypeIsPrototypeOf(BlobPrototype, part)) {
       getParts(part, bag);
     } else {
@@ -257,7 +259,9 @@ export class Blob {
     const blobParts = [];
     let added = 0;
 
-    for (const part of new SafeArrayIterator(this[_parts])) {
+    const parts = this[_parts];
+    for (let i = 0; i < parts.length; ++i) {
+      const part = parts[i];
       // don't add the overflow to new blobParts
       if (added >= span) {
         // Could maybe be possible to remove variable `added`
@@ -558,7 +562,8 @@ export function blobFromObjectUrl(url: string): Blob | null {
   const parts: BlobReference[] = [];
   let totalSize = 0;
 
-  for (const { uuid, size } of new SafeArrayIterator(blobData.parts)) {
+  for (let i = 0; i < blobData.parts.length; ++i) {
+    const { uuid, size } = blobData.parts[i];
     ArrayPrototypePush(parts, new BlobReference(uuid, size));
     totalSize += size;
   }
