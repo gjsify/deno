@@ -34,7 +34,12 @@ const timerId = Symbol("[[timerId]]");
 
 const illegalConstructorKey = Symbol("illegalConstructorKey");
 
-export class AbortSignal extends EventTarget {
+export interface AbortSignal extends globalThis.AbortSignal {
+  /** Dispatches a synthetic event event to target and returns true if either event's cancelable attribute value is false or its preventDefault() method was not invoked, and false otherwise. */
+  dispatchEvent(event: Event): boolean;
+}
+
+export class AbortSignal extends EventTarget implements globalThis.AbortSignal {
   static abort(reason = undefined) {
     if (reason !== undefined) {
       reason = webidl.converters.any(reason);

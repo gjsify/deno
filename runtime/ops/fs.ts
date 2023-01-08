@@ -104,8 +104,9 @@ export const op_write_file_sync = (...args: any[]) => {
   console.warn("Not implemented: ops.op_write_file_sync");
 }
 
-export const op_write_file_async = async (...args: any[]) => {
+export const op_write_file_async = async (path: string, mode: number, append: boolean, create: boolean, createNew: boolean, data: Uint8Array, cancelRid: number) => {
   console.warn("Not implemented: ops.op_write_file_async");
+  // See op_sleep how to use the cancelRid
 }
 
 export const op_seek_sync = (options: { rid: number, offset: number, whence: Deno.SeekMode }): number => {

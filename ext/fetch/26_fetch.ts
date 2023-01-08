@@ -55,8 +55,6 @@ const {
   WeakMapPrototypeSet,
 } = primordials;
 
-import type { RequestInit, RequestInfo } from '../../types/index.js';
-
 const REQUEST_BODY_HEADER_NAMES = [
   "content-encoding",
   "content-language",
@@ -415,7 +413,7 @@ export function fetch(input: RequestInfo, init: RequestInit = {}) {
     const prefix = "Failed to call 'fetch'";
     webidl.requiredArguments(arguments.length, 1, { prefix });
     // 2.
-    const requestObject = new Request(input, init);
+    const requestObject = new Request(input as any, init as any);
     // 3.
     const request = toInnerRequest(requestObject);
     // 4.

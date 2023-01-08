@@ -1,6 +1,6 @@
 import GLib from "@gjsify/types/GLib-2.0";
 import { byteArray } from "@gjsify/types/Gjs";
-import { logSignals } from "@gjsify/utils";
+import { logSignals, parseStackTrace, StackTraceFrame, extractErrorData } from "@gjsify/utils";
 
 let has_tick_scheduled = false;
 const pending_promise_exceptions: {promise: Promise<any>, reason: any}[] = [];
@@ -125,17 +125,41 @@ export const op_abort_wasm_streaming = (rid: number, error: Error): void => {
   console.warn("Not implemented: ops.op_abort_wasm_streaming");
 }
 
-export const op_destructure_error = (error: Error) => {
-  console.warn("Not implemented: ops.op_destructure_error");
-  const frames = [];
+export const op_destructure_error = (error: Error | string) => {
+  if(typeof error === 'object' && error.stack) {
+    const stackLines = error.stack.split('\n');
+    const frames: StackTraceFrame[] = [];
+    for (let stackLine of stackLines) {
+      const frame = parseStackTrace(stackLine.trim());
+      if(frame) {
+        frames.push(frame);
+      }
+    }
+
+    return {
+      frames,
+      exceptionMessage: error.message,
+    }
+  }
+
+  const message = typeof error === 'string' ? error : error.message;
+  const data = extractErrorData(message);
+
   return {
-    frames,
-    exceptionMessage: ""
+    frames: data.frames,
+    exceptionMessage: data.message,
   }
 }
 
+/**
+ * Effectively throw an uncatchable error. This will terminate runtime
+ * execution before any more JS code can run, except in the REPL where it
+ * should just output the error to the console.
+ * @param error
+ */
 export const op_dispatch_exception = (error: Error) => {
   console.warn("Not implemented: ops.op_dispatch_exception");
+  throw error;
 }
 
 export const op_op_names = () => {

@@ -43,7 +43,7 @@ export function opNow() {
  *
  * @type { {action: () => void, nestingLevel: number}[] }
  */
-const timerTasks = [];
+const timerTasks: { action: () => void; nestingLevel: number; }[] = [];
 
 /**
  * The current task's timer nesting level, or zero if we're not currently
@@ -51,7 +51,7 @@ const timerTasks = [];
  *
  * @type {number}
  */
-let timerNestingLevel = 0;
+let timerNestingLevel: number = 0;
 
 export function handleTimerMacrotask() {
   if (timerTasks.length === 0) {
@@ -76,9 +76,8 @@ export function handleTimerMacrotask() {
  * The keys in this map correspond to the key ID's in the spec's map of active
  * timers. The values are the timeout's cancel rid.
  *
- * @type {Map<number, { cancelRid: number, isRef: boolean, promiseId: number }>}
  */
-const activeTimers = new Map();
+const activeTimers = new Map<number, { cancelRid: number, isRef: boolean, promiseId: number }>();
 
 let nextId = 1;
 
@@ -96,7 +95,7 @@ function initializeTimer(
   // previousId be an implementation-defined integer than is greater than zero
   // and does not already exist in global's map of active timers.
   let id: number;
-  let timerInfo;
+  let timerInfo: { cancelRid: number, isRef: boolean, promiseId: number };
   if (prevId !== undefined) {
     // `prevId` is only passed for follow-up calls on intervals
     assert(repeat);

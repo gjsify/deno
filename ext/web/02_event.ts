@@ -148,7 +148,7 @@ export const _skipInternalInit = Symbol("[[skipSlowInit]]");
  *
  * @category DOM Events
  */
-export class Event {
+export class Event implements globalThis.Event {
 
   /** Returns true if event was dispatched by the user agent, and false
    * otherwise. */
@@ -1396,8 +1396,7 @@ export class ProgressEvent<T extends EventTarget = EventTarget> extends Event {
 
   readonly lengthComputable: boolean;
   readonly loaded: number;
-  // @ts-ignore
-  readonly target: T | null;
+  // readonly target: EventTarget | null;
   readonly total: number;
 
   constructor(type: string, eventInitDict: ProgressEventInit = {}) {
@@ -1604,7 +1603,7 @@ export function reportException(error) {
     error,
   });
   // Avoid recursing `reportException()` via error handlers more than once.
-  if (reportExceptionStackedCalls > 1 || window.dispatchEvent(event as any)) {
+  if (reportExceptionStackedCalls > 1 || (window?.dispatchEvent && window.dispatchEvent(event as any))) {
     ops.op_dispatch_exception(error);
   }
   reportExceptionStackedCalls--;

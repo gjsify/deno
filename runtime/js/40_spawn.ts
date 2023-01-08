@@ -7,8 +7,7 @@ import * as ops from '../../ops/index.js';
 import { pathFromURL } from './06_util.js';
 import { illegalConstructorKey } from './01_web_util.js';
 import { add, remove } from '../../ext/web/03_abort_signal.js';
-
-import type { AbortSignal } from '../../types/index.js';
+import type { AbortSignal } from '../../ext/web/03_abort_signal.js';
 
 const {
   ArrayPrototypeMap,

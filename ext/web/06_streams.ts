@@ -63,6 +63,31 @@ import * as webidl from '../webidl/00_webidl.js';
 import * as consoleInternal from '../console/02_console.js';
 import { AssertionError, assert } from './00_infra.js';
 
+/** @category Streams API */
+export interface PipeOptions {
+  preventAbort?: boolean;
+  preventCancel?: boolean;
+  preventClose?: boolean;
+  signal?: AbortSignal;
+}
+
+/** @category Streams API */
+interface ReadableStreamBYOBReadDoneResult<V extends ArrayBufferView> {
+  done: true;
+  value?: V;
+}
+
+/** @category Streams API */
+interface ReadableStreamBYOBReadValueResult<V extends ArrayBufferView> {
+  done: false;
+  value: V;
+}
+
+/** @category Streams API */
+export type ReadableStreamBYOBReadResult<V extends ArrayBufferView> =
+  | ReadableStreamBYOBReadDoneResult<V>
+  | ReadableStreamBYOBReadValueResult<V>;
+
 import type {
   PendingAbortRequest,
   PullIntoDescriptor,
@@ -74,7 +99,6 @@ import type {
   ReadableStreamIteratorOptions,
   ValueWithSize
 } from './06_streams_types.js';
-import type { ReadableStreamBYOBReadResult, PipeOptions } from '../../types/index.js';
 
 export class Deferred<T> {
   #promise: Promise<T>;

@@ -509,7 +509,7 @@ interface ReadableStreamBYOBReadValueResult<V extends ArrayBufferView> {
 }
 
 /** @category Streams API */
-type ReadableStreamBYOBReadResult<V extends ArrayBufferView> =
+export type ReadableStreamBYOBReadResult<V extends ArrayBufferView> =
   | ReadableStreamBYOBReadDoneResult<V>
   | ReadableStreamBYOBReadValueResult<V>;
 
@@ -607,7 +607,7 @@ export var ReadableByteStreamController: {
 };
 
 /** @category Streams API */
-interface PipeOptions {
+export interface PipeOptions {
   preventAbort?: boolean;
   preventCancel?: boolean;
   preventClose?: boolean;

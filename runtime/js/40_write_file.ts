@@ -64,7 +64,7 @@ export async function writeFile(
   data: Uint8Array,
   options: Deno.WriteFileOptions = {},
 ) {
-  let cancelRid;
+  let cancelRid: number;
   let abortHandler;
   if (options.signal) {
     options.signal.throwIfAborted();

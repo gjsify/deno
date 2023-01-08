@@ -520,7 +520,7 @@ export const abortWasmStreaming = (
   rid: number,
   error,
 ) => ops.op_abort_wasm_streaming(rid, error);
-export const destructureError = (error: Error) => ops.op_destructure_error(error);
+export const destructureError = (error: Error | string) => ops.op_destructure_error(error);
 export const opNames = () => ops.op_op_names();
 export const eventLoopHasMoreWork = () => ops.op_event_loop_has_more_work();
 

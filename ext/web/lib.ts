@@ -1,4 +1,7 @@
 import GLib from '@gjsify/types/GLib-2.0';
+import { createCancelHandler } from '@gjsify/utils';
+
+export * from './timers.js';
 
 export const op_base64_decode = (data: string): Uint8Array => {
   return GLib.base64_decode(data)
@@ -111,26 +114,12 @@ export const op_compression_finish = (...args: any[]) => {
   console.warn("Not implemented: ops.op_compression_finish");
 }
 
-export const op_now = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_now");
-}
-
-export const op_timer_handle = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_timer_handle");
-}
-
+/**
+ * Creates a [`CancelHandle`] resource that can be used to cancel invocations of certain ops.
+ * @returns
+ */
 export const op_cancel_handle = () => {
-  console.warn("Not implemented: ops.op_cancel_handle");
-  const cancelRid = 0;
-  return cancelRid;
-}
-
-export const op_sleep = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_sleep");
-}
-
-export const op_sleep_sync = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_sleep_sync");
+  return createCancelHandler();
 }
 
 export const op_transfer_arraybuffer = (O: ArrayBufferLike): ArrayBufferLike => {

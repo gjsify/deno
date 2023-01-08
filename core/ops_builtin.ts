@@ -1,9 +1,21 @@
-export const op_close = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_close");
+import { getCancelHandler } from '@gjsify/utils';
+
+export const op_close = (rid: number) => {
+  const cancelHandler = getCancelHandler(rid);
+  if(!cancelHandler) {
+    throw new TypeError('missing or invalid `rid`');
+  }
+  cancelHandler.emit('close');
 }
 
-export const op_try_close = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_try_close");
+/**
+ * Try to remove a resource from the resource table. If there is no resource
+ * with the specified `rid`, this is a no-op.
+ * @param args
+ */
+export const op_try_close = (rid: number) => {
+  const cancelHandler = getCancelHandler(rid);
+  cancelHandler?.emit('close');
 }
 
 export const op_print = (msg: string, isErr = false) => {
