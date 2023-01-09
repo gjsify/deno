@@ -696,17 +696,6 @@ export const op_tls_handshake = (...args: any[]) => {
 export const op_getuid = (...args: any[]) => {
   console.warn("Not implemented: ops.op_getuid");
 }
-export const op_hostname = (): string => {
-  console.warn("Not implemented: ops.op_hostname");
-  return "";
-}
-export const op_loadavg = (): number[] => {
-  console.warn("Not implemented: ops.op_loadavg");
-  return [];
-}
-export const op_network_interfaces = (...args: any[]) => {
-  console.warn("Not implemented: ops.op_network_interfaces");
-}
 
 export const op_query_permission = (desc: Deno.PermissionDescriptor): PermissionState => {
   console.warn("Not implemented: ops.op_query_permission");

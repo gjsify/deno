@@ -66,17 +66,27 @@ export function osRelease(): string {
   return ops.op_os_release();
 }
 
-export function createOsUptime(opFn) {
+export function createOsUptime(opFn: () => number) {
   return function osUptime() {
     return opFn();
   };
 }
 
-export function systemMemoryInfo() {
+// Gjsify:
+export function osUptime() {
+  return ops.op_os_uptime();
+}
+
+// Gjsify:
+export function nodeOsUptime() {
+  return ops.op_node_unstable_os_uptime();
+}
+
+export function systemMemoryInfo(): Deno.SystemMemoryInfo {
   return ops.op_system_memory_info();
 }
 
-export function networkInterfaces() {
+export function networkInterfaces(): Deno.NetworkInterfaceInfo[] {
   return ops.op_network_interfaces();
 }
 
