@@ -10,9 +10,10 @@ export const op_verify_ed25519 = (keyData, data: BufferSource, signature: Buffer
     return false;
 }
 
-export const op_crypto_get_random_values = (...args: any[]) => {
-    console.warn("Not implemented: ops.op_crypto_get_random_values");
+export const op_crypto_get_random_values = (out: Uint8Array) =>{
+  console.warn("Not implemented: ops.op_crypto_get_random_values");
 }
+
 export const op_crypto_generate_key = (...args: any[]) => {
     console.warn("Not implemented: ops.op_crypto_generate_key");
 }

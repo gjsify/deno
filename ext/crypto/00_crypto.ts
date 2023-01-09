@@ -4744,7 +4744,7 @@ export class Crypto {
     webidl.requiredArguments(arguments.length, 1, { prefix });
     // Fast path for Uint8Array
     if (ObjectPrototypeIsPrototypeOf(Uint8ArrayPrototype, arrayBufferView)) {
-      ops.op_crypto_get_random_values(arrayBufferView);
+      ops.op_crypto_get_random_values(arrayBufferView as Uint8Array);
       return arrayBufferView;
     }
     arrayBufferView = webidl.converters.ArrayBufferView(arrayBufferView, {

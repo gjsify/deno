@@ -4,11 +4,15 @@
 
 import { primordials } from '../../core/00_primordials.js';
 import * as core from '../../core/01_core.js';
+import { initErrorV8Methods } from "@gjsify/utils";
 
 const { Error } = primordials;
 const { BadResource, Interrupted } = core;
 
 export { BadResource, Interrupted }
+
+// Gjsify: Add captureStackTrace from v8, see https://nodejs.org/dist/latest-v18.x/docs/api/errors.html#errorcapturestacktracetargetobject-constructoropt
+initErrorV8Methods(Error);
 
 export class NotFound extends Error {
   name = "NotFound"
