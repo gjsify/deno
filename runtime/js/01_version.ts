@@ -3,6 +3,7 @@
 "use strict";
 
 import { primordials } from '../../core/00_primordials.js';
+import { getGjsVersion } from '@gjsify/utils'
 
 const { ObjectFreeze } = primordials;
 
@@ -26,3 +27,6 @@ export function setVersions(
 
   ObjectFreeze(version);
 }
+
+// Gjsify: Set versions to latest Deno versions and current Gjs version
+setVersions('1.29.2', '10.9.194.5', '4.9.4', getGjsVersion());

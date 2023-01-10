@@ -5,6 +5,8 @@
 /// <reference no-default-lib="true" />
 /// <reference path="../../cli/tsc/dts/lib.dom.d.ts" />
 
+import type { URLSearchParams as NodeURLSearchParams } from "url";
+
 // Gjsify
 interface UrlComponents {
   protocol: UrlComponent;
@@ -25,7 +27,7 @@ interface UrlComponent {
 }
 
 /** @category Web APIs */
-declare class URLSearchParams {
+declare class URLSearchParams extends NodeURLSearchParams {
   constructor(
     init?: string[][] | Record<string, string> | string | URLSearchParams,
   );
