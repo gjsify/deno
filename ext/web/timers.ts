@@ -1,6 +1,5 @@
-import GLib from '@gjsify/types/GLib-2.0';
-import { getCancelHandler } from '@gjsify/utils';
 import { op_cancel_handle } from '../../ext/web/lib.js';
+import { getCancelHandler } from '@gjsify/utils';
 
 export const op_now = (...args: any[]) => {
   console.warn("Not implemented: ops.op_now");

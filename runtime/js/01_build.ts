@@ -3,7 +3,7 @@
 "use strict";
 
 import { primordials } from '../../core/00_primordials.js';
-import { target } from '@gjsify/utils';
+import { getTarget } from '@gjsify/utils';
 
 const { ObjectFreeze, StringPrototypeSplit } = primordials;
 
@@ -31,4 +31,4 @@ export function setBuildInfo(target: string) {
 }
 
 // Gjsify
-setBuildInfo(target);
+setBuildInfo(getTarget());

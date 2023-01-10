@@ -17,6 +17,8 @@ export interface RuntimeOptions {
   denoVersion: string;
   v8Version: string;
   tsVersion: string;
+  // Gjsify:
+  gjsVersion: string;
   // Gjsify: we set the target directly in the build.ts: target?: string;
   isTty: boolean;
   enableTestingFeaturesFlag?: boolean;
@@ -292,6 +294,7 @@ function runtimeStart(runtimeOptions: RuntimeOptions, source?: string) {
     runtimeOptions.denoVersion,
     runtimeOptions.v8Version,
     runtimeOptions.tsVersion,
+    runtimeOptions.gjsVersion,
   );
   // Gjsify we do this already in the build import: build.setBuildInfo(runtimeOptions.target);
   util.setLogDebug(runtimeOptions.debugFlag, source);

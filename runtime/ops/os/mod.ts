@@ -1,5 +1,5 @@
 import GLib from '@gjsify/types/GLib-2.0';
-import { cli, os } from '@gjsify/utils';
+import { cli, getOs } from '@gjsify/utils';
 
 const System = imports.system;
 const EOL = /\r\n|\n/;
@@ -76,7 +76,7 @@ const op_loadavg_linux = (): number[] => {
 }
 
 export const op_loadavg = (): number[] => {
-  if(os() === 'darwin') {
+  if(getOs() === 'darwin') {
     return op_loadavg_darwin();
   }
   return op_loadavg_linux();
@@ -123,7 +123,7 @@ export const op_system_memory_info = (): Deno.SystemMemoryInfo => {
     swapFree: 0
   }
 
-  if(os() === 'darwin') {
+  if(getOs() === 'darwin') {
     result.free = op_system_memory_info_free_darwin();
     result.total = op_system_memory_info_total();
   } else {
@@ -171,7 +171,7 @@ const op_os_uptime_darwin = (): number => {
 
 /** Returns the uptime of the os in seconds */
 export const op_os_uptime = (): number => {
-  if(os() === 'darwin') {
+  if(getOs() === 'darwin') {
     return op_os_uptime_darwin();
   }
   return op_os_uptime_linux();
