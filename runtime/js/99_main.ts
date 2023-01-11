@@ -14,12 +14,16 @@ export interface RuntimeOptions {
   pid: number;
   ppid: number;
   noColor?: boolean;
-  denoVersion: string;
-  v8Version: string;
-  tsVersion: string;
-  // Gjsify:
-  gjsVersion: string;
-  // Gjsify: we set the target directly in the build.ts: target?: string;
+
+  //  Gjsify: We set the target directly in packages/deno/runtime/src/runtime/js/01_version.ts
+  // denoVersion: string;
+  // v8Version: string;
+  // tsVersion: string;
+  // gjsVersion: string;
+
+  // Gjsify: We set the target directly in packages/deno/runtime/src/runtime/js/01_build.ts
+  // target?: string;
+
   isTty: boolean;
   enableTestingFeaturesFlag?: boolean;
 }
@@ -290,12 +294,15 @@ function runtimeStart(runtimeOptions: RuntimeOptions, source?: string) {
   core.setWasmStreamingCallback(fetch.handleWasmStreaming);
   core.setReportExceptionCallback(reportException);
   ops.op_set_format_exception_callback(formatException);
-  version.setVersions(
-    runtimeOptions.denoVersion,
-    runtimeOptions.v8Version,
-    runtimeOptions.tsVersion,
-    runtimeOptions.gjsVersion,
-  );
+
+  // Gjsify: We set the target directly in packages/deno/runtime/src/runtime/js/01_version.ts
+  // version.setVersions(
+  //   runtimeOptions.denoVersion,
+  //   runtimeOptions.v8Version,
+  //   runtimeOptions.tsVersion,
+  //   runtimeOptions.gjsVersion,
+  // );
+
   // Gjsify we do this already in the build import: build.setBuildInfo(runtimeOptions.target);
   util.setLogDebug(runtimeOptions.debugFlag, source);
   colors.setNoColor(runtimeOptions.noColor || !runtimeOptions.isTty);

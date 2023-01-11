@@ -20,9 +20,5 @@ mainRuntime({
   noColor: !hasTty,
   unstableFlag: argsObj.unstable as boolean || false,
   debugFlag: argsObj.debug as boolean || false,
-  denoVersion: "",
   isTty: hasTty,
-  tsVersion: "0.0.0",
-  v8Version: "0.0.0.0",
-  gjsVersion: getGjsVersion(),
 });

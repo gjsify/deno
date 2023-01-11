@@ -12,7 +12,13 @@
 
 import { primordials } from '../../core/00_primordials.js';
 import * as ops from '../../ops/index.js';
-import * as webidl from '../webidl/00_webidl.js';;
+import * as webidl from '../webidl/00_webidl.js';
+
+import type {
+  URLPatternInput,
+  UrlComponents,
+  UrlComponent,
+} from '../../types/index.js';
 
 const {
   ArrayPrototypeMap,
@@ -21,7 +27,6 @@ const {
   RegExp,
   RegExpPrototypeExec,
   RegExpPrototypeTest,
-  SafeArrayIterator,
   Symbol,
   SymbolFor,
   TypeError,

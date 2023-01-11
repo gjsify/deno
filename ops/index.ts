@@ -24,16 +24,13 @@ export * from '../cli/ops/testing.js';
 import type {
   TypedArray,
   messagePort,
+  URLPatternInput,
+  UrlComponents,
+  UrlComponent,
 } from '../types/index.js';
 import type { TestDescription } from '../cli/js/40_testing.js';
 import type { URL } from '../ext/url/00_url.js';
 import type { HeaderList } from '../ext/fetch/20_headers.js';
-
-
-
-
-
-
 
 
 export const op_urlpattern_parse = (input: URLPatternInput, baseURL: string): UrlComponents => {

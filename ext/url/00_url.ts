@@ -96,7 +96,7 @@ export interface URLSearchParams {
    * }
    * ```
    */
-   [Symbol.iterator](): IterableIterator<[string, string]>;
+  [Symbol.iterator](): IterableIterator<[string, string]>;
 }
 
 /** @category Web APIs */
