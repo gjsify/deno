@@ -25,9 +25,10 @@ const {
   TypeError,
   indirectEval,
 } = primordials;
-import * as webidl from '../webidl/00_webidl.js';
-import { reportException } from './02_event.js';
+
 import { assert } from './00_infra.js';
+import { reportException } from './02_event.js';
+import { converters } from '../webidl/00_webidl.js';
 
 const hrU8 = new Uint8Array(8);
 const hr = new Uint32Array(hrU8.buffer);
@@ -304,9 +305,9 @@ function checkThis(thisArg: any) {
 export function setTimeout(callback, timeout = 0, ...args) {
   checkThis(this);
   if (typeof callback !== "function") {
-    callback = webidl.converters.DOMString(callback);
+    callback = converters.DOMString(callback);
   }
-  timeout = webidl.converters.long(timeout);
+  timeout = converters.long(timeout);
 
   return initializeTimer(callback, timeout, args, false);
 }
@@ -314,16 +315,16 @@ export function setTimeout(callback, timeout = 0, ...args) {
 export function setInterval(callback, timeout = 0, ...args) {
   checkThis(this);
   if (typeof callback !== "function") {
-    callback = webidl.converters.DOMString(callback);
+    callback = converters.DOMString(callback);
   }
-  timeout = webidl.converters.long(timeout);
+  timeout = converters.long(timeout);
 
   return initializeTimer(callback, timeout, args, true);
 }
 
 export function clearTimeout(id = 0) {
   checkThis(this);
-  id = webidl.converters.long(id);
+  id = converters.long(id);
   const timerInfo = MapPrototypeGet(activeTimers, id);
   if (timerInfo !== undefined) {
     core.tryClose(timerInfo.cancelRid);

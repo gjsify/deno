@@ -19,11 +19,11 @@ const {
 } = primordials;
 
 import * as webidl from '../webidl/00_webidl.js';
+import { DOMException } from './01_dom_exception.js';
 import { structuredClone } from './02_structured_clone.js';
 import * as consoleInternal from '../console/02_console.js';
-import { EventTarget } from './02_event.js';
 import { opNow } from './02_timers.js';
-import { DOMException } from './01_dom_exception.js';
+import { EventTarget } from './02_event.js';
 
 const illegalConstructorKey = Symbol("illegalConstructorKey");
 const customInspect = SymbolFor("Deno.customInspect");

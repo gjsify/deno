@@ -1,2 +1,2 @@
-export * from '../ext/web/internal.d.js';
+export * from '../ext/web/internal.js';
 

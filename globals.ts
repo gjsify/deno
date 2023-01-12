@@ -1,7 +1,7 @@
 import '@gjsify/types/index';
 import GLib from '@gjsify/types/GLib-2.0';
 import { mainRuntime } from './runtime/js/99_main.js';
-import { getLocale, getPid, getPpid, existsTty, getArgs, parseArgv, getGjsVersion } from '@gjsify/utils';
+import { getLocale, getPid, getPpid, existsTty, getArgs, parseArgv } from '@gjsify/utils';
 
 const args = getArgs();
 const argsObj = parseArgv(args);

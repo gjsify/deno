@@ -16,10 +16,10 @@ const {
 } = primordials;
 import * as webidl from '../../ext/webidl/00_webidl.js';
 import { URL } from '../../ext/url/00_url.js';
+import { ErrorEvent, MessageEvent, defineEventHandler, EventTarget } from '../../ext/web/02_event.js';
 import { getLocationHref } from '../../ext/web/12_location.js';
 import { serializePermissions } from './10_permissions.js';
 import { log } from './06_util.js';
-import { ErrorEvent, MessageEvent, defineEventHandler, EventTarget } from '../../ext/web/02_event.js';
 import { deserializeJsMessageData, serializeJsMessageData, MessagePortPrototype } from '../../ext/web/13_message_port.js';
 
 function createWorker(

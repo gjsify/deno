@@ -1,1 +1,1 @@
-export * from '../ext/webidl/internal.d.js';
+export * from '../ext/webidl/internal.js';

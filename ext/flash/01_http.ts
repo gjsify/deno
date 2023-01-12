@@ -6,11 +6,11 @@
 import { primordials } from '../../core/00_primordials.js';
 import * as core from '../../core/01_core.js';
 import * as ops from '../../ops/index.js';
-import { BlobPrototype } from '../web/09_file.js';
+import { Event } from '../web/02_event.js';
 import { TcpConn } from '../net/01_net.js';
+import { BlobPrototype } from '../web/09_file.js';
 import { fromFlashRequest, _flash } from '../fetch/23_request.js';
 import { toInnerResponse } from '../fetch/23_response.js';
-import { Event } from '../web/02_event.js';
 import {
   ReadableStream,
   ReadableStreamPrototype,

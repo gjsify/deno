@@ -7,12 +7,12 @@
 // and impossible logic branches based on what Deno currently supports.
 "use strict";
 
+import { op_dispatch_exception } from '../../ops/index.js';
 import { primordials } from '../../core/00_primordials.js';
 import * as core from '../../core/01_core.js';
-import * as ops from '../../ops/index.js';
+import * as webidl from '../webidl/00_webidl.js';
 import { DOMException } from './01_dom_exception.js';
 import * as consoleInternal from '../console/02_console.js';
-import * as webidl from '../webidl/00_webidl.js';
 
 const {
   ArrayPrototypeFilter,
@@ -1604,7 +1604,7 @@ export function reportException(error) {
   });
   // Avoid recursing `reportException()` via error handlers more than once.
   if (reportExceptionStackedCalls > 1 || (window?.dispatchEvent && window.dispatchEvent(event as any))) {
-    ops.op_dispatch_exception(error);
+    op_dispatch_exception(error);
   }
   reportExceptionStackedCalls--;
 }

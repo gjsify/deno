@@ -88,9 +88,10 @@ const {
   WeakMapPrototypeSet,
 } = primordials;
 
-import { __bootstrap } from './80_bootstrap.js';
-
 import { DedicatedWorkerGlobalScope } from '../../ext/web/04_global_interfaces.js';
+
+import { __bootstrap } from './80_bootstrap.js';
+import { denoNs, denoNsUnstable } from './90_deno_ns.js';
 
 const util = __bootstrap.util;
 const event = __bootstrap.event;
@@ -111,13 +112,13 @@ const fetch = __bootstrap.fetch;
 const messagePort = __bootstrap.messagePort;
 // const denoNs = __bootstrap.denoNs;
 // const denoNsUnstable = __bootstrap.denoNsUnstable;
-import { denoNs, denoNsUnstable } from './90_deno_ns.js';
 const errors = __bootstrap.errors.errors;
 const webidl = __bootstrap.webidl;
 const domException = __bootstrap.domException;
 const { defineEventHandler, reportException } = __bootstrap.event;
 const { deserializeJsMessageData, serializeJsMessageData } =
   __bootstrap.messagePort;
+
 import {
   windowOrWorkerGlobalScope,
   unstableWindowOrWorkerGlobalScope,

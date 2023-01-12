@@ -1,6 +1,7 @@
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 // deno-lint-ignore-file no-window-prefix
 import { assertEquals, assertThrows } from "./test_util.ts";
+import { EventTarget, Event, AddEventListenerOptions, EventListenerOptions } from "@gjsify/deno-runtime/ext/web/02_event";
 
 Deno.test(function addEventListenerTest() {
   const document = new EventTarget();

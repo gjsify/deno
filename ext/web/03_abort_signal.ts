@@ -8,7 +8,9 @@
 
 import { primordials } from '../../core/00_primordials.js';
 import * as webidl from '../webidl/00_webidl.js';
+import { DOMException } from './01_dom_exception.js';
 import { Event, setIsTrusted, defineEventHandler, EventTarget, listenerCount } from './02_event.js';
+import { setTimeout, refTimer, unrefTimer } from './02_timers.js';
 
 const {
   SafeArrayIterator,
@@ -19,10 +21,6 @@ const {
   Symbol,
   TypeError,
 } = primordials;
-
-import { setTimeout, refTimer, unrefTimer } from './02_timers.js';
-
-import { DOMException } from '../../ext/web/01_dom_exception.js'
 
 export const add = Symbol("[[add]]");
 export const signalAbort = Symbol("[[signalAbort]]");

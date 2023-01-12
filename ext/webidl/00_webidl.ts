@@ -12,7 +12,8 @@
 "use strict";
 
 import { primordials } from '../../core/00_primordials.js';
-import * as core from '../../core/01_core.js';
+import { isProxy } from '../../core/01_core.js';
+
 import type { webidl } from '../../types/index.js';
 
 const {
@@ -846,7 +847,7 @@ export function createRecordConverter<
     }
     const result: any = {}; // TODO type
     // Fast path for common case (not a Proxy)
-    if (!core.isProxy(V)) {
+    if (!isProxy(V)) {
       for (const key in V) {
         if (!ObjectPrototypeHasOwnProperty(V, key)) {
           continue;

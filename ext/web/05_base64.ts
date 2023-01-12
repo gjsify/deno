@@ -11,8 +11,9 @@
 
 import { primordials } from '../../core/00_primordials.js';
 import * as ops from '../../ops/index.js';
-import * as webidl from '../webidl/00_webidl.js';
 import { DOMException } from './01_dom_exception.js';
+import { requiredArguments, converters } from '../webidl/00_webidl.js';
+
 const { ObjectPrototypeIsPrototypeOf, TypeErrorPrototype } = primordials;
 
 /** Decodes a string of data which has been encoded using base-64 encoding.
@@ -25,8 +26,8 @@ const { ObjectPrototypeIsPrototypeOf, TypeErrorPrototype } = primordials;
  */
 export function atob(data: string): string {
   const prefix = "Failed to execute 'atob'";
-  webidl.requiredArguments(arguments.length, 1, { prefix });
-  data = webidl.converters.DOMString(data, {
+  requiredArguments(arguments.length, 1, { prefix });
+  data = converters.DOMString(data, {
     prefix,
     context: "Argument 1",
   });
@@ -53,8 +54,8 @@ export function atob(data: string): string {
  */
 export function btoa(data: string): string {
   const prefix = "Failed to execute 'btoa'";
-  webidl.requiredArguments(arguments.length, 1, { prefix });
-  data = webidl.converters.DOMString(data, {
+  requiredArguments(arguments.length, 1, { prefix });
+  data = converters.DOMString(data, {
     prefix,
     context: "Argument 1",
   });
