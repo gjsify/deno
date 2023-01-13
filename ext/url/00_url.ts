@@ -85,7 +85,7 @@ function getSerialization(status: number, href: string, maybeBase?: string) {
   }
 }
 
-export interface URLSearchParams {
+export interface URLSearchParams extends globalThis.URLSearchParams{
   /** Returns an iterator allowing to go through all key/value
    * pairs contained in this object.
    *

@@ -55,6 +55,8 @@ const {
   WeakMapPrototypeSet,
 } = primordials;
 
+import type { AbortSignal } from '../web/03_abort_signal.js';
+
 const REQUEST_BODY_HEADER_NAMES = [
   "content-encoding",
   "content-language",

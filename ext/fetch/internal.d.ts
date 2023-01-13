@@ -9,6 +9,7 @@ import type { FormDataEntry } from '../../ext/fetch/21_formdata.js';
 import type { InnerRequest } from '../../ext/fetch/23_request.js';
 import type { InnerResponse } from '../../ext/fetch/23_response.js';
 import type { InnerBody } from '../../ext/fetch/22_body.js';
+import type { AbortSignal } from '../web/03_abort_signal.js';
 
 export var fetchUtil: {
   requiredArguments(name: string, length: number, required: number): void;

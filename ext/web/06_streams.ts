@@ -63,6 +63,8 @@ import * as webidl from '../webidl/00_webidl.js';
 import * as consoleInternal from '../console/02_console.js';
 import { AssertionError, assert } from './00_infra.js';
 
+import type { AbortSignal } from '../web/03_abort_signal.js';
+
 /** @category Streams API */
 export interface PipeOptions {
   preventAbort?: boolean;

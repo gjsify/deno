@@ -40,6 +40,8 @@ import {
   ReadableStream,
 } from '../web/06_streams.js';
 
+import type { AbortSignal } from '../web/03_abort_signal.js';
+
 const {
   ArrayPrototypeMap,
   ArrayPrototypeSlice,
