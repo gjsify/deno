@@ -13,8 +13,8 @@ import { primordials } from '../../../core/00_primordials.js';
 import * as core from '../../../core/01_core.js';
 import * as ops from '../../../ops/index.js';
 import * as webidl from '../../webidl/00_webidl.js';
-import { EventTarget } from '../../web/02_event.js';
 import { DOMException } from '../../web/01_dom_exception.js';
+import { EventTarget } from '../../web/02_event.js';
 
 type GPUSize64 = number;
 

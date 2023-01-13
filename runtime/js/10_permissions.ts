@@ -5,8 +5,8 @@
 import { primordials } from '../../core/00_primordials.js';
 import * as ops from '../../ops/index.js';
 import { illegalConstructorKey } from './01_web_util.js';
-import { Event, EventTarget } from '../../ext/web/02_event.js';
 import { pathFromURL } from './06_util.js';
+import { Event, EventTarget } from '../../ext/web/02_event.js';
 
 const {
   ArrayIsArray,

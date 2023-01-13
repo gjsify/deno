@@ -19,7 +19,7 @@ export * from '../ext/node/lib.js';
 export * from '../ext/napi/lib.js';
 export * from '../ext/web/lib.js';
 export * from '../ext/url/lib.js';
-export * from '../cli/ops/testing.js';
+export * from '../cli/ops/mod.js';
 
 import type {
   TypedArray,
