@@ -15,12 +15,16 @@ export const op_unref_op = (promiseId: number) => {
 
 export const op_set_macrotask_callback = (fn: () => boolean): void => {
   console.warn("Not implemented: ops.op_set_macrotask_callback");
-  fn();
+
+  // TODO: Not sure how we should implement this:
+  return op_set_next_tick_callback(fn);
 }
 
 export const op_set_next_tick_callback = (fn: () => void): void => {
-  console.warn("Not implemented: ops.op_set_next_tick_callback");
-  fn();
+  GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+    fn();
+    return GLib.SOURCE_CONTINUE;
+  });
 }
 
 export const op_set_promise_reject_callback = (fn: Deno.core.PromiseRejectCallback): void => {
@@ -177,8 +181,9 @@ export const op_set_format_exception_callback = (cb: (error: Error | string) => 
   return [];
 }
 
-export const op_event_loop_has_more_work = (): void => {
+export const op_event_loop_has_more_work = (): boolean => {
   console.warn("Not implemented: ops.op_event_loop_has_more_work");
+  return false;
 }
 
 export const op_store_pending_promise_exception = (promise: Promise<any>, reason: any) => {

@@ -14,7 +14,7 @@ import {
   readableStreamForRidUnrefableRef,
   readableStreamForRidUnrefableUnref,
   writableStreamForRid,
-} from '../../ext//web/06_streams.js'
+} from '../../ext/web/06_streams.js'
 const {
   Error,
   ObjectPrototypeIsPrototypeOf,

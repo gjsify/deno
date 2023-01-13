@@ -18,10 +18,10 @@ import * as ops from '../../ops/index.js';
 import * as webidl from '../webidl/00_webidl.js';
 import { forgivingBase64Encode } from './00_infra.js';
 import { ProgressEvent, EventTarget } from './02_event.js';
-import { decode, TextDecoder } from './08_text_encoding.js';
-import { Blob } from './09_file.js';
 import { parseMimeType } from './01_mimesniff.js';
 import { DOMException } from './01_dom_exception.js';
+import { decode, TextDecoder } from './08_text_encoding.js';
+import { Blob } from './09_file.js';
 const {
   ArrayPrototypePush,
   ArrayPrototypeReduce,

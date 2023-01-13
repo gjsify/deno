@@ -7,24 +7,8 @@ import { primordials } from '../../core/00_primordials.js';
 import * as core from '../../core/01_core.js';
 import * as ops from '../../ops/index.js';
 import * as webidl from '../webidl/00_webidl.js';
-import { InnerBody, InnerBodyStatic } from '../fetch/22_body.js';
 import { Event, setEventTargetData } from '../web/02_event.js';
-import { BlobPrototype } from '../web/09_file.js';
-import {
-  ResponsePrototype,
-  toInnerResponse,
-  newInnerResponse,
-  fromInnerResponse,
-} from '../fetch/23_response.js';
-
-import {
-  _flash,
-  newInnerRequest,
-  fromInnerRequest,
-} from '../fetch/23_request.js';
-
-const { BadResourcePrototype, InterruptedPrototype } = core;
-
+import { newSignal } from '../web/03_abort_signal.js';
 import {
   ReadableStreamPrototype,
   Deferred,
@@ -33,7 +17,7 @@ import {
   readableStreamClose,
 } from '../web/06_streams.js';
 
-import * as abortSignal from '../web/03_abort_signal.js';
+const { BadResourcePrototype, InterruptedPrototype } = core;
 
 import {
   WebSocket,
@@ -49,6 +33,21 @@ import {
 
 import { TcpConn, UnixConn } from '../net/01_net.js';
 import { TlsConn } from '../net/02_tls.js';
+
+import { BlobPrototype } from '../web/09_file.js';
+import { InnerBody, InnerBodyStatic } from '../fetch/22_body.js';
+import {
+  ResponsePrototype,
+  toInnerResponse,
+  newInnerResponse,
+  fromInnerResponse,
+} from '../fetch/23_response.js';
+
+import {
+  _flash,
+  newInnerRequest,
+  fromInnerRequest,
+} from '../fetch/23_request.js';
 
 const {
   ArrayPrototypeIncludes,
@@ -145,7 +144,7 @@ export class HttpConn {
       body !== null ? new InnerBody(body) : null,
       false,
     );
-    const signal = abortSignal.newSignal();
+    const signal = newSignal();
     const request = fromInnerRequest(innerRequest, signal, "immutable");
 
     const respondWith = createRespondWith(
