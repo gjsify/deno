@@ -132,7 +132,8 @@ export function prepareStackTrace(error, callSites) {
     __callSiteEvals: { __proto__: null, value: [], configurable: true },
   });
   const formattedCallSites = [];
-  for (const cse of callSiteEvals) {
+  for (let i = 0; i < callSiteEvals.length; ++i) {
+    const cse = callSiteEvals[i];
     ArrayPrototypePush(error.__callSiteEvals, cse);
     ArrayPrototypePush(formattedCallSites, formatCallSiteEval(cse));
   }

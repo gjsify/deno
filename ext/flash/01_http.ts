@@ -148,7 +148,7 @@ function http1Response(
   // Date header: https://datatracker.ietf.org/doc/html/rfc7231#section-7.1.1.2
   let str = `HTTP/1.1 ${status} ${statusCodes[status]}\r\nDate: ${date}\r\n`;
   for (let i = 0; i < headerList.length; ++i) {
-    const [name, value] = headerList[i];
+    const { 0: name, 1: value } = headerList[i];
     // header-field   = field-name ":" OWS field-value OWS
     str += `${name}: ${value}\r\n`;
   }
@@ -252,6 +252,7 @@ async function handleResponse(
   i,
   respondFast,
   respondChunked,
+  tryRespondChunked,
 ) {
   // there might've been an HTTP upgrade.
   if (resp === undefined) {
@@ -262,7 +263,7 @@ async function handleResponse(
   // single op, in other case a "response body" resource will be created and
   // we'll be streaming it.
   /** @type {ReadableStream<Uint8Array> | Uint8Array | null} */
-  let respBody: ReadableStream<Uint8Array> | Uint8Array | null | string = null;
+  let respBody = null;
   let isStreamingResponseBody = false;
   if (innerResp.body !== null) {
     if (typeof (innerResp.body.streamOrStatic as InnerBodyStatic)?.body === "string") {
@@ -270,7 +271,7 @@ async function handleResponse(
         throw new TypeError("Body is unusable.");
       }
       (innerResp.body.streamOrStatic as InnerBodyStatic).consumed = true;
-      respBody = (innerResp.body.streamOrStatic as InnerBodyStatic).body as Uint8Array;
+      respBody = (innerResp.body.streamOrStatic as InnerBodyStatic).body;
       isStreamingResponseBody = false;
     } else if (
       ObjectPrototypeIsPrototypeOf(
@@ -288,9 +289,9 @@ async function handleResponse(
           innerResp.body.source,
         )
       ) {
-        respBody = innerResp.body.stream as ReadableStream;
+        respBody = innerResp.body.stream;
       } else {
-        const reader = (innerResp.body.stream as ReadableStream).getReader();
+        const reader = (innerResp.body.stream as ReadableStream<Uint8Array>).getReader();
         const r1 = await reader.read();
         if (r1.done) {
           respBody = new Uint8Array(0);
@@ -317,8 +318,7 @@ async function handleResponse(
 
   const ws = resp[_ws];
   if (isStreamingResponseBody === false) {
-    // @ts-ignore
-    const length: number = respBody.byteLength || core.byteLength(respBody);
+    const length = respBody.byteLength || core.byteLength(respBody);
     const responseStr = http1Response(
       method,
       innerResp.status ?? 200,
@@ -336,7 +336,7 @@ async function handleResponse(
     );
   }
 
-  (async () => {
+  return (async () => {
     if (!ws) {
       if (hasBody && body[_state] !== "closed") {
         // TODO(@littledivy): Optimize by draining in a single op.
@@ -349,10 +349,10 @@ async function handleResponse(
     if (isStreamingResponseBody === true) {
       const resourceBacking = getReadableStreamResourceBacking(respBody);
       if (resourceBacking) {
-        if ((respBody as ReadableStream).locked) {
+        if (respBody.locked) {
           throw new TypeError("ReadableStream is locked.");
         }
-        const reader = (respBody as ReadableStream).getReader(); // Aquire JS lock.
+        const reader = respBody.getReader(); // Aquire JS lock.
         try {
           PromisePrototypeThen(
             core.opAsync(
@@ -372,7 +372,7 @@ async function handleResponse(
             ),
             () => {
               // Release JS lock.
-              readableStreamClose(respBody as ReadableStream);
+              readableStreamClose(respBody);
             },
           );
         } catch (error) {
@@ -380,7 +380,10 @@ async function handleResponse(
           throw error;
         }
       } else {
-        const reader = (respBody as ReadableStream).getReader();
+        const reader = respBody.getReader();
+
+        // Best case: sends headers + first chunk in a single go.
+        const { value, done } = await reader.read();
         writeFixedResponse(
           serverId,
           i,
@@ -388,21 +391,30 @@ async function handleResponse(
             method,
             innerResp.status ?? 200,
             innerResp.headerList,
-            (respBody as Uint8Array).byteLength,
+            respBody.byteLength,
             null,
           ),
-          (respBody as Uint8Array).byteLength,
+          respBody.byteLength,
           false,
           respondFast,
         );
-        while (true) {
-          const { value, done } = await reader.read();
-          await respondChunked(
-            i,
-            value,
-            done,
-          );
-          if (done) break;
+
+        await tryRespondChunked(
+          i,
+          value,
+          done,
+        );
+
+        if (!done) {
+          while (true) {
+            const chunk = await reader.read();
+            await respondChunked(
+              i,
+              chunk.value,
+              chunk.done,
+            );
+            if (chunk.done) break;
+          }
         }
       }
     }
@@ -416,7 +428,6 @@ async function handleResponse(
       ws[_rid] = wsRid;
       ws[_protocol] = resp.headers.get("sec-websocket-protocol");
 
-      // @ts-ignore
       ws[_readyState] = WebSocket.OPEN;
       const event = new Event("open");
       ws.dispatchEvent(event);
@@ -589,6 +600,7 @@ export function createServe(opFn) {
                         i,
                         respondFast,
                         respondChunked,
+                        tryRespondChunked,
                       ),
                   ),
                   onError,
@@ -606,25 +618,26 @@ export function createServe(opFn) {
                     i,
                     respondFast,
                     respondChunked,
+                    tryRespondChunked,
                   )
                 ).catch(onError);
-                continue;
+              } else {
+                handleResponse(
+                  req,
+                  resp,
+                  body,
+                  hasBody,
+                  method,
+                  serverId,
+                  i,
+                  respondFast,
+                  respondChunked,
+                  tryRespondChunked,
+                ).catch(onError);
               }
             } catch (e) {
               resp = await onError(e);
             }
-
-            handleResponse(
-              req,
-              resp,
-              body,
-              hasBody,
-              method,
-              serverId,
-              i,
-              respondFast,
-              respondChunked,
-            );
           }
 
           offset += tokens;
@@ -640,9 +653,28 @@ export function createServe(opFn) {
       once: true,
     });
 
+    function tryRespondChunked(token, chunk, shutdown) {
+      const nwritten = ops.op_try_flash_respond_chunked(
+        serverId,
+        token,
+        chunk ?? new Uint8Array(),
+        shutdown,
+      );
+      if (nwritten > 0) {
+        return core.opAsync(
+          "op_flash_respond_chunked",
+          serverId,
+          token,
+          chunk,
+          shutdown,
+          nwritten,
+        );
+      }
+    }
+
     function respondChunked(token, chunk, shutdown) {
       return core.opAsync(
-        "op_flash_respond_chuncked",
+        "op_flash_respond_chunked",
         serverId,
         token,
         chunk,
@@ -740,3 +772,5 @@ export function upgradeHttpRaw(req) {
   // TODO(@littledivy): return already read first packet too.
   return [new TcpConn(connRid), new Uint8Array()];
 }
+
+export const serve = createServe(ops.op_flash_serve);

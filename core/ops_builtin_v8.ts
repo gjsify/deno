@@ -186,19 +186,19 @@ export const op_event_loop_has_more_work = (): boolean => {
   return false;
 }
 
-export const op_store_pending_promise_exception = (promise: Promise<any>, reason: any) => {
+export const op_store_pending_promise_rejection = (promise: Promise<any>, reason: any) => {
   pending_promise_exceptions.push({
     promise,
     reason
   });
 }
 
-export const op_remove_pending_promise_exception = (promise: Promise<any>) => {
+export const op_remove_pending_promise_rejection = (promise: Promise<any>) => {
   const index = pending_promise_exceptions.findIndex((el) => el.promise === promise);
   pending_promise_exceptions.splice(index, 1);
 }
 
-export const op_has_pending_promise_exception = (promise: Promise<any>) => {
+export const op_has_pending_promise_rejection = (promise: Promise<any>) => {
   return !!pending_promise_exceptions.find((el) => el.promise === promise);
 }
 

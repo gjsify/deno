@@ -78,6 +78,7 @@ async function loop(sigData) {
       return;
     }
     for (const listener of new SafeSetIterator(sigData.listeners)) {
+      // @ts-ignore TODO: fix TS error
       listener();
     }
   }

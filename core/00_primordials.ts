@@ -30,11 +30,13 @@
 // benchmark all changes made in performance-sensitive areas of the codebase.
 // See: https://github.com/nodejs/node/pull/38248
 
+// deno-lint-ignore-file prefer-primordials
+
 "use strict";
 
 import type { Primordials } from '../types/index.js';
 
-const primordials: Partial<Primordials> = {};
+const primordials = {} as typeof Primordials;
 
 const {
   defineProperty: ReflectDefineProperty,
@@ -250,25 +252,6 @@ primordials[isNaN.name] = isNaN;
   copyPrototype(original.prototype, primordials, `${name}Prototype`);
 });
 
-const {
-  ArrayPrototypeForEach,
-  ArrayPrototypeMap,
-  FunctionPrototypeCall,
-  Map,
-  ObjectDefineProperty,
-  ObjectFreeze,
-  ObjectPrototypeIsPrototypeOf,
-  ObjectSetPrototypeOf,
-  Promise,
-  PromisePrototype,
-  PromisePrototypeThen,
-  Set,
-  SymbolIterator,
-  WeakMap,
-  WeakSet,
-} = primordials;
-
-
 // Create copies of abstract intrinsic objects that are not directly exposed
 // on the global object.
 // Refs: https://tc39.es/ecma262/#sec-%typedarray%-intrinsic-object
@@ -298,6 +281,11 @@ const {
       prototype: Reflect.getPrototypeOf(String.prototype[Symbol.iterator]()),
     },
   },
+  { name: "Generator", original: Reflect.getPrototypeOf(function* () {}) },
+  {
+    name: "AsyncGenerator",
+    original: Reflect.getPrototypeOf(async function* () {}),
+  },
 ].forEach(({ name, original }: {name: string, original: object & { prototype?: object}}) => {
   primordials[name] = original;
   // The static %TypedArray% methods require a valid `this`, but can't be bound,
@@ -305,6 +293,22 @@ const {
   copyPrototype(original, primordials, name);
   copyPrototype(original.prototype, primordials, `${name}Prototype`);
 });
+
+const {
+  ArrayPrototypeForEach,
+  ArrayPrototypeJoin,
+  ArrayPrototypeMap,
+  FunctionPrototypeCall,
+  ObjectDefineProperty,
+  ObjectFreeze,
+  ObjectPrototypeIsPrototypeOf,
+  ObjectSetPrototypeOf,
+  Promise,
+  PromisePrototype,
+  PromisePrototypeThen,
+  SymbolIterator,
+  TypedArrayPrototypeJoin,
+} = primordials;
 
 // Because these functions are used by `makeSafe`, which is exposed
 // on the `primordials` object, it's important to use const references
@@ -331,21 +335,21 @@ const createSafeIterator = (factory, next) => {
   return SafeIterator;
 };
 
-primordials.SafeArrayIterator = createSafeIterator(
-  primordials.ArrayPrototypeSymbolIterator,
-  primordials.ArrayIteratorPrototypeNext,
+(primordials as any).SafeArrayIterator = createSafeIterator(
+  (primordials as any).ArrayPrototypeSymbolIterator,
+  (primordials as any).ArrayIteratorPrototypeNext,
 );
-primordials.SafeSetIterator = createSafeIterator(
-  primordials.SetPrototypeSymbolIterator,
-  primordials.SetIteratorPrototypeNext,
+(primordials as any).SafeSetIterator = createSafeIterator(
+  (primordials as any).SetPrototypeSymbolIterator,
+  (primordials as any).SetIteratorPrototypeNext,
 );
-primordials.SafeMapIterator = createSafeIterator(
-  primordials.MapPrototypeSymbolIterator,
-  primordials.MapIteratorPrototypeNext,
+(primordials as any).SafeMapIterator = createSafeIterator(
+  (primordials as any).MapPrototypeSymbolIterator,
+  (primordials as any).MapIteratorPrototypeNext,
 );
-primordials.SafeStringIterator = createSafeIterator(
-  primordials.StringPrototypeSymbolIterator,
-  primordials.StringIteratorPrototypeNext,
+(primordials as any).SafeStringIterator = createSafeIterator(
+  (primordials as any).StringPrototypeSymbolIterator,
+  (primordials as any).StringIteratorPrototypeNext,
 );
 
 const copyProps = (src: any, dest: any) => {
@@ -402,7 +406,7 @@ primordials.makeSafe = makeSafe;
 // methods later.
 // Defining the `constructor` is necessary here to avoid the default
 // constructor which uses the user-mutable `%ArrayIteratorPrototype%.next`.
-primordials.SafeMap = makeSafe(
+(primordials as any).SafeMap = makeSafe(
   Map,
   class SafeMap extends (Map as any) {
     constructor(i) {
@@ -410,7 +414,7 @@ primordials.SafeMap = makeSafe(
     }
   },
 );
-primordials.SafeWeakMap = makeSafe(
+(primordials as any).SafeWeakMap = makeSafe(
   WeakMap,
   class SafeWeakMap extends WeakMap {
     constructor(i) {
@@ -419,7 +423,7 @@ primordials.SafeWeakMap = makeSafe(
   },
 );
 
-primordials.SafeSet = makeSafe(
+(primordials as any).SafeSet = makeSafe(
   Set,
   class SafeSet extends Set {
     constructor(i) {
@@ -427,7 +431,7 @@ primordials.SafeSet = makeSafe(
     }
   },
 );
-primordials.SafeWeakSet = makeSafe(
+(primordials as any).SafeWeakSet = makeSafe(
   WeakSet,
   class SafeWeakSet extends WeakSet {
     constructor(i) {
@@ -436,7 +440,7 @@ primordials.SafeWeakSet = makeSafe(
   },
 );
 
-primordials.SafeFinalizationRegistry = makeSafe(
+(primordials as any).SafeFinalizationRegistry = makeSafe(
   FinalizationRegistry,
   // TODO type FinalizationRegistry
   class SafeFinalizationRegistry extends (FinalizationRegistry as any) {
@@ -446,7 +450,7 @@ primordials.SafeFinalizationRegistry = makeSafe(
   },
 );
 
-primordials.SafeWeakRef = makeSafe(
+(primordials as any).SafeWeakRef = makeSafe(
   WeakRef,
   // TODO WeakRef type
   class SafeWeakRef extends (WeakRef as any) {
@@ -466,7 +470,13 @@ const SafePromise = makeSafe(
   },
 );
 
-primordials.PromisePrototypeCatch = (thisPromise, onRejected) =>
+(primordials as any).ArrayPrototypeToString = (thisArray) =>
+ArrayPrototypeJoin(thisArray);
+
+(primordials as any).TypedArrayPrototypeToString = (thisArray) =>
+TypedArrayPrototypeJoin(thisArray);
+
+(primordials as any).PromisePrototypeCatch = (thisPromise, onRejected) =>
   PromisePrototypeThen(thisPromise, undefined, onRejected);
 
 /**
@@ -475,7 +485,7 @@ primordials.PromisePrototypeCatch = (thisPromise, onRejected) =>
  * @param {unknown[]} values An array of Promises.
  * @returns A new Promise.
  */
-primordials.SafePromiseAll = <T = unknown>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>[]> =>
+(primordials as any).SafePromiseAll = <T = unknown>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>[]> =>
   // Wrapping on a new Promise is necessary to not expose the SafePromise
   // prototype to user-land.
   new Promise((a, b) =>
@@ -501,7 +511,7 @@ primordials.SafePromiseAll = <T = unknown>(values: Iterable<T | PromiseLike<T>>)
  *        when the Promise is settled (fulfilled or rejected).
  * @returns A Promise for the completion of the callback.
  */
-primordials.SafePromisePrototypeFinally = (thisPromise: Promise<any>, onFinally: (() => void) | undefined | null) =>
+(primordials as any).SafePromisePrototypeFinally = (thisPromise: Promise<any>, onFinally: (() => void) | undefined | null) =>
   // Wrapping on a new Promise is necessary to not expose the SafePromise
   // prototype to user-land.
   new Promise((a, b) =>
@@ -517,7 +527,7 @@ ObjectDefineProperty(primordials, "queueMicrotask", {
     return queueMicrotask;
   },
 });
-primordials.setQueueMicrotask = (value) => {
+(primordials as any).setQueueMicrotask = (value) => {
   if (queueMicrotask !== undefined) {
     throw new Error("queueMicrotask is already defined");
   }
@@ -527,7 +537,7 @@ primordials.setQueueMicrotask = (value) => {
 // Renaming from `eval` is necessary because otherwise it would perform direct
 // evaluation, allowing user-land access to local variables.
 // This is because the identifier `eval` is somewhat treated as a keyword
-primordials.indirectEval = eval;
+(primordials as any).indirectEval = eval;
 
 ObjectSetPrototypeOf(primordials, null);
 ObjectFreeze(primordials);

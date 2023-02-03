@@ -19,9 +19,11 @@ const {
   ArrayPrototypeMap,
   ArrayPrototypePush,
   ArrayPrototypeShift,
+  AsyncGeneratorPrototype,
   BigInt64ArrayPrototype,
   BigUint64ArrayPrototype,
   DataView,
+  FinalizationRegistry,
   Int8ArrayPrototype,
   Int16ArrayPrototype,
   Int32ArrayPrototype,
@@ -32,6 +34,7 @@ const {
   ObjectDefineProperties,
   ObjectDefineProperty,
   ObjectGetPrototypeOf,
+  ObjectPrototype,
   ObjectPrototypeIsPrototypeOf,
   ObjectSetPrototypeOf,
   Promise,
@@ -43,7 +46,8 @@ const {
   RangeError,
   ReflectHas,
   SafePromiseAll,
-  SharedArrayBuffer,
+  // TODO(lucacasonato): add SharedArrayBuffer to primordials
+  // SharedArrayBufferPrototype
   Symbol,
   SymbolAsyncIterator,
   SymbolFor,
@@ -190,6 +194,7 @@ function canTransferArrayBuffer(O: ArrayBufferLike): boolean {
   assert(typeof O === "object");
   assert(
     ObjectPrototypeIsPrototypeOf(ArrayBufferPrototype, O) ||
+      // deno-lint-ignore prefer-primordials
       ObjectPrototypeIsPrototypeOf(SharedArrayBuffer.prototype, O),
   );
   if (isDetachedBuffer(O)) {
@@ -3688,7 +3693,7 @@ function writableStreamUpdateBackpressure(stream: WritableStream, backpressure: 
 }
 
 export function createIteratorResult<T>(value: T, done: boolean): IteratorResult<T> {
-  const result = ObjectCreate(null);
+  const result = ObjectCreate(ObjectPrototype);
   ObjectDefineProperties(result, {
     value: { value, writable: true, enumerable: true, configurable: true },
     done: {
@@ -3701,55 +3706,99 @@ export function createIteratorResult<T>(value: T, done: boolean): IteratorResult
   return result;
 }
 
-const asyncIteratorPrototype: AsyncIterator<unknown, unknown> = ObjectGetPrototypeOf(
-  ObjectGetPrototypeOf(async function* () {}).prototype,
-);
+const asyncIteratorPrototype: AsyncIterator<unknown, unknown> = ObjectGetPrototypeOf(AsyncGeneratorPrototype);
+
+const _iteratorNext = Symbol("[[iteratorNext]]");
+const _iteratorFinished = Symbol("[[iteratorFinished]]");
 
 const readableStreamAsyncIteratorPrototype: AsyncIterator<unknown> = ObjectSetPrototypeOf({
-
+  /** @returns {Promise<IteratorResult<unknown>>} */
   next(): Promise<IteratorResult<unknown>> {
     const reader: ReadableStreamDefaultReader = this[_reader];
-    if (reader[_stream] === undefined) {
-      return PromiseReject(
-        new TypeError(
-          "Cannot get the next iteration result once the reader has been released.",
-        ),
-      );
+    function nextSteps() {
+      if (reader[_iteratorFinished]) {
+        return PromiseResolve(createIteratorResult(undefined, true));
+      }
+
+      if (reader[_stream] === undefined) {
+        return PromiseReject(
+          new TypeError(
+            "Cannot get the next iteration result once the reader has been released.",
+          ),
+        );
+      }
+
+      /** @type {Deferred<IteratorResult<any>>} */
+      const promise: Deferred<IteratorResult<any>> = new Deferred();
+      /** @type {ReadRequest} */
+      const readRequest: ReadRequest = {
+        chunkSteps(chunk) {
+          promise.resolve(createIteratorResult(chunk, false));
+        },
+        closeSteps() {
+          readableStreamDefaultReaderRelease(reader);
+          promise.resolve(createIteratorResult(undefined, true));
+        },
+        errorSteps(e) {
+          readableStreamDefaultReaderRelease(reader);
+          promise.reject(e);
+        },
+      };
+
+      readableStreamDefaultReaderRead(reader, readRequest);
+      return PromisePrototypeThen(promise.promise, (result) => {
+        reader[_iteratorNext] = null;
+        if (result.done === true) {
+          reader[_iteratorFinished] = true;
+          return createIteratorResult(undefined, true);
+        }
+        return result;
+      }, (reason) => {
+        reader[_iteratorNext] = null;
+        reader[_iteratorFinished] = true;
+        throw reason;
+      });
     }
 
-    const promise: Deferred<IteratorResult<any>> = new Deferred();
+    reader[_iteratorNext] = reader[_iteratorNext]
+      ? PromisePrototypeThen(reader[_iteratorNext], nextSteps, nextSteps)
+      : nextSteps();
 
-    const readRequest: ReadRequest = {
-      chunkSteps(chunk) {
-        promise.resolve(createIteratorResult(chunk, false));
-      },
-      closeSteps() {
-        readableStreamDefaultReaderRelease(reader);
-        promise.resolve(createIteratorResult(undefined, true));
-      },
-      errorSteps(e) {
-        readableStreamDefaultReaderRelease(reader);
-        promise.reject(e);
-      },
-    };
-    readableStreamDefaultReaderRead(reader, readRequest);
-    return promise.promise;
+    return reader[_iteratorNext];
   },
-
-  async return(arg: unknown): Promise<IteratorResult<unknown>> {
+  /**
+   * @param {unknown} arg
+   * @returns {Promise<IteratorResult<unknown>>}
+   */
+  return(arg: unknown): Promise<IteratorResult<unknown>> {
+    /** @type {ReadableStreamDefaultReader} */
     const reader: ReadableStreamDefaultReader = this[_reader];
-    if (reader[_stream] === undefined) {
-      return createIteratorResult(undefined, true);
-    }
-    assert(reader[_readRequests].length === 0);
-    if (this[_preventCancel] === false) {
-      const result = readableStreamReaderGenericCancel(reader, arg);
+    const returnSteps = () => {
+      if (reader[_iteratorFinished]) {
+        return PromiseResolve(createIteratorResult(arg, true));
+      }
+      reader[_iteratorFinished] = true;
+
+      if (reader[_stream] === undefined) {
+        return PromiseResolve(createIteratorResult(undefined, true));
+      }
+      assert(reader[_readRequests].length === 0);
+      if (this[_preventCancel] === false) {
+        const result = readableStreamReaderGenericCancel(reader, arg);
+        readableStreamDefaultReaderRelease(reader);
+        return result;
+      }
       readableStreamDefaultReaderRelease(reader);
-      await result;
-      return createIteratorResult(arg, true);
-    }
-    readableStreamDefaultReaderRelease(reader);
-    return createIteratorResult(undefined, true);
+      return PromiseResolve(createIteratorResult(undefined, true));
+    };
+
+    const returnPromise = reader[_iteratorNext]
+      ? PromisePrototypeThen(reader[_iteratorNext], returnSteps, returnSteps)
+      : returnSteps();
+    return PromisePrototypeThen(
+      returnPromise,
+      () => createIteratorResult(arg, true),
+    ) as Promise<IteratorResult<unknown>>;
   },
 }, asyncIteratorPrototype);
 

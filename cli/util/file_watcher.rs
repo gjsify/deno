@@ -74,7 +74,7 @@ where
   if let Err(err) = result {
     let error_string = match err.downcast_ref::<JsError>() {
       Some(e) => format_js_error(e),
-      None => format!("{:?}", err),
+      None => format!("{err:?}"),
     };
     eprintln!(
       "{}: {}",
@@ -107,9 +107,13 @@ where
         log::debug!("File change ignored")
       }
       ResolutionResult::Restart {
-        paths_to_watch,
+        mut paths_to_watch,
         result,
       } => {
+        // watch the current directory when empty
+        if paths_to_watch.is_empty() {
+          paths_to_watch.push(PathBuf::from("."));
+        }
         return (paths_to_watch, result);
       }
     }
@@ -126,7 +130,7 @@ pub struct PrintConfig {
 fn create_print_after_restart_fn(clear_screen: bool) -> impl Fn() {
   move || {
     if clear_screen && atty::is(atty::Stream::Stderr) {
-      eprint!("{}", CLEAR_SCREEN);
+      eprint!("{CLEAR_SCREEN}");
     }
     info!(
       "{} File change detected! Restarting!",
@@ -190,9 +194,13 @@ where
       print_after_restart();
     }
     ResolutionResult::Restart {
-      paths_to_watch: paths,
+      paths_to_watch: mut paths,
       result,
     } => {
+      // watch the current directory when empty
+      if paths.is_empty() {
+        paths.push(PathBuf::from("."));
+      }
       paths_to_watch = paths;
       resolution_result = result;
     }

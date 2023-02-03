@@ -1358,12 +1358,10 @@ export class SubtleCrypto {
         }
 
         const hashAlgorithm = key[_algorithm].hash.name;
-        const saltLength = normalizedAlgorithm.saltLength;
         return await core.opAsync("op_crypto_verify_key", {
           key: keyData,
           algorithm: "RSA-PSS",
           hash: hashAlgorithm,
-          saltLength,
           signature,
         }, data);
       }
@@ -4129,7 +4127,7 @@ function exportKeyEd25519(format, key, innerKey) {
       }
 
       const pkcs8Der = ops.op_export_pkcs8_ed25519(
-        new Uint8Array([0x04, 0x22, ...new SafeArrayIterator(innerKey)]),
+        new Uint8Array([0x04, 0x22, ...(new SafeArrayIterator(innerKey) as IterableIterator<number>)]),
       );
       pkcs8Der[15] = 0x20;
       return pkcs8Der.buffer;
@@ -4192,7 +4190,7 @@ function exportKeyX25519(format, key, innerKey) {
       }
 
       const pkcs8Der = ops.op_export_pkcs8_x25519(
-        new Uint8Array([0x04, 0x22, ...new SafeArrayIterator(innerKey)]),
+        new Uint8Array([0x04, 0x22, ...new SafeArrayIterator(innerKey) as IterableIterator<number>]),
       );
       pkcs8Der[15] = 0x20;
       return pkcs8Der.buffer;

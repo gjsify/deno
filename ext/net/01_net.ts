@@ -188,7 +188,7 @@ export class Listener {
     }
     this.#promiseId = promise[promiseIdSymbol];
     if (this.#unref) core.unrefOp(this.#promiseId);
-    const [rid, localAddr, remoteAddr] = await promise;
+    const { 0: rid, 1: localAddr, 2: remoteAddr } = await promise;
     this.#promiseId = null;
     if (this.addr.transport == "tcp") {
       localAddr.transport = "tcp";
@@ -274,21 +274,21 @@ export class Datagram {
     let remoteAddr;
     switch (this.addr.transport) {
       case "udp": {
-        [nread, remoteAddr] = await core.opAsync(
+        ({ 0: nread, 1: remoteAddr } = await core.opAsync(
           "op_net_recv_udp",
           this.rid,
           buf,
-        );
+        ));
         remoteAddr.transport = "udp";
         break;
       }
       case "unixpacket": {
         let path;
-        [nread, path] = await core.opAsync(
+        ({ 0: nread, 1: path } = await core.opAsync(
           "op_net_recv_unixpacket",
           this.rid,
           buf,
-        );
+        ));
         remoteAddr = { transport: "unixpacket", path };
         break;
       }
@@ -344,7 +344,7 @@ export class Datagram {
 export function listen(args) {
   switch (args.transport ?? "tcp") {
     case "tcp": {
-      const [rid, addr] = ops.op_net_listen_tcp({
+      const { 0: rid, 1: addr } = ops.op_net_listen_tcp({
         hostname: args.hostname ?? "0.0.0.0",
         port: args.port,
       }, args.reusePort);
@@ -352,7 +352,7 @@ export function listen(args) {
       return new Listener(rid, addr);
     }
     case "unix": {
-      const [rid, path] = ops.op_net_listen_unix(args.path);
+      const { 0: rid, 1: path } = ops.op_net_listen_unix(args.path);
       const addr = {
         transport: "unix",
         path,
@@ -368,7 +368,7 @@ export function createListenDatagram(udpOpFn, unixOpFn) {
   return function listenDatagram(args) {
     switch (args.transport) {
       case "udp": {
-        const [rid, addr] = udpOpFn(
+        const { 0: rid, 1: addr } = udpOpFn(
           {
             hostname: args.hostname ?? "127.0.0.1",
             port: args.port,
@@ -379,7 +379,7 @@ export function createListenDatagram(udpOpFn, unixOpFn) {
         return new Datagram(rid, addr);
       }
       case "unixpacket": {
-        const [rid, path] = unixOpFn(args.path);
+        const { 0: rid, 1: path } = unixOpFn(args.path);
         const addr = {
           transport: "unixpacket",
           path,
@@ -400,7 +400,7 @@ export const listenDatagram = createListenDatagram(
 export async function connect(args) {
   switch (args.transport ?? "tcp") {
     case "tcp": {
-      const [rid, localAddr, remoteAddr] = await core.opAsync(
+      const { 0: rid, 1: localAddr, 2: remoteAddr } = await core.opAsync(
         "op_net_connect_tcp",
         {
           hostname: args.hostname ?? "127.0.0.1",
@@ -412,7 +412,7 @@ export async function connect(args) {
       return new TcpConn(rid, remoteAddr, localAddr);
     }
     case "unix": {
-      const [rid, localAddr, remoteAddr] = await core.opAsync(
+      const { 0: rid, 1: localAddr, 2: remoteAddr } = await core.opAsync(
         "op_net_connect_unix",
         args.path,
       );
@@ -424,12 +424,5 @@ export async function connect(args) {
     }
     default:
       throw new TypeError(`Unsupported transport: '${args.transport}'`);
-  }
-}
-
-export function setup(unstable) {
-  if (!unstable) {
-    delete Listener.prototype.ref;
-    delete Listener.prototype.unref;
   }
 }

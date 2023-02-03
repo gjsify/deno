@@ -27,12 +27,16 @@ const {
   ArrayBufferPrototypeSlice,
   ArrayBufferIsView,
   ArrayPrototypePush,
+  AsyncGeneratorPrototypeNext,
   Date,
   DatePrototypeGetTime,
+  FinalizationRegistry,
   MathMax,
   MathMin,
   ObjectPrototypeIsPrototypeOf,
   RegExpPrototypeTest,
+  // TODO(lucacasonato): add SharedArrayBuffer to primordials
+  // SharedArrayBufferPrototype
   StringPrototypeCharAt,
   StringPrototypeToLowerCase,
   StringPrototypeSlice,
@@ -307,7 +311,9 @@ export class Blob {
       type: "bytes",
       async pull(controller: ReadableByteStreamController) {
         while (true) {
-          const { value, done } = await partIterator.next();
+          const { value, done } = await AsyncGeneratorPrototypeNext(
+            partIterator,
+          );
           if (done) return controller.close();
           if (value.byteLength > 0) {
             return controller.enqueue(value);
@@ -328,11 +334,14 @@ export class Blob {
     const bytes = new Uint8Array(size);
     const partIterator = toIterator(this[_parts]);
     let offset = 0;
-    // deno-lint-ignore prefer-primordials
-    for await (const chunk of partIterator) {
-      const byteLength = chunk.byteLength;
+    while (true) {
+      const { value, done } = await AsyncGeneratorPrototypeNext(
+        partIterator,
+      );
+      if (done) break;
+      const byteLength = value.byteLength;
       if (byteLength > 0) {
-        TypedArrayPrototypeSet(bytes, chunk, offset);
+        TypedArrayPrototypeSet(bytes, value, offset);
         offset += byteLength;
       }
     }
@@ -372,6 +381,7 @@ webidl.converters["BlobPart"] = (V, opts) => {
     }
     if (
       ObjectPrototypeIsPrototypeOf(ArrayBufferPrototype, V) ||
+      // deno-lint-ignore prefer-primordials
       ObjectPrototypeIsPrototypeOf(SharedArrayBuffer.prototype, V)
     ) {
       return webidl.converters["ArrayBuffer"](V, opts);

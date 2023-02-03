@@ -49,6 +49,8 @@ const {
   JSONParse,
   ObjectDefineProperties,
   ObjectPrototypeIsPrototypeOf,
+  // TODO(lucacasonato): add SharedArrayBuffer to primordials
+  // SharedArrayBufferPrototype
   TypedArrayPrototypeSlice,
   TypeError,
   Uint8Array,
@@ -177,7 +179,7 @@ export class InnerBody {
   }
 
   clone(): InnerBody {
-    const [out1, out2] = (this.stream as ReadableStream).tee();
+    const { 0: out1, 1: out2 } = (this.stream as ReadableStream).tee();
     this.streamOrStatic = out1;
     const second = new InnerBody(out2);
     second.source = core.deserialize(core.serialize(this.source));
@@ -411,6 +413,7 @@ webidl.converters["BodyInit_DOMString"] = (V, opts) => {
   if (typeof V === "object") {
     if (
       ObjectPrototypeIsPrototypeOf(ArrayBufferPrototype, V) ||
+      // deno-lint-ignore prefer-primordials
       ObjectPrototypeIsPrototypeOf(SharedArrayBuffer.prototype, V)
     ) {
       return webidl.converters["ArrayBuffer"](V, opts);

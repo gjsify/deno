@@ -36,7 +36,7 @@ export async function connectTls({
   if (transport !== "tcp") {
     throw new TypeError(`Unsupported transport: '${transport}'`);
   }
-  const [rid, localAddr, remoteAddr] = await core.opAsync(
+  const { 0: rid, 1: localAddr, 2: remoteAddr } = await core.opAsync(
     "op_net_connect_tls",
     { hostname, port },
     { certFile, caCerts, certChain, privateKey, alpnProtocols },
@@ -48,7 +48,7 @@ export async function connectTls({
 
 export class TlsListener extends Listener {
   async accept() {
-    const [rid, localAddr, remoteAddr] = await core.opAsync(
+    const { 0: rid, 1: localAddr, 2: remoteAddr } = await core.opAsync(
       "op_net_accept_tls",
       this.rid,
     );
@@ -72,7 +72,7 @@ export function listenTls({
   if (transport !== "tcp") {
     throw new TypeError(`Unsupported transport: '${transport}'`);
   }
-  const [rid, localAddr] = ops.op_net_listen_tls(
+  const { 0: rid, 1: localAddr } = ops.op_net_listen_tls(
     { hostname, port },
     { cert, certFile, key, keyFile, alpnProtocols, reusePort },
   );
@@ -88,7 +88,7 @@ export async function startTls(
     alpnProtocols = undefined,
   } = {},
 ) {
-  const [rid, localAddr, remoteAddr] = await opStartTls({
+  const { 0: rid, 1: localAddr, 2: remoteAddr } = await opStartTls({
     rid: conn.rid,
     hostname,
     certFile,

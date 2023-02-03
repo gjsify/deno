@@ -1217,11 +1217,11 @@ export class ErrorEvent extends Event {
   }
 
   [SymbolFor("Deno.privateCustomInspect")](inspect) {
-    return inspect(consoleInternal.createFilteredInspectProxy({
+    return inspect(consoleInternal.createFilteredInspectProxy<any>({
       object: this,
       evaluate: ObjectPrototypeIsPrototypeOf(ErrorEvent.prototype, this),
       keys: [
-        ...new SafeArrayIterator(EVENT_PROPS),
+        ...new SafeArrayIterator(EVENT_PROPS) as Iterable<string>,
         "message",
         "filename",
         "lineno",
@@ -1279,11 +1279,11 @@ export class CloseEvent extends Event {
   }
 
   [SymbolFor("Deno.privateCustomInspect")](inspect) {
-    return inspect(consoleInternal.createFilteredInspectProxy({
+    return inspect(consoleInternal.createFilteredInspectProxy<any>({
       object: this,
       evaluate: ObjectPrototypeIsPrototypeOf(CloseEvent.prototype, this),
       keys: [
-        ...new SafeArrayIterator(EVENT_PROPS),
+        ...new SafeArrayIterator(EVENT_PROPS) as Iterable<string>,
         "wasClean",
         "code",
         "reason",
@@ -1330,7 +1330,7 @@ export class MessageEvent<T = any> extends Event {
   }
 
   [SymbolFor("Deno.privateCustomInspect")](inspect) {
-    return inspect(consoleInternal.createFilteredInspectProxy({
+    return inspect(consoleInternal.createFilteredInspectProxy<any>({
       object: this,
       evaluate: ObjectPrototypeIsPrototypeOf(MessageEvent.prototype, this),
       keys: [
@@ -1364,7 +1364,7 @@ export class CustomEvent extends Event {
   }
 
   [SymbolFor("Deno.privateCustomInspect")](inspect) {
-    return inspect(consoleInternal.createFilteredInspectProxy({
+    return inspect(consoleInternal.createFilteredInspectProxy<any>({
       object: this,
       evaluate: ObjectPrototypeIsPrototypeOf(CustomEvent.prototype, this),
       keys: [
@@ -1408,7 +1408,7 @@ export class ProgressEvent<T extends EventTarget = EventTarget> extends Event {
   }
 
   [SymbolFor("Deno.privateCustomInspect")](inspect) {
-    return inspect(consoleInternal.createFilteredInspectProxy({
+    return inspect(consoleInternal.createFilteredInspectProxy<any>({
       object: this,
       evaluate: ObjectPrototypeIsPrototypeOf(ProgressEvent.prototype, this),
       keys: [

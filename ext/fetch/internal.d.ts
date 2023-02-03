@@ -87,6 +87,8 @@ export namespace fetch {
       | "request-no-cors"
       | "response"
       | "none",
+    skipBody: boolean,
+    flash: boolean,
   ): Request;
   function redirectStatus(status: number): boolean;
   function nullBodyStatus(status: number): boolean;

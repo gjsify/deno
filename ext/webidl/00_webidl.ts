@@ -67,14 +67,23 @@ const {
   ReflectOwnKeys,
   RegExpPrototypeTest,
   Set,
+  SetPrototypeEntries,
+  SetPrototypeForEach,
+  SetPrototypeKeys,
+  SetPrototypeValues,
+  SetPrototypeHas,
+  SetPrototypeClear,
+  SetPrototypeDelete,
+  SetPrototypeAdd,
   // TODO(lucacasonato): add SharedArrayBuffer to primordials
-  // SharedArrayBuffer,
+  // SharedArrayBufferPrototype,
   String,
   StringFromCodePoint,
   StringPrototypeCharCodeAt,
   Symbol,
   SymbolIterator,
   SymbolToStringTag,
+  TypedArrayPrototypeGetSymbolToStringTag,
   TypeError,
   Uint16Array,
   Uint32Array,
@@ -447,11 +456,17 @@ function convertCallbackFunction(V: any, opts) {
   return V;
 }
 
+function isDataView(V: any) {
+  return ArrayBufferIsView(V) &&
+    TypedArrayPrototypeGetSymbolToStringTag(V) === undefined;
+}
+
 function isNonSharedArrayBuffer(V: any) {
   return ObjectPrototypeIsPrototypeOf(ArrayBufferPrototype, V);
 }
 
 function isSharedArrayBuffer(V: any) {
+  // deno-lint-ignore prefer-primordials
   return ObjectPrototypeIsPrototypeOf(SharedArrayBuffer.prototype, V);
 }
 
@@ -471,7 +486,7 @@ converters.ArrayBuffer = (V: any, opts: Partial<webidl.BufferConverterOpts> = {}
 };
 
 converters.DataView = (V: any, opts: Partial<webidl.BufferConverterOpts> = {}) => {
-  if (!(ObjectPrototypeIsPrototypeOf(DataViewPrototype, V))) {
+  if (!(isDataView(V))) {
     throw makeException(TypeError, "is not a DataView", opts);
   }
 
@@ -1088,6 +1103,8 @@ export function mixinPairIterable(
   return ObjectDefineProperties(prototype.prototype, properties);
 }
 
+export const setlikeInner = Symbol("[[set]]");
+
 /**
  * Configure prototype properties enumerability / writability / configurability.
  */
@@ -1121,6 +1138,106 @@ export function configurePrototype(prototype: any) {
     configurable: true,
     writable: false,
   });
+}
+
+// Ref: https://webidl.spec.whatwg.org/#es-setlike
+export function setlike(obj, objPrototype, readonly) {
+  ObjectDefineProperties(obj, {
+    size: {
+      configurable: true,
+      enumerable: true,
+      get() {
+        assertBranded(this, objPrototype);
+        return obj[setlikeInner].size;
+      },
+    },
+    [SymbolIterator]: {
+      configurable: true,
+      enumerable: false,
+      writable: true,
+      value() {
+        assertBranded(this, objPrototype);
+        return obj[setlikeInner][SymbolIterator]();
+      },
+    },
+    entries: {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value() {
+        assertBranded(this, objPrototype);
+        return SetPrototypeEntries(obj[setlikeInner]);
+      },
+    },
+    keys: {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value() {
+        assertBranded(this, objPrototype);
+        return SetPrototypeKeys(obj[setlikeInner]);
+      },
+    },
+    values: {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value() {
+        assertBranded(this, objPrototype);
+        return SetPrototypeValues(obj[setlikeInner]);
+      },
+    },
+    forEach: {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value(callbackfn, thisArg) {
+        assertBranded(this, objPrototype);
+        return SetPrototypeForEach(obj[setlikeInner], callbackfn, thisArg);
+      },
+    },
+    has: {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value(value) {
+        assertBranded(this, objPrototype);
+        return SetPrototypeHas(obj[setlikeInner], value);
+      },
+    },
+  });
+
+  if (!readonly) {
+    ObjectDefineProperties(obj, {
+      add: {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        value(value) {
+          assertBranded(this, objPrototype);
+          return SetPrototypeAdd(obj[setlikeInner], value);
+        },
+      },
+      delete: {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        value(value) {
+          assertBranded(this, objPrototype);
+          return SetPrototypeDelete(obj[setlikeInner], value);
+        },
+      },
+      clear: {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        value() {
+          assertBranded(this, objPrototype);
+          return SetPrototypeClear(obj[setlikeInner]);
+        },
+      },
+    });
+  }
 }
 
 export { converters }

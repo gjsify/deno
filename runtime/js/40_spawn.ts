@@ -1,4 +1,4 @@
-// Copyright 2018-2021 the Deno authors. All rights reserved. MIT license.
+// Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 "use strict";
 
 import { primordials } from '../../core/00_primordials.js';
@@ -88,7 +88,7 @@ function collectOutput(readableStream) {
  *
  * @category Sub Process
  */
- export class Child {
+export class Child {
   #rid: number;
   #waitPromiseId;
   #unrefed = false;
@@ -195,7 +195,7 @@ function collectOutput(readableStream) {
       );
     }
 
-    const [status, _stdout, _stderr] = await SafePromiseAll([
+    const { 0: status, 1: stdout, 2: stderr } = await SafePromiseAll([
       this.#status,
       collectOutput(this.#stdout),
       collectOutput(this.#stderr),
@@ -206,16 +206,16 @@ function collectOutput(readableStream) {
       code: status.code,
       signal: status.signal,
       get stdout() {
-        if (_stdout == null) {
+        if (stdout == null) {
           throw new TypeError("stdout is not piped");
         }
-        return _stdout;
+        return stdout;
       },
       get stderr() {
-        if (_stderr == null) {
+        if (stderr == null) {
           throw new TypeError("stderr is not piped");
         }
-        return _stderr;
+        return stderr;
       },
     };
   }
@@ -343,6 +343,7 @@ export function createCommand(spawn, spawnSync, spawnChild) {
         ...(this.#options ?? {}),
         stdout: this.#options?.stdout ?? "inherit",
         stderr: this.#options?.stderr ?? "inherit",
+        stdin: this.#options?.stdin ?? "inherit",
       };
       return spawnChild(this.#command, options);
     }
@@ -364,3 +365,4 @@ export const Command = createCommand(
 //   createSpawnSync,
 // };
 
+export const ChildProcess = Child;

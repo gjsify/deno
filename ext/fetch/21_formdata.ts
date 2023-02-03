@@ -287,7 +287,7 @@ const escape = (str: string, isFilename?: boolean) => {
 /**
  * convert FormData to a Blob synchronous without reading all of the files
  */
-export function formDataToBlob(formData: FormData) {
+export function formDataToBlob(formData: FormData): Blob {
   const boundary = StringPrototypePadStart(
     StringPrototypeSlice(
       StringPrototypeReplaceAll(`${MathRandom()}${MathRandom()}`, ".", "" as any),
@@ -300,7 +300,7 @@ export function formDataToBlob(formData: FormData) {
   const prefix = `--${boundary}\r\nContent-Disposition: form-data; name="`;
 
   // deno-lint-ignore prefer-primordials
-  for (const [name, value] of formData) {
+  for (const { 0: name, 1: value } of formData as FormData & Iterable<[string, any]>) {
     if (typeof value === "string") {
       ArrayPrototypePush(
         chunks,

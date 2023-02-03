@@ -177,9 +177,9 @@ async function mainFetch(req: InnerRequest, recursive: boolean, terminator: Abor
   }
 
   const { requestRid, requestBodyRid, cancelHandleRid } = opFetch(
-    req.method,
+    req.method as string,
     req.currentUrl(),
-    req.headerList,
+    req.headerList as [string, string][],
     req.clientRid,
     reqBody !== null,
     req.body?.length,

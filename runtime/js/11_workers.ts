@@ -135,7 +135,7 @@ export class Worker extends EventTarget {
 
   #pollControl = async () => {
     while (this.#status === "RUNNING") {
-      const [type, data] = await hostRecvCtrl(this.#id);
+      const { 0: type, 1: data } = await hostRecvCtrl(this.#id);
 
       // If terminate was called then we ignore all messages
       // @ts-ignore

@@ -38,18 +38,14 @@ const {
   SafeArrayIterator,
   SafePromiseAll,
   Set,
-  SetPrototypeEntries,
-  SetPrototypeForEach,
   SetPrototypeHas,
-  SetPrototypeKeys,
-  SetPrototypeValues,
   Symbol,
   SymbolFor,
-  SymbolIterator,
   TypeError,
   Uint32Array,
   Uint32ArrayPrototype,
   Uint8Array,
+  WeakRef,
 } = primordials;
 
 const _rid = Symbol("[[rid]]");
@@ -65,24 +61,32 @@ const _vendor = Symbol("[[vendor]]");
 const _architecture = Symbol("[[architecture]]");
 const _description = Symbol("[[description]]");
 const _limits = Symbol("[[limits]]");
-const _features = Symbol("[[features]]");
 const _reason = Symbol("[[reason]]");
 const _message = Symbol("[[message]]");
 const _label = Symbol("[[label]]");
-const _device = Symbol("[[device]]");
+export const _device = Symbol("[[device]]");
 const _queue = Symbol("[[queue]]");
 const _views = Symbol("[[views]]");
 const _texture = Symbol("[[texture]]");
 const _encoders = Symbol("[[encoders]]");
 const _encoder = Symbol("[[encoder]]");
 const _descriptor = Symbol("[[descriptor]]");
+const _width = Symbol("[[width]]");
+const _height = Symbol("[[height]]");
+const _depthOrArrayLayers = Symbol("[[depthOrArrayLayers]]");
+const _mipLevelCount = Symbol("[[mipLevelCount]]");
+const _sampleCount = Symbol("[[sampleCount]]");
+const _dimension = Symbol("[[dimension]]");
+const _format = Symbol("[[format]]");
+const _type = Symbol("[[type]]");
+const _count = Symbol("[[count]]");
 
 /**
  * @param {any} self
  * @param {{prefix: string, context: string}} opts
  * @returns {InnerGPUDevice & {rid: number}}
  */
-function assertDevice(self: any, { prefix, context }: { prefix: string; context: string; }): InnerGPUDevice & { rid: number; } {
+export function assertDevice(self: any, { prefix, context }: { prefix: string; context: string; }): InnerGPUDevice & { rid: number; } {
   const device = self[_device];
   const deviceRid = device?.rid;
   if (deviceRid === undefined) {
@@ -183,15 +187,17 @@ function normalizeGPUColor(data: number[] | GPUColor): GPUColor {
   }
 }
 
-class GPUError extends Error {
+const illegalConstructorKey = Symbol("illegalConstructorKey");
+export class GPUError extends Error {
 
   // @ts-ignore
   [_message]: string;
 
-  constructor(message: string) {
-    super(message);
-    this[_message] = message;
-    webidl.illegalConstructor();
+  constructor(key = null) {
+    super();
+    if (key !== illegalConstructorKey) {
+      webidl.illegalConstructor();
+    }
   }
 
   get message() {
@@ -200,20 +206,6 @@ class GPUError extends Error {
   }
 }
 const GPUErrorPrototype = GPUError.prototype;
-
-export class GPUOutOfMemoryError extends GPUError {
-  name = "GPUOutOfMemoryError";
-  constructor(message?: string) {
-    const prefix = "Failed to construct 'GPUOutOfMemoryError'";
-    webidl.requiredArguments(arguments.length, 1, { prefix });
-    message = webidl.converters.DOMString(message, {
-      prefix,
-      context: "Argument 1",
-    });
-    super(message);
-  }
-}
-const GPUOutOfMemoryErrorPrototype = GPUOutOfMemoryError.prototype;
 
 export class GPUValidationError extends GPUError {
   name = "GPUValidationError";
@@ -225,10 +217,28 @@ export class GPUValidationError extends GPUError {
       prefix,
       context: "Argument 1",
     });
-    super(message);
+    super(illegalConstructorKey);
+    this[webidl.brand] = webidl.brand;
+    this[_message] = message;
   }
 }
 const GPUValidationErrorPrototype = GPUValidationError.prototype;
+
+export class GPUOutOfMemoryError extends GPUError {
+  name = "GPUOutOfMemoryError";
+  constructor(message?: string) {
+    const prefix = "Failed to construct 'GPUOutOfMemoryError'";
+    webidl.requiredArguments(arguments.length, 1, { prefix });
+    message = webidl.converters.DOMString(message, {
+      prefix,
+      context: "Argument 1",
+    });
+    super(illegalConstructorKey);
+    this[webidl.brand] = webidl.brand;
+    this[_message] = message;
+  }
+}
+const GPUOutOfMemoryErrorPrototype = GPUOutOfMemoryError.prototype;
 
 export class GPU {
   // @ts-ignore
@@ -333,39 +343,37 @@ export class GPUAdapter {
     const requiredFeatures = descriptor.requiredFeatures ?? [];
     for (let i = 0; i < requiredFeatures.length; ++i) {
       const feature = requiredFeatures[i];
-      if (!SetPrototypeHas(this[_adapter].features[_features], feature)) {
+      if (
+        !SetPrototypeHas(
+          this[_adapter].features[webidl.setlikeInner],
+          feature,
+        )
+      ) {
         throw new TypeError(
-          `${prefix}: nonGuaranteedFeatures must be a subset of the adapter features.`,
+          `${prefix}: requiredFeatures must be a subset of the adapter features.`,
         );
       }
     }
-    let requiredLimits = descriptor.requiredLimits;
-    if (requiredLimits) {
-      requiredLimits = {
-        ...this[_adapter].limits[_limits],
-        ...requiredLimits,
-      };
-    }
-    // TODO(lucacasonato): validate requiredLimits
 
     const { rid, features, limits } = await core.opAsync(
       "op_webgpu_request_device",
       this[_adapter].rid,
       descriptor.label,
       requiredFeatures,
-      requiredLimits,
+      descriptor.requiredLimits,
     );
 
     const inner = new InnerGPUDevice({
       rid,
       adapter: this,
+      // @ts-ignore TODO: fix this
       features: createGPUSupportedFeatures(features),
       limits: createGPUSupportedLimits(limits),
     });
     return createGPUDevice(
-      descriptor.label ?? null,
+      descriptor.label,
       inner,
-      createGPUQueue(descriptor.label ?? null, inner),
+      createGPUQueue(descriptor.label, inner),
     );
   }
 
@@ -414,7 +422,7 @@ export class GPUAdapter {
 }
 const GPUAdapterPrototype = GPUAdapter.prototype;
 
-class GPUAdapterInfo {
+export class GPUAdapterInfo {
   // @ts-ignore
   [_vendor]: string;
   /** @returns {string} */
@@ -460,10 +468,10 @@ class GPUAdapterInfo {
 }
 const GPUAdapterInfoPrototype = GPUAdapterInfo.prototype;
 
-function createGPUSupportedLimits(features) {
+function createGPUSupportedLimits(limits) {
   /** @type {GPUSupportedLimits} */
   const adapterFeatures: GPUSupportedLimits = webidl.createBranded(GPUSupportedLimits);
-  adapterFeatures[_limits] = features;
+  adapterFeatures[_limits] = limits;
   return adapterFeatures;
 }
 
@@ -550,6 +558,14 @@ export class GPUSupportedLimits {
   get maxBindGroups() {
     webidl.assertBranded(this, GPUSupportedLimitsPrototype);
     return this[_limits].maxBindGroups;
+  }
+  get maxBindingsPerBindGroup() {
+    webidl.assertBranded(this, GPUSupportedLimitsPrototype);
+    return this[_limits].maxBindingsPerBindGroup;
+  }
+  get maxBufferSize() {
+    webidl.assertBranded(this, GPUSupportedLimitsPrototype);
+    return this[_limits].maxBufferSize;
   }
   get maxDynamicUniformBuffersPerPipelineLayout() {
     webidl.assertBranded(this, GPUSupportedLimitsPrototype);
@@ -644,63 +660,43 @@ const GPUSupportedLimitsPrototype = GPUSupportedLimits.prototype;
 
 function createGPUSupportedFeatures(features) {
   /** @type {GPUSupportedFeatures} */
-  const adapterFeatures: GPUSupportedFeatures = webidl.createBranded(GPUSupportedFeatures);
-  adapterFeatures[_features] = new Set(features);
-  return adapterFeatures;
+  const supportedFeatures: GPUSupportedFeatures = webidl.createBranded(GPUSupportedFeatures);
+  supportedFeatures[webidl.setlikeInner] = new Set(features);
+  return webidl.setlike(
+    supportedFeatures,
+    GPUSupportedFeaturesPrototype,
+    true,
+  );
+}
+
+// Gjsify: Copy from packages/deno/runtime/src/cli/tsc/dts/lib.deno_webgpu.d.ts
+export interface GPUSupportedFeatures {
+  forEach(
+    callbackfn: (
+      value: GPUFeatureName,
+      value2: GPUFeatureName,
+      set: Set<GPUFeatureName>,
+    ) => void,
+    thisArg?: any,
+  ): void;
+  has(value: GPUFeatureName): boolean;
+  size: number;
+  [
+    Symbol
+      .iterator
+  ](): IterableIterator<GPUFeatureName>;
+  entries(): IterableIterator<[GPUFeatureName, GPUFeatureName]>;
+  keys(): IterableIterator<GPUFeatureName>;
+  values(): IterableIterator<GPUFeatureName>;
 }
 
 export class GPUSupportedFeatures {
-  // @ts-ignore
-  [_features]: Set<string>;
-
   constructor() {
     webidl.illegalConstructor();
   }
-
-  /** @return {IterableIterator<[string, string]>} */
-  entries(): IterableIterator<[string, string]> {
-    webidl.assertBranded(this, GPUSupportedFeaturesPrototype);
-    return SetPrototypeEntries(this[_features]);
-  }
-
-  /** @return {void} */
-  forEach(callbackfn, thisArg): void {
-    webidl.assertBranded(this, GPUSupportedFeaturesPrototype);
-    SetPrototypeForEach(this[_features], callbackfn, thisArg);
-  }
-
-  /** @return {boolean} */
-  has(value): boolean {
-    webidl.assertBranded(this, GPUSupportedFeaturesPrototype);
-    return SetPrototypeHas(this[_features], value);
-  }
-
-  /** @return {IterableIterator<string>} */
-  keys(): IterableIterator<string> {
-    webidl.assertBranded(this, GPUSupportedFeaturesPrototype);
-    return SetPrototypeKeys(this[_features]);
-  }
-
-  /** @return {IterableIterator<string>} */
-  values(): IterableIterator<string> {
-    webidl.assertBranded(this, GPUSupportedFeaturesPrototype);
-    return SetPrototypeValues(this[_features]);
-  }
-
-  /** @return {number} */
-  get size(): number {
-    webidl.assertBranded(this, GPUSupportedFeaturesPrototype);
-    return this[_features].size;
-  }
-
-  [SymbolIterator]() {
-    webidl.assertBranded(this, GPUSupportedFeaturesPrototype);
-    return this[_features][SymbolIterator]();
-  }
-
   [SymbolFor("Deno.privateCustomInspect")](inspect) {
     return `${this.constructor.name} ${
-      inspect([...new SafeArrayIterator(this.values())])
+      inspect([...new SafeArrayIterator(this.values() as any)]) // TODO: fix this
     }`;
   }
 }
@@ -720,7 +716,7 @@ function createGPUDeviceLostInfo(reason: string | undefined, message: string): G
   return deviceLostInfo;
 }
 
-class GPUDeviceLostInfo {
+export class GPUDeviceLostInfo {
   // @ts-ignore
   [_reason]?: string;
   // @ts-ignore
@@ -1020,7 +1016,7 @@ export class GPUDevice extends EventTarget {
       };
     }
     const buffer = createGPUBuffer(
-      descriptor.label ?? null,
+      descriptor.label,
       device,
       rid,
       descriptor.size,
@@ -1052,7 +1048,7 @@ export class GPUDevice extends EventTarget {
     device.pushError(err);
 
     const texture = createGPUTexture(
-      descriptor.label ?? null,
+      descriptor,
       device,
       rid,
     );
@@ -1072,14 +1068,14 @@ export class GPUDevice extends EventTarget {
       context: "Argument 1",
     });
     const device = assertDevice(this, { prefix, context: "this" });
-    const { rid, err } = ops.op_webgpu_create_sampler({
+    const { rid, err } = ops.op_webgpu_create_texture({
       deviceRid: device.rid,
       ...descriptor,
     });
     device.pushError(err);
 
     const sampler = createGPUSampler(
-      descriptor.label ?? null,
+      descriptor.label,
       device,
       rid,
     );
@@ -1103,13 +1099,13 @@ export class GPUDevice extends EventTarget {
     for (let i = 0; i < descriptor.entries.length; ++i) {
       const entry = descriptor.entries[i];
 
-      let count = 0;
-      if (entry.buffer) count++;
-      if (entry.sampler) count++;
-      if (entry.texture) count++;
-      if (entry.storageTexture) count++;
+      let j = 0;
+      if (entry.buffer) j++;
+      if (entry.sampler) j++;
+      if (entry.texture) j++;
+      if (entry.storageTexture) j++;
 
-      if (count !== 1) {
+      if (j !== 1) {
         throw new Error(); // TODO(@crowlKats): correct error
       }
     }
@@ -1122,7 +1118,7 @@ export class GPUDevice extends EventTarget {
     device.pushError(err);
 
     const bindGroupLayout = createGPUBindGroupLayout(
-      descriptor.label ?? null,
+      descriptor.label,
       device,
       rid,
     );
@@ -1164,7 +1160,7 @@ export class GPUDevice extends EventTarget {
     device.pushError(err);
 
     const pipelineLayout = createGPUPipelineLayout(
-      descriptor.label ?? null,
+      descriptor.label,
       device,
       rid,
     );
@@ -1269,7 +1265,7 @@ export class GPUDevice extends EventTarget {
     device.pushError(err);
 
     const bindGroup = createGPUBindGroup(
-      descriptor.label ?? null,
+      descriptor.label,
       device,
       rid,
     );
@@ -1293,12 +1289,11 @@ export class GPUDevice extends EventTarget {
       device.rid,
       descriptor.label,
       descriptor.code,
-      descriptor.sourceMap,
     );
     device.pushError(err);
 
     const shaderModule = createGPUShaderModule(
-      descriptor.label ?? null,
+      descriptor.label,
       device,
       rid,
     );
@@ -1354,7 +1349,7 @@ export class GPUDevice extends EventTarget {
     device.pushError(err);
 
     const computePipeline = createGPUComputePipeline(
-      descriptor.label ?? null,
+      descriptor.label,
       device,
       rid,
     );
@@ -1430,7 +1425,7 @@ export class GPUDevice extends EventTarget {
     device.pushError(err);
 
     const renderPipeline = createGPURenderPipeline(
-      descriptor.label ?? null,
+      descriptor.label,
       device,
       rid,
     );
@@ -1467,7 +1462,7 @@ export class GPUDevice extends EventTarget {
     device.pushError(err);
 
     const commandEncoder = createGPUCommandEncoder(
-      descriptor.label ?? null,
+      descriptor.label,
       device,
       rid,
     );
@@ -1492,16 +1487,14 @@ export class GPUDevice extends EventTarget {
       },
     );
     const device = assertDevice(this, { prefix, context: "this" });
-    const { rid, err } = ops.op_webgpu_create_render_bundle_encoder(
-      {
-        deviceRid: device.rid,
-        ...descriptor,
-      },
-    );
+    const { rid, err } = ops.op_webgpu_create_render_bundle_encoder({
+      deviceRid: device.rid,
+      ...descriptor,
+    });
     device.pushError(err);
 
     const renderBundleEncoder = createGPURenderBundleEncoder(
-      descriptor.label ?? null,
+      descriptor.label,
       device,
       rid,
     );
@@ -1532,7 +1525,7 @@ export class GPUDevice extends EventTarget {
     device.pushError(err);
 
     const querySet = createGPUQuerySet(
-      descriptor.label ?? null,
+      descriptor.label,
       device,
       rid,
       descriptor,
@@ -1633,7 +1626,7 @@ export class GPUQueue {
    * @param {GPUCommandBuffer[]} commandBuffers
    */
   submit(commandBuffers: GPUCommandBuffer[]) {
-    webidl.assertBranded(this, GPUQueue.prototype);
+    webidl.assertBranded(this, GPUQueuePrototype);
     const prefix = "Failed to execute 'submit' on 'GPUQueue'";
     webidl.requiredArguments(arguments.length, 1, {
       prefix,
@@ -1656,10 +1649,7 @@ export class GPUQueue {
         return rid;
       },
     );
-    const { err } = ops.op_webgpu_queue_submit(
-      device.rid,
-      commandBufferRids,
-    );
+    const { err } = ops.op_webgpu_queue_submit(device.rid, commandBufferRids);
     for (let i = 0; i < commandBuffers.length; ++i) {
       commandBuffers[i][_rid] = undefined;
     }
@@ -1667,7 +1657,7 @@ export class GPUQueue {
   }
 
   onSubmittedWorkDone() {
-    webidl.assertBranded(this, GPUQueue.prototype);
+    webidl.assertBranded(this, GPUQueuePrototype);
     return PromiseResolve();
   }
 
@@ -1679,7 +1669,7 @@ export class GPUQueue {
    * @param {number} [size]
    */
   writeBuffer(buffer: GPUBuffer, bufferOffset: number, data: BufferSource, dataOffset: number = 0, size: number) {
-    webidl.assertBranded(this, GPUQueue.prototype);
+    webidl.assertBranded(this, GPUQueuePrototype);
     const prefix = "Failed to execute 'writeBuffer' on 'GPUQueue'";
     webidl.requiredArguments(arguments.length, 3, { prefix });
     buffer = webidl.converters["GPUBuffer"](buffer, {
@@ -1732,7 +1722,7 @@ export class GPUQueue {
    * @param {GPUExtent3D} size
    */
   writeTexture(destination: GPUImageCopyTexture, data: BufferSource, dataLayout: GPUImageDataLayout, size: GPUExtent3D) {
-    webidl.assertBranded(this, GPUQueue.prototype);
+    webidl.assertBranded(this, GPUQueuePrototype);
     const prefix = "Failed to execute 'writeTexture' on 'GPUQueue'";
     webidl.requiredArguments(arguments.length, 4, { prefix });
     destination = webidl.converters.GPUImageCopyTexture(destination, {
@@ -1792,6 +1782,7 @@ export class GPUQueue {
   }
 }
 GPUObjectBaseMixin("GPUQueue", GPUQueue);
+const GPUQueuePrototype = GPUQueue.prototype;
 
 /**
  * @typedef CreateGPUBufferOptions
@@ -1833,25 +1824,18 @@ function createGPUBuffer(label: string | null, device: InnerGPUDevice, rid: numb
 export class GPUBuffer {
   // @ts-ignore
   [_device]: InnerGPUDevice;
-
   // @ts-ignore
   [_rid]: number;
-
   // @ts-ignore
   [_size]: number;
-
   // @ts-ignore
   [_usage]: number;
-
   // @ts-ignore
-  [_state]: "mapped" | "mapped at creation" | "mapped pending" | "unmapped" | "destroy";
-
+  [_state]: "mapped" | "mapped at creation" | "pending" | "unmapped" | "destroy";
   // @ts-ignore
   [_mappingRange]: [number, number] | null;
-
   // @ts-ignore
   [_mappedRanges]: [ArrayBuffer, number, number][] | null;
-
   // @ts-ignore
   [_mapMode]: number;
 
@@ -1878,13 +1862,33 @@ export class GPUBuffer {
     webidl.illegalConstructor();
   }
 
+  get size() {
+    webidl.assertBranded(this, GPUBufferPrototype);
+    return this[_size];
+  }
+
+  get usage() {
+    webidl.assertBranded(this, GPUBufferPrototype);
+    return this[_usage];
+  }
+
+  get mapState() {
+    webidl.assertBranded(this, GPUBufferPrototype);
+    const state = this[_state];
+    if (state === "mapped at creation") {
+      return "mapped";
+    } else {
+      return state;
+    }
+  }
+
   /**
    * @param {number} mode
    * @param {number} offset
    * @param {number} [size]
    */
   async mapAsync(mode: number, offset: number = 0, size: number) {
-    webidl.assertBranded(this, GPUBuffer.prototype);
+    webidl.assertBranded(this, GPUBufferPrototype);
     const prefix = "Failed to execute 'mapAsync' on 'GPUBuffer'";
     webidl.requiredArguments(arguments.length, 1, { prefix });
     mode = webidl.converters.GPUMapModeFlags(mode, {
@@ -1956,7 +1960,7 @@ export class GPUBuffer {
     }
 
     this[_mapMode] = mode;
-    this[_state] = "mapping pending";
+    this[_state] = "pending";
     const promise = PromisePrototypeThen(
       core.opAsync(
         "op_webgpu_buffer_get_map_async",
@@ -1984,7 +1988,7 @@ export class GPUBuffer {
    * @param {number} size
    */
   getMappedRange(offset: number = 0, size: number) {
-    webidl.assertBranded(this, GPUBuffer.prototype);
+    webidl.assertBranded(this, GPUBufferPrototype);
     const prefix = "Failed to execute 'getMappedRange' on 'GPUBuffer'";
     offset = webidl.converters.GPUSize64(offset, {
       prefix,
@@ -2011,7 +2015,7 @@ export class GPUBuffer {
       throw new DOMException(`${prefix}: invalid state.`, "OperationError");
     }
     for (let i = 0; i < mappedRanges.length; ++i) {
-      const [buffer, _rid, start] = mappedRanges[i];
+      const { 0: buffer, /* 1: rid, */ 2: start } = mappedRanges[i];
       // TODO(lucacasonato): is this logic correct?
       const end = start + buffer.byteLength;
       if (
@@ -2039,7 +2043,7 @@ export class GPUBuffer {
   }
 
   unmap() {
-    webidl.assertBranded(this, GPUBuffer.prototype);
+    webidl.assertBranded(this, GPUBufferPrototype);
     const prefix = "Failed to execute 'unmap' on 'GPUBuffer'";
     const device = assertDevice(this, { prefix, context: "this" });
     const bufferRid = assertResource(this, { prefix, context: "this" });
@@ -2049,7 +2053,7 @@ export class GPUBuffer {
         "OperationError",
       );
     }
-    if (this[_state] === "mapping pending") {
+    if (this[_state] === "pending") {
       // TODO(lucacasonato): this is not spec compliant.
       throw new DOMException(
         `${prefix}: can not unmap while mapping. This is a Deno limitation.`,
@@ -2080,7 +2084,7 @@ export class GPUBuffer {
         throw new DOMException(`${prefix}: invalid state.`, "OperationError");
       }
       for (let i = 0; i < mappedRanges.length; ++i) {
-        const [buffer, mappedRid] = mappedRanges[i];
+        const { 0: buffer, 1: mappedRid } = mappedRanges[i];
         const { err } = ops.op_webgpu_buffer_unmap(
           bufferRid,
           mappedRid,
@@ -2097,7 +2101,7 @@ export class GPUBuffer {
   }
 
   destroy() {
-    webidl.assertBranded(this, GPUBuffer.prototype);
+    webidl.assertBranded(this, GPUBufferPrototype);
     this[_cleanup]();
   }
 
@@ -2111,6 +2115,7 @@ export class GPUBuffer {
   }
 }
 GPUObjectBaseMixin("GPUBuffer", GPUBuffer);
+const GPUBufferPrototype = GPUBuffer.prototype;
 
 export class GPUBufferUsage {
   constructor() {
@@ -2163,18 +2168,26 @@ export class GPUMapMode {
 }
 
 /**
- * @param {string | null} label
+ * @param {GPUTextureDescriptor} descriptor
  * @param {InnerGPUDevice} device
  * @param {number} rid
  * @returns {GPUTexture}
  */
-function createGPUTexture(label: string | null, device: InnerGPUDevice, rid: number): GPUTexture {
+export function createGPUTexture(descriptor: GPUTextureDescriptor, device: InnerGPUDevice, rid: number): GPUTexture {
   /** @type {GPUTexture} */
   const texture: GPUTexture = webidl.createBranded(GPUTexture);
-  texture[_label] = label;
+  texture[_label] = descriptor.label;
   texture[_device] = device;
   texture[_rid] = rid;
   texture[_views] = [];
+  texture[_width] = (descriptor.size as GPUExtent3DDict).width;
+  texture[_height] = (descriptor.size as GPUExtent3DDict).height;
+  texture[_depthOrArrayLayers] = (descriptor.size as GPUExtent3DDict).depthOrArrayLayers;
+  texture[_mipLevelCount] = descriptor.mipLevelCount;
+  texture[_sampleCount] = descriptor.sampleCount;
+  texture[_dimension] = descriptor.dimension;
+  texture[_format] = descriptor.format;
+  texture[_usage] = descriptor.usage;
   return texture;
 }
 
@@ -2185,6 +2198,22 @@ export class GPUTexture {
   [_rid]: number | undefined;
   // @ts-ignore
   [_views]: WeakRef<GPUTextureView>[];
+  // @ts-ignore
+  [_width]: number;
+  // @ts-ignore
+  [_height]: number;
+  // @ts-ignore
+  [_depthOrArrayLayers]: number;
+  // @ts-ignore
+  [_mipLevelCount]: number;
+  // @ts-ignore
+  [_sampleCount]: number;
+  // @ts-ignore
+  [_dimension]: GPUTextureDimension;
+  // @ts-ignore
+  [_format]: GPUTextureFormat;
+  // @ts-ignore
+  [_usage]: number;
 
   [_cleanup]() {
     const views = this[_views];
@@ -2210,7 +2239,7 @@ export class GPUTexture {
    * @param {GPUTextureViewDescriptor} descriptor
    */
   createView(descriptor: GPUTextureViewDescriptor = {}) {
-    webidl.assertBranded(this, GPUTexture.prototype);
+    webidl.assertBranded(this, GPUTexturePrototype);
     const prefix = "Failed to execute 'createView' on 'GPUTexture'";
     webidl.requiredArguments(arguments.length, 0, { prefix });
     descriptor = webidl.converters.GPUTextureViewDescriptor(descriptor, {
@@ -2226,7 +2255,7 @@ export class GPUTexture {
     device.pushError(err);
 
     const textureView = createGPUTextureView(
-      descriptor.label ?? null,
+      descriptor.label,
       this,
       rid,
     );
@@ -2235,8 +2264,48 @@ export class GPUTexture {
   }
 
   destroy() {
-    webidl.assertBranded(this, GPUTexture.prototype);
+    webidl.assertBranded(this, GPUTexturePrototype);
     this[_cleanup]();
+  }
+
+  get width() {
+    webidl.assertBranded(this, GPUTexturePrototype);
+    return this[_width];
+  }
+
+  get height() {
+    webidl.assertBranded(this, GPUTexturePrototype);
+    return this[_height];
+  }
+
+  get depthOrArrayLayers() {
+    webidl.assertBranded(this, GPUTexturePrototype);
+    return this[_depthOrArrayLayers];
+  }
+
+  get mipLevelCount() {
+    webidl.assertBranded(this, GPUTexturePrototype);
+    return this[_mipLevelCount];
+  }
+
+  get sampleCount() {
+    webidl.assertBranded(this, GPUTexturePrototype);
+    return this[_sampleCount];
+  }
+
+  get dimension() {
+    webidl.assertBranded(this, GPUTexturePrototype);
+    return this[_dimension];
+  }
+
+  get format() {
+    webidl.assertBranded(this, GPUTexturePrototype);
+    return this[_format];
+  }
+
+  get usage() {
+    webidl.assertBranded(this, GPUTexturePrototype);
+    return this[_usage];
   }
 
   [SymbolFor("Deno.privateCustomInspect")](inspect) {
@@ -2249,6 +2318,7 @@ export class GPUTexture {
   }
 }
 GPUObjectBaseMixin("GPUTexture", GPUTexture);
+const GPUTexturePrototype = GPUTexture.prototype;
 
 export class GPUTextureUsage {
   constructor() {
@@ -2885,7 +2955,7 @@ export class GPUCommandEncoder {
     );
 
     const renderPassEncoder = createGPURenderPassEncoder(
-      descriptor.label ?? null,
+      descriptor.label,
       this,
       rid,
     );
@@ -2917,7 +2987,7 @@ export class GPUCommandEncoder {
     );
 
     const computePassEncoder = createGPUComputePassEncoder(
-      descriptor.label ?? null,
+      descriptor.label,
       this,
       rid,
     );
@@ -3432,7 +3502,7 @@ export class GPUCommandEncoder {
     this[_rid] = undefined;
 
     const commandBuffer = createGPUCommandBuffer(
-      descriptor.label ?? null,
+      descriptor.label,
       device,
       rid,
     );
@@ -3696,9 +3766,7 @@ export class GPURenderPassEncoder {
       context: "encoder referenced by this",
     });
     const renderPassRid = assertResource(this, { prefix, context: "this" });
-    ops.op_webgpu_render_pass_end_pipeline_statistics_query(
-      renderPassRid,
-    );
+    ops.op_webgpu_render_pass_end_pipeline_statistics_query(renderPassRid);
   }
 
   /**
@@ -3774,10 +3842,7 @@ export class GPURenderPassEncoder {
       });
       return rid;
     });
-    ops.op_webgpu_render_pass_execute_bundles(
-      renderPassRid,
-      bundleRids,
-    );
+    ops.op_webgpu_render_pass_execute_bundles(renderPassRid, bundleRids);
   }
 
   end() {
@@ -3870,10 +3935,7 @@ export class GPURenderPassEncoder {
       context: "encoder referenced by this",
     });
     const renderPassRid = assertResource(this, { prefix, context: "this" });
-    ops.op_webgpu_render_pass_push_debug_group(
-      renderPassRid,
-      groupLabel,
-    );
+    ops.op_webgpu_render_pass_push_debug_group(renderPassRid, groupLabel);
   }
 
   popDebugGroup() {
@@ -3913,10 +3975,7 @@ export class GPURenderPassEncoder {
       context: "encoder referenced by this",
     });
     const renderPassRid = assertResource(this, { prefix, context: "this" });
-    ops.op_webgpu_render_pass_insert_debug_marker(
-      renderPassRid,
-      markerLabel,
-    );
+    ops.op_webgpu_render_pass_insert_debug_marker(renderPassRid, markerLabel);
   }
 
   /**
@@ -3949,10 +4008,7 @@ export class GPURenderPassEncoder {
       resourceContext: "Argument 1",
       selfContext: "this",
     });
-    ops.op_webgpu_render_pass_set_pipeline(
-      renderPassRid,
-      pipelineRid,
-    );
+    ops.op_webgpu_render_pass_set_pipeline(renderPassRid, pipelineRid);
   }
 
   /**
@@ -4475,9 +4531,7 @@ export class GPUComputePassEncoder {
       context: "encoder referenced by this",
     });
     const computePassRid = assertResource(this, { prefix, context: "this" });
-    ops.op_webgpu_compute_pass_end_pipeline_statistics_query(
-      computePassRid,
-    );
+    ops.op_webgpu_compute_pass_end_pipeline_statistics_query(computePassRid);
   }
 
   /**
@@ -4612,10 +4666,7 @@ export class GPUComputePassEncoder {
       context: "encoder referenced by this",
     });
     const computePassRid = assertResource(this, { prefix, context: "this" });
-    ops.op_webgpu_compute_pass_push_debug_group(
-      computePassRid,
-      groupLabel,
-    );
+    ops.op_webgpu_compute_pass_push_debug_group(computePassRid, groupLabel);
   }
 
   popDebugGroup() {
@@ -4756,7 +4807,7 @@ export class GPURenderBundleEncoder {
    * @param {GPURenderBundleDescriptor} descriptor
    */
   finish(descriptor: GPURenderBundleDescriptor = {}) {
-    webidl.assertBranded(this, GPURenderBundleEncoder.prototype);
+    webidl.assertBranded(this, GPURenderBundleEncoderPrototype);
     const prefix = "Failed to execute 'finish' on 'GPURenderBundleEncoder'";
     descriptor = webidl.converters.GPURenderBundleDescriptor(descriptor, {
       prefix,
@@ -4775,7 +4826,7 @@ export class GPURenderBundleEncoder {
     this[_rid] = undefined;
 
     const renderBundle = createGPURenderBundle(
-      descriptor.label ?? null,
+      descriptor.label,
       device,
       rid,
     );
@@ -4791,7 +4842,7 @@ export class GPURenderBundleEncoder {
     dynamicOffsetsDataStart,
     dynamicOffsetsDataLength,
   ) {
-    webidl.assertBranded(this, GPURenderBundleEncoder.prototype);
+    webidl.assertBranded(this, GPURenderBundleEncoderPrototype);
     const prefix =
       "Failed to execute 'setBindGroup' on 'GPURenderBundleEncoder'";
     const device = assertDevice(this, { prefix, context: "this" });
@@ -4832,7 +4883,7 @@ export class GPURenderBundleEncoder {
    * @param {string} groupLabel
    */
   pushDebugGroup(groupLabel: string) {
-    webidl.assertBranded(this, GPURenderBundleEncoder.prototype);
+    webidl.assertBranded(this, GPURenderBundleEncoderPrototype);
     const prefix =
       "Failed to execute 'pushDebugGroup' on 'GPURenderBundleEncoder'";
     webidl.requiredArguments(arguments.length, 1, { prefix });
@@ -4852,7 +4903,7 @@ export class GPURenderBundleEncoder {
   }
 
   popDebugGroup() {
-    webidl.assertBranded(this, GPURenderBundleEncoder.prototype);
+    webidl.assertBranded(this, GPURenderBundleEncoderPrototype);
     const prefix =
       "Failed to execute 'popDebugGroup' on 'GPURenderBundleEncoder'";
     assertDevice(this, { prefix, context: "this" });
@@ -4869,7 +4920,7 @@ export class GPURenderBundleEncoder {
    * @param {string} markerLabel
    */
   insertDebugMarker(markerLabel: string) {
-    webidl.assertBranded(this, GPURenderBundleEncoder.prototype);
+    webidl.assertBranded(this, GPURenderBundleEncoderPrototype);
     const prefix =
       "Failed to execute 'insertDebugMarker' on 'GPURenderBundleEncoder'";
     webidl.requiredArguments(arguments.length, 1, { prefix });
@@ -4892,7 +4943,7 @@ export class GPURenderBundleEncoder {
    * @param {GPURenderPipeline} pipeline
    */
   setPipeline(pipeline: GPURenderPipeline) {
-    webidl.assertBranded(this, GPURenderBundleEncoder.prototype);
+    webidl.assertBranded(this, GPURenderBundleEncoderPrototype);
     const prefix =
       "Failed to execute 'setPipeline' on 'GPURenderBundleEncoder'";
     webidl.requiredArguments(arguments.length, 1, { prefix });
@@ -4927,7 +4978,7 @@ export class GPURenderBundleEncoder {
    * @param {number} size
    */
   setIndexBuffer(buffer: GPUBuffer, indexFormat: GPUIndexFormat, offset: number = 0, size: number = 0) {
-    webidl.assertBranded(this, GPURenderBundleEncoder.prototype);
+    webidl.assertBranded(this, GPURenderBundleEncoderPrototype);
     const prefix =
       "Failed to execute 'setIndexBuffer' on 'GPURenderBundleEncoder'";
     webidl.requiredArguments(arguments.length, 2, { prefix });
@@ -4977,7 +5028,7 @@ export class GPURenderBundleEncoder {
    * @param {number} size
    */
   setVertexBuffer(slot: number, buffer: GPUBuffer, offset: number = 0, size: number = 0) {
-    webidl.assertBranded(this, GPURenderBundleEncoder.prototype);
+    webidl.assertBranded(this, GPURenderBundleEncoderPrototype);
     const prefix =
       "Failed to execute 'setVertexBuffer' on 'GPURenderBundleEncoder'";
     webidl.requiredArguments(arguments.length, 2, { prefix });
@@ -5027,7 +5078,7 @@ export class GPURenderBundleEncoder {
    * @param {number} firstInstance
    */
   draw(vertexCount: number, instanceCount: number = 1, firstVertex: number = 0, firstInstance: number = 0) {
-    webidl.assertBranded(this, GPURenderBundleEncoder.prototype);
+    webidl.assertBranded(this, GPURenderBundleEncoderPrototype);
     const prefix = "Failed to execute 'draw' on 'GPURenderBundleEncoder'";
     webidl.requiredArguments(arguments.length, 1, { prefix });
     vertexCount = webidl.converters.GPUSize32(vertexCount, {
@@ -5074,7 +5125,7 @@ export class GPURenderBundleEncoder {
     baseVertex: number = 0,
     firstInstance: number = 0,
   ) {
-    webidl.assertBranded(this, GPURenderBundleEncoder.prototype);
+    webidl.assertBranded(this, GPURenderBundleEncoderPrototype);
     const prefix =
       "Failed to execute 'drawIndexed' on 'GPURenderBundleEncoder'";
     webidl.requiredArguments(arguments.length, 1, { prefix });
@@ -5118,7 +5169,7 @@ export class GPURenderBundleEncoder {
    * @param {number} indirectOffset
    */
   drawIndirect(indirectBuffer: GPUBuffer, indirectOffset: number) {
-    webidl.assertBranded(this, GPURenderBundleEncoder.prototype);
+    webidl.assertBranded(this, GPURenderBundleEncoderPrototype);
     const prefix =
       "Failed to execute 'drawIndirect' on 'GPURenderBundleEncoder'";
     webidl.requiredArguments(arguments.length, 2, { prefix });
@@ -5165,6 +5216,7 @@ export class GPURenderBundleEncoder {
   }
 }
 GPUObjectBaseMixin("GPURenderBundleEncoder", GPURenderBundleEncoder);
+const GPURenderBundleEncoderPrototype = GPURenderBundleEncoder.prototype;
 
 /**
  * @param {string | null} label
@@ -5234,6 +5286,10 @@ export class GPUQuerySet {
   [_rid]: number | undefined;
   // @ts-ignore
   [_descriptor]: GPUQuerySetDescriptor;
+  // @ts-ignore
+  [_type]: GPUQueryType;
+  // @ts-ignore
+  [_count]: number;
 
   [_cleanup]() {
     const rid = this[_rid];
@@ -5251,6 +5307,16 @@ export class GPUQuerySet {
   destroy() {
     webidl.assertBranded(this, GPUQuerySetPrototype);
     this[_cleanup]();
+  }
+
+  get type() {
+    webidl.assertBranded(this, GPUQuerySetPrototype);
+    return this[_type]();
+  }
+
+  get count() {
+    webidl.assertBranded(this, GPUQuerySetPrototype);
+    return this[_count]();
   }
 
   [SymbolFor("Deno.privateCustomInspect")](inspect) {

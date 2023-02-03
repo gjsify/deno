@@ -87,6 +87,7 @@ export class AbortSignal extends EventTarget implements globalThis.AbortSignal {
     this[abortReason] = reason;
     if (this[abortAlgos] !== null) {
       for (const algorithm of new SafeSetIterator(this[abortAlgos])) {
+        // @ts-ignore TODO: fix this type
         algorithm();
       }
       this[abortAlgos] = null;

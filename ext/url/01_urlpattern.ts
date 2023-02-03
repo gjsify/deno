@@ -195,7 +195,7 @@ export class URLPattern {
       return false;
     }
 
-    const [values] = res;
+    const values = res[0];
 
     const keys = ObjectKeys(values);
     for (let i = 0; i < keys.length; ++i) {
@@ -253,7 +253,7 @@ export class URLPattern {
       return null;
     }
 
-    const [values, inputs] = res;
+    const { 0: values, 1: inputs } = res;
     if (inputs[1] === null) {
       inputs.pop();
     }

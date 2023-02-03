@@ -16,12 +16,18 @@ const {
   Number,
   NumberIsSafeInteger,
   TypeError,
+  Uint8Array,
   Int32Array,
   Uint32Array,
   BigInt64Array,
   BigUint64Array,
   Function,
   ReflectHas,
+  PromisePrototypeThen,
+  MathMax,
+  MathCeil,
+  SafeMap,
+  SafeArrayIterator,
 } = primordials;
 
 const U32_BUFFER = new Uint32Array(2);
@@ -252,26 +258,56 @@ export class UnsafeFnPointer<Fn extends Deno.ForeignFunction> {
   /** The definition of the function. */
   definition: Fn;
 
+  #structSize;
+
   constructor(pointer: Deno.PointerValue, definition: Fn) {
     this.pointer = pointer;
     this.definition = definition;
+    this.#structSize = isStruct(definition.result)
+    ? getTypeSizeAndAlignment(definition.result)[0]
+    : null;
   }
 
   /** Call the foreign function. */
   call<T extends Deno.ForeignFunction>(...parameters: Deno.ToNativeParameterTypes<T["parameters"]>): Deno.StaticForeignSymbolReturnType<T> {
     if (this.definition.nonblocking) {
-      return core.opAsync(
-        "op_ffi_call_ptr_nonblocking",
-        this.pointer,
-        this.definition,
-        parameters,
-      ) as Deno.StaticForeignSymbolReturnType<T>;
+      if (this.#structSize === null) {
+        return core.opAsync(
+          "op_ffi_call_ptr_nonblocking",
+          this.pointer,
+          this.definition,
+          parameters,
+        ) as Deno.StaticForeignSymbolReturnType<T>;
+      } else {
+        const buffer = new Uint8Array(this.#structSize);
+        return PromisePrototypeThen(
+          core.opAsync(
+            "op_ffi_call_ptr_nonblocking",
+            this.pointer,
+            this.definition,
+            parameters,
+            buffer,
+          ),
+          () => buffer,
+        ) as Deno.StaticForeignSymbolReturnType<T>;;
+      }
     } else {
-      return ops.op_ffi_call_ptr(
-        this.pointer,
-        this.definition,
-        parameters,
-      ) as Deno.StaticForeignSymbolReturnType<T>;
+      if (this.#structSize === null) {
+        return ops.op_ffi_call_ptr(
+          this.pointer,
+          this.definition,
+          parameters,
+        ) as Deno.StaticForeignSymbolReturnType<T>;;
+      } else {
+        const buffer = new Uint8Array(this.#structSize);
+        ops.op_ffi_call_ptr(
+          this.pointer,
+          this.definition,
+          parameters,
+          buffer,
+        );
+        return buffer as Deno.StaticForeignSymbolReturnType<T>;;
+      }
     }
   }
 }
@@ -284,6 +320,64 @@ function isReturnedAsBigInt(type) {
 
 function isI64(type) {
   return type === "i64" || type === "isize";
+}
+
+
+function isStruct(type) {
+  return typeof type === "object" && type !== null &&
+    typeof type.struct === "object";
+}
+
+function getTypeSizeAndAlignment(type, cache = new SafeMap()) {
+  if (isStruct(type)) {
+    const cached = cache.get(type);
+    if (cached !== undefined) {
+      if (cached === null) {
+        throw new TypeError("Recursive struct definition");
+      }
+      return cached;
+    }
+    cache.set(type, null);
+    let size = 0;
+    let alignment = 1;
+    for (const field of new SafeArrayIterator(type.struct)) {
+      const { 0: fieldSize, 1: fieldAlign } = getTypeSizeAndAlignment(
+        field,
+        cache,
+      );
+      alignment = MathMax(alignment, fieldAlign);
+      size = MathCeil(size / fieldAlign) * fieldAlign;
+      size += fieldSize;
+    }
+    size = MathCeil(size / alignment) * alignment;
+    cache.set(type, size);
+    return [size, alignment];
+  }
+
+  switch (type) {
+    case "bool":
+    case "u8":
+    case "i8":
+      return [1, 1];
+    case "u16":
+    case "i16":
+      return [2, 2];
+    case "u32":
+    case "i32":
+    case "f32":
+      return [4, 4];
+    case "u64":
+    case "i64":
+    case "f64":
+    case "pointer":
+    case "buffer":
+    case "function":
+    case "usize":
+    case "isize":
+      return [8, 8];
+    default:
+      throw new TypeError(`Unsupported type: ${type}`);
+  }
 }
 
 /** **UNSTABLE**: New API, yet to be vetted.
@@ -326,7 +420,7 @@ Definition extends Deno.UnsafeCallbackDefinition,
         "Invalid UnsafeCallback, cannot be nonblocking",
       );
     }
-    const [rid, pointer] = ops.op_ffi_unsafe_callback_create(
+    const { 0: rid, 1: pointer } = ops.op_ffi_unsafe_callback_create(
       definition,
       callback,
     );
@@ -400,7 +494,7 @@ class DynamicLibrary<S extends Deno.ForeignLibraryInterface> {
 
   constructor(path: string, symbols: S) {
     // @ts-ignore
-    [this.#rid, this.symbols] = ops.op_ffi_load({ path, symbols });
+    ({ 0: this.#rid, 1: this.symbols } = ops.op_ffi_load({ path, symbols }));
     for (const symbol in symbols) {
         if (!ObjectPrototypeHasOwnProperty(symbols, symbol)) {
           continue;
@@ -435,6 +529,10 @@ class DynamicLibrary<S extends Deno.ForeignLibraryInterface> {
       }
       // @ts-ignore
       const resultType = symbols[symbol].result;
+      const isStructResult = isStruct(resultType);
+      const structSize = isStructResult
+        ? getTypeSizeAndAlignment(resultType)[0]
+        : 0;
       const needsUnpacking = isReturnedAsBigInt(resultType);
 
       // @ts-ignore
@@ -447,12 +545,27 @@ class DynamicLibrary<S extends Deno.ForeignLibraryInterface> {
             configurable: false,
             enumerable: true,
             value: (...parameters) => {
-              return core.opAsync(
-                "op_ffi_call_nonblocking",
-                this.#rid,
-                symbol,
-                parameters,
-              );
+              if (isStructResult) {
+                const buffer = new Uint8Array(structSize);
+                const ret = core.opAsync(
+                  "op_ffi_call_nonblocking",
+                  this.#rid,
+                  symbol,
+                  parameters,
+                  buffer,
+                );
+                return PromisePrototypeThen(
+                  ret,
+                  () => buffer,
+                );
+              } else {
+                return core.opAsync(
+                  "op_ffi_call_nonblocking",
+                  this.#rid,
+                  symbol,
+                  parameters,
+                );
+              }
             },
             writable: false,
           },
@@ -490,6 +603,21 @@ class DynamicLibrary<S extends Deno.ForeignLibraryInterface> {
           return b[0];
         }`,
         )(vi, vui, b, call, NumberIsSafeInteger, Number);
+      } else if (isStructResult && !isNonBlocking) {
+        const call = this.symbols[symbol];
+        const parameters = (symbols[symbol] as any).parameters;
+        const params = ArrayPrototypeJoin(
+          ArrayPrototypeMap(parameters, (_, index) => `p${index}`),
+          ", ",
+        );
+        this.symbols[symbol] = new Function(
+          "call",
+          `return function (${params}) {
+          const buffer = new Uint8Array(${structSize});
+          call(${params}${parameters.length > 0 ? ", " : ""}buffer);
+          return buffer;
+        }`,
+        )(call);
       }
     }
   }

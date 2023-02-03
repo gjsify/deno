@@ -654,7 +654,7 @@ function createByteStruct(types): [(statBuf: Uint32Array) => Deno.FileInfo, Uint
     `const unix = "${build.os}" === "darwin" || "${build.os}" === "linux"; return {`;
   const typeEntries = ObjectEntries<string>(types);
   for (let i = 0; i < typeEntries.length; ++i) {
-    let [name, type] = typeEntries[i];
+    let { 0: name, 1: type } = typeEntries[i];
     const optional = type.startsWith("?");
     if (optional) type = type.slice(1);
 
@@ -683,7 +683,7 @@ function createByteStruct(types): [(statBuf: Uint32Array) => Deno.FileInfo, Uint
   return [new Function("view", str) as (statBuf: Uint32Array) => Deno.FileInfo, new Uint32Array(offset)];
 }
 
-const [statStruct, statBuf] = createByteStruct({
+const { 0: statStruct, 1: statBuf } = createByteStruct({
   isFile: "bool",
   isDirectory: "bool",
   isSymlink: "bool",
@@ -1110,8 +1110,8 @@ export function futimeSync(
   atime: number | Date,
   mtime: number | Date,
 ): void {
-  const [atimeSec, atimeNsec] = toUnixTimeFromEpoch(atime);
-  const [mtimeSec, mtimeNsec] = toUnixTimeFromEpoch(mtime);
+  const { 0: atimeSec, 1: atimeNsec } = toUnixTimeFromEpoch(atime);
+  const { 0: mtimeSec, 1: mtimeNsec } = toUnixTimeFromEpoch(mtime);
   ops.op_futime_sync(rid, atimeSec, atimeNsec, mtimeSec, mtimeNsec);
 }
 
@@ -1132,8 +1132,8 @@ export async function futime(
   atime: number | Date,
   mtime: number | Date,
 ): Promise<void> {
-  const [atimeSec, atimeNsec] = toUnixTimeFromEpoch(atime);
-  const [mtimeSec, mtimeNsec] = toUnixTimeFromEpoch(mtime);
+  const { 0: atimeSec, 1: atimeNsec } = toUnixTimeFromEpoch(atime);
+  const { 0: mtimeSec, 1: mtimeNsec } = toUnixTimeFromEpoch(mtime);
   await core.opAsync(
     "op_futime_async",
     rid,
@@ -1163,8 +1163,8 @@ export function utimeSync(
   atime: number | Date,
   mtime: number | Date,
 ): void {
-  const [atimeSec, atimeNsec] = toUnixTimeFromEpoch(atime);
-  const [mtimeSec, mtimeNsec] = toUnixTimeFromEpoch(mtime);
+  const { 0: atimeSec, 1: atimeNsec } = toUnixTimeFromEpoch(atime);
+  const { 0: mtimeSec, 1: mtimeNsec } = toUnixTimeFromEpoch(mtime);
   ops.op_utime_sync(
     pathFromURL(path),
     atimeSec,
@@ -1193,8 +1193,8 @@ export async function utime(
   atime: number | Date,
   mtime: number | Date,
 ): Promise<void> {
-  const [atimeSec, atimeNsec] = toUnixTimeFromEpoch(atime);
-  const [mtimeSec, mtimeNsec] = toUnixTimeFromEpoch(mtime);
+  const { 0: atimeSec, 1: atimeNsec } = toUnixTimeFromEpoch(atime);
+  const { 0: mtimeSec, 1: mtimeNsec } = toUnixTimeFromEpoch(mtime);
   await core.opAsync(
     "op_utime_async",
     pathFromURL(path),

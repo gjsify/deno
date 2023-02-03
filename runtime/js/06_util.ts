@@ -129,6 +129,7 @@ export function readOnly(value: any) {
 export function getterOnly(getter: any) {
   return {
     get: getter,
+    set() {},
     enumerable: true,
     configurable: true,
   };

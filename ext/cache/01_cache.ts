@@ -258,7 +258,7 @@ export class Cache {
         },
       );
       if (matchResult) {
-        const [meta, responseBodyRid] = matchResult;
+        const { 0: meta, 1: responseBodyRid } = matchResult;
         let body = null;
         if (responseBodyRid !== null) {
           body = readableStreamForRid(responseBodyRid);

@@ -37,6 +37,9 @@ const {
   PromisePrototypeThen,
   RegExpPrototypeTest,
   Set,
+  // TODO(lucacasonato): add SharedArrayBuffer to primordials
+  // SharedArrayBufferPrototype
+  String,
   StringPrototypeEndsWith,
   StringPrototypeToLowerCase,
   Symbol,
@@ -66,6 +69,7 @@ webidl.converters["WebSocketSend"] = (V, opts) => {
     // TODO(littledivy): use primordial for SharedArrayBuffer
     if (
       ObjectPrototypeIsPrototypeOf(ArrayBufferPrototype, V) ||
+      // deno-lint-ignore prefer-primordials
       ObjectPrototypeIsPrototypeOf(SharedArrayBuffer.prototype, V)
     ) {
       return webidl.converters["ArrayBuffer"](V, opts);
@@ -389,58 +393,40 @@ export class WebSocket extends EventTarget {
       throw new DOMException("readyState not OPEN", "InvalidStateError");
     }
 
-    if (typeof data === "string") {
-      // try to send in one go!
-      const d = core.byteLength(data);
-      const sent = ops.op_ws_try_send_string(this[_rid], data);
-      this[_bufferedAmount] += d;
-      if (!sent) {
-        PromisePrototypeThen(
-          core.opAsync("op_ws_send_string", this[_rid], data),
-          () => {
-            this[_bufferedAmount] -= d;
-          },
-        );
-      } else {
-        // Spec expects data to be start flushing on next tick but oh well...
-        // we already sent it so we can just decrement the bufferedAmount
-        // on the next tick.
-        queueMicrotask(() => {
-          this[_bufferedAmount] -= d;
-        });
-      }
-      return;
-    }
-
     const sendTypedArray = (ta: TypedArray) => {
-      // try to send in one go!
-      const sent = ops.op_ws_try_send_binary(this[_rid], ta);
       this[_bufferedAmount] += ta.byteLength;
-      if (!sent) {
-        PromisePrototypeThen(
-          core.opAsync("op_ws_send_binary", this[_rid], ta),
-          () => {
-            this[_bufferedAmount] -= ta.byteLength;
-          },
-        );
-      } else {
-        // Spec expects data to be start flushing on next tick but oh well...
-        // we already sent it so we can just decrement the bufferedAmount
-        // on the next tick.
-        queueMicrotask(() => {
+      PromisePrototypeThen(
+        core.opAsync("op_ws_send", this[_rid], {
+          kind: "binary",
+          value: ta,
+        }),
+        () => {
           this[_bufferedAmount] -= ta.byteLength;
-        });
-      }
+        },
+      );
     };
 
-    if (ObjectPrototypeIsPrototypeOf(ArrayBufferPrototype, data)) {
-      sendTypedArray(new Uint8Array(data as ArrayBuffer));
+    if (ObjectPrototypeIsPrototypeOf(BlobPrototype, data)) {
+      PromisePrototypeThen(
+        (data as Blob).slice().arrayBuffer(),
+        (ab) => sendTypedArray(new DataView(ab)),
+      );
     } else if (ArrayBufferIsView(data)) {
       sendTypedArray(data);
-    } else if (ObjectPrototypeIsPrototypeOf(BlobPrototype, data)) {
+    } else if (ObjectPrototypeIsPrototypeOf(ArrayBufferPrototype, data)) {
+      sendTypedArray(new DataView(data as ArrayBuffer));
+    } else {
+      const string = String(data);
+      const d = core.encode(string);
+      this[_bufferedAmount] += d.byteLength;
       PromisePrototypeThen(
-        (data.slice(0) as Blob).arrayBuffer(),
-        (ab) => sendTypedArray(new Uint8Array(ab)),
+        core.opAsync("op_ws_send", this[_rid], {
+          kind: "text",
+          value: string,
+        }),
+        () => {
+          this[_bufferedAmount] -= d.byteLength;
+        },
       );
     }
   }

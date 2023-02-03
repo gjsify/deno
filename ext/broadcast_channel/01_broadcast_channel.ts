@@ -34,7 +34,7 @@ async function recv() {
       break;
     }
 
-    const [name, data] = message;
+    const { 0: name, 1: data } = message;
     dispatch(null, name, new Uint8Array(data));
   }
 
@@ -124,7 +124,11 @@ export class BroadcastChannel extends EventTarget {
     dispatch(this, this[_name], new Uint8Array(data));
 
     // Send to listeners in other VMs.
-    defer(() => core.opAsync("op_broadcast_send", rid, this[_name], data));
+    defer(() => {
+      if (!this[_closed]) {
+        core.opAsync("op_broadcast_send", rid, this[_name], data);
+      }
+    });
   }
 
   close() {

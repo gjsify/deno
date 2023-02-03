@@ -21,6 +21,7 @@ use deno_core::ModuleSource;
 use deno_core::ModuleSourceFuture;
 use deno_core::ModuleSpecifier;
 use deno_core::ModuleType;
+use deno_core::ResolutionKind;
 use deno_core::RuntimeOptions;
 use futures::FutureExt;
 
@@ -31,7 +32,7 @@ impl ModuleLoader for TypescriptModuleLoader {
     &self,
     specifier: &str,
     referrer: &str,
-    _is_main: bool,
+    _kind: ResolutionKind,
   ) -> Result<ModuleSpecifier, Error> {
     Ok(resolve_import(specifier, referrer)?)
   }
@@ -98,7 +99,7 @@ fn main() -> Result<(), Error> {
     std::process::exit(1);
   }
   let main_url = &args[1];
-  println!("Run {}", main_url);
+  println!("Run {main_url}");
 
   let mut js_runtime = JsRuntime::new(RuntimeOptions {
     module_loader: Some(Rc::new(TypescriptModuleLoader)),

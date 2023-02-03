@@ -43,6 +43,8 @@ interface FinalDenoNs extends DenoNs {
   Command: ReturnType<typeof __bootstrap.spawn.createCommand>;
 }
 
+const denoConsole = new Console((msg: string, level: number) => core.print(msg, level > 1))
+
 // Removes the `__proto__` for security reasons.
 // https://tc39.es/ecma262/#sec-get-object.prototype.__proto__
 if ((Object.prototype as any).__proto__ !== undefined) {
@@ -87,6 +89,8 @@ const {
   WeakMapPrototypeGet,
   WeakMapPrototypeSet,
 } = primordials;
+
+import { Console } from '../../ext/console/02_console.js'
 
 import { DedicatedWorkerGlobalScope } from '../../ext/web/04_global_interfaces.js';
 
@@ -382,13 +386,13 @@ const pendingRejectionsReasons = new SafeWeakMap();
 function promiseRejectCallback(type, promise, reason) {
   switch (type) {
     case 0: {
-      ops.op_store_pending_promise_exception(promise, reason);
+      ops.op_store_pending_promise_rejection(promise, reason);
       ArrayPrototypePush(pendingRejections, promise);
       WeakMapPrototypeSet(pendingRejectionsReasons, promise, reason);
       break;
     }
     case 1: {
-      ops.op_remove_pending_promise_exception(promise);
+      ops.op_remove_pending_promise_rejection(promise);
       const index = ArrayPrototypeIndexOf(pendingRejections, promise);
       if (index > -1) {
         ArrayPrototypeSplice(pendingRejections, index, 1);
@@ -407,7 +411,7 @@ function promiseRejectCallback(type, promise, reason) {
 function promiseRejectMacrotaskCallback() {
   while (pendingRejections.length > 0) {
     const promise = ArrayPrototypeShift(pendingRejections);
-    const hasPendingException = ops.op_has_pending_promise_exception(
+    const hasPendingException = ops.op_has_pending_promise_rejection(
       promise,
     );
     const reason = WeakMapPrototypeGet(pendingRejectionsReasons, promise);
@@ -428,7 +432,7 @@ function promiseRejectMacrotaskCallback() {
 
     const errorEventCb = (event) => {
       if (event.error === reason) {
-        ops.op_remove_pending_promise_exception(promise);
+        ops.op_remove_pending_promise_rejection(promise);
       }
     };
     // Add a callback for "error" event - it will be dispatched
@@ -441,7 +445,7 @@ function promiseRejectMacrotaskCallback() {
     // If event was not prevented (or "unhandledrejection" listeners didn't
     // throw) we will let Rust side handle it.
     if (rejectionEvent.defaultPrevented) {
-      ops.op_remove_pending_promise_exception(promise);
+      ops.op_remove_pending_promise_rejection(promise);
     }
   }
   return true;
@@ -456,9 +460,8 @@ function bootstrapMainRuntime(runtimeOptions: RuntimeOptions) {
 
   core.initializeAsyncOps();
   performance.setTimeOrigin(DateNow());
-  net.setup(runtimeOptions.unstableFlag);
 
-  const consoleFromV8 = window.console;
+  const consoleFromV8 = denoConsole
   const wrapConsole = __bootstrap.console.wrapConsole;
 
   // Remove bootstrapping data from the global scope
@@ -550,8 +553,14 @@ function bootstrapMainRuntime(runtimeOptions: RuntimeOptions) {
     },
   });
 
-  const finalDenoNs = {
+  // FIXME(bartlomieju): temporarily add whole `Deno.core` to
+  // `Deno[Deno.internal]` namespace. It should be removed and only necessary
+  // methods should be left there.
+  ObjectAssign(internals, {
     core,
+  });
+
+  const finalDenoNs = {
     internal: internalSymbol,
     [internalSymbol]: internals,
     resources: core.resources,
@@ -585,7 +594,6 @@ function bootstrapMainRuntime(runtimeOptions: RuntimeOptions) {
   // Setup `Deno` global - we're actually overriding already existing global
   // `Deno` with `Deno` namespace from "./deno.ts".
   ObjectDefineProperty(globalThis, "Deno", util.readOnly(finalDenoNs));
-  ObjectFreeze(globalThis.Deno.core);
 
   util.log("args", runtimeOptions.args);
 }
@@ -601,9 +609,8 @@ function bootstrapWorkerRuntime(
 
   core.initializeAsyncOps();
   performance.setTimeOrigin(DateNow());
-  net.setup(runtimeOptions.unstableFlag);
 
-  const consoleFromV8 = window.console;
+  const consoleFromV8 = denoConsole;
   const wrapConsole = __bootstrap.console.wrapConsole;
 
   // Remove bootstrapping data from the global scope
@@ -687,16 +694,14 @@ function bootstrapWorkerRuntime(
     },
   });
 
-  ObjectAssign((internals as any).nodeUnstable, {
-    Command: __bootstrap.spawn.createCommand(
-      (internals as any).nodeUnstable.spawn,
-      (internals as any).nodeUnstable.spawnSync,
-      (internals as any).nodeUnstable.spawnChild,
-    ),
+  // FIXME(bartlomieju): temporarily add whole `Deno.core` to
+  // `Deno[Deno.internal]` namespace. It should be removed and only necessary
+  // methods should be left there.
+  ObjectAssign(internals, {
+    core,
   });
 
   const finalDenoNs = {
-    core,
     internal: internalSymbol,
     [internalSymbol]: internals,
     resources: core.resources,
@@ -726,7 +731,6 @@ function bootstrapWorkerRuntime(
   // Setup `Deno` global - we're actually overriding already
   // existing global `Deno` with `Deno` namespace from "./deno.ts".
   ObjectDefineProperty(globalThis, "Deno", util.readOnly(finalDenoNs));
-  ObjectFreeze(globalThis.Deno.core);
 }
 
 export const mainRuntime = bootstrapMainRuntime;

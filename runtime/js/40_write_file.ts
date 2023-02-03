@@ -6,6 +6,11 @@ import * as core from '../../core/01_core.js';
 import * as ops from '../../ops/index.js';
 import * as abortSignal from '../../ext/web/03_abort_signal.js';
 import { pathFromURL } from './06_util.js';
+import { open } from './40_files.js';
+import { ReadableStreamPrototype } from '../../ext/web/06_streams.js';
+import primordials from '../../core/00_primordials.js';
+
+const { ObjectPrototypeIsPrototypeOf } = primordials;
 
 /** Synchronously write `data` to the given `path`, by default creating a new
  * file if needed, else overwriting.
@@ -61,7 +66,7 @@ export function writeFileSync(
  */
 export async function writeFile(
   path: string | URL,
-  data: Uint8Array,
+  data: Uint8Array | ReadableStream<Uint8Array>,
   options: Deno.WriteFileOptions = {},
 ) {
   let cancelRid: number;
@@ -73,16 +78,29 @@ export async function writeFile(
     options.signal[abortSignal.add](abortHandler);
   }
   try {
-    await core.opAsync(
-      "op_write_file_async",
-      pathFromURL(path),
-      options.mode,
-      options.append ?? false,
-      options.create ?? true,
-      options.createNew ?? false,
-      data,
-      cancelRid,
-    );
+    if (ObjectPrototypeIsPrototypeOf(ReadableStreamPrototype, data)) {
+      const file = await open(path, {
+        mode: options.mode,
+        append: options.append ?? false,
+        create: options.create ?? true,
+        createNew: options.createNew ?? false,
+        write: true,
+      });
+      await (data as ReadableStream<Uint8Array>).pipeTo(file.writable as WritableStream<Uint8Array>, {
+        signal: options.signal,
+      });
+    } else {
+      await core.opAsync(
+        "op_write_file_async",
+        pathFromURL(path),
+        options.mode,
+        options.append ?? false,
+        options.create ?? true,
+        options.createNew ?? false,
+        data,
+        cancelRid,
+      );
+    }
   } finally {
     if (options.signal) {
       options.signal[abortSignal.remove](abortHandler);
@@ -131,10 +149,18 @@ export function writeTextFileSync(
  */
 export function writeTextFile(
   path: string | URL,
-  data: string,
+  data: string | ReadableStream<string>,
   options: Deno.WriteFileOptions = {},
 ) {
-  const encoder = new TextEncoder();
-  return writeFile(path, encoder.encode(data), options);
+  if (ObjectPrototypeIsPrototypeOf(ReadableStreamPrototype, data)) {
+    return writeFile(
+      path,
+      (data as ReadableStream).pipeThrough(new TextEncoderStream()),
+      options,
+    );
+  } else {
+    const encoder = new TextEncoder();
+    return writeFile(path, encoder.encode((data as string)), options);
+  }
 }
 

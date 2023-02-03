@@ -80,13 +80,10 @@ export function processUrlList(urlList: (() => string)[], urlListProcessed: stri
 
 export interface InnerRequest {
 
-  // TODO: what type is right?
-  method: string;
-  // method: () => string;
+  method: string | (() => string);
   url: () => URL;
   currentUrl: () => URL;
-  headerList: [string, string][];
-  // headerList: () => [string, string][];
+  headerList: [string, string][] | (() => [string, string])[];
   body: null | InnerBody;
   redirectMode: "follow" | "error" | "manual";
   redirectCount: number;
@@ -167,9 +164,11 @@ export function newInnerRequest(method: () => string, url: string | (() => strin
 /**
  * https://fetch.spec.whatwg.org/#concept-request-clone
  * @param {InnerRequest} request
+ * @param {boolean} skipBody
+ * @param {boolean} flash
  * @returns {InnerRequest}
  */
-function cloneInnerRequest(request: InnerRequest, skipBody = false): InnerRequest {
+function cloneInnerRequest(request: InnerRequest, skipBody = false, flash = false): InnerRequest {
   const headerList = ArrayPrototypeMap(
     request.headerList,
     (x) => [x[0], x[1]],
@@ -179,6 +178,19 @@ function cloneInnerRequest(request: InnerRequest, skipBody = false): InnerReques
   if (request.body !== null && !skipBody) {
     // @ts-ignore
     body = request.body.clone();
+  }
+
+  if (flash) {
+    return {
+      body,
+      methodCb: (request as any).methodCb,
+      urlCb: (request as any).urlCb,
+      headerList: (request as any).headerList,
+      streamRid: (request as any).streamRid,
+      serverId: (request as any).serverId,
+      redirectMode: "follow",
+      redirectCount: 0,
+    } as any;
   }
 
   const result: InnerRequest = {
@@ -382,7 +394,7 @@ export class Request implements Body {
     return extractMimeType(values);
   }
   get [_body]() {
-    if (this[_flash]) {
+    if (this[_flash], false, true) {
       return this[_flash].body;
     } else {
       return this[_request].body;
@@ -481,7 +493,7 @@ export class Request implements Body {
     }
 
     // 30.
-    this[_headers] = headersFromHeaderList(request.headerList, "request");
+    this[_headers] = headersFromHeaderList((request as any).headerList, "request");
 
     // 32.
     if (ObjectKeys(init).length > 0) {
@@ -626,11 +638,25 @@ export class Request implements Body {
       newReq = cloneInnerRequest(this[_request]);
     }
     const newSignal = abortSignal.newSignal();
-    abortSignal.follow(newSignal, this[_signal]);
+
+    if (this[_signal]) {
+      abortSignal.follow(newSignal, this[_signal]);
+    }
+
+    if (this[_flash]) {
+      return fromInnerRequest(
+        newReq,
+        newSignal,
+        guardFromHeaders(this[_headers]),
+        true,
+      );
+    }
+
     return fromInnerRequest(
       newReq,
       newSignal,
       guardFromHeaders(this[_headers]),
+      false,
     );
   }
 
@@ -707,14 +733,22 @@ export function toInnerRequest(request: Request): InnerRequest {
 
 /**
  * @param {InnerRequest} inner
+ * @param {AbortSignal} signal
  * @param {"request" | "immutable" | "request-no-cors" | "response" | "none"} guard
+ * @param {boolean} flash
  * @returns {Request}
  */
-export function fromInnerRequest(inner: InnerRequest, signal, guard: "request" | "immutable" | "request-no-cors" | "response" | "none"): Request {
+export function fromInnerRequest(inner: InnerRequest, signal, guard: "request" | "immutable" | "request-no-cors" | "response" | "none", flash: boolean): Request {
   const request = webidl.createBranded(Request);
-  request[_request] = inner;
+  if (flash) {
+    request[_flash] = inner;
+  } else {
+    request[_request] = inner;
+  }
   request[_signal] = signal;
-  request[_getHeaders] = () => headersFromHeaderList(inner.headerList, guard);
+  request[_getHeaders] = flash
+  ? () => headersFromHeaderList((inner as any).headerList(), guard)
+  : () => headersFromHeaderList((inner as any).headerList, guard);
   return request;
 }
 
@@ -740,6 +774,7 @@ export function fromFlashRequest(
     body: body !== null ? new InnerBody(body) : null,
     methodCb,
     urlCb,
+    headerList: headersCb,
     streamRid,
     serverId,
     redirectMode: "follow",

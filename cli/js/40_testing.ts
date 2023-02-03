@@ -27,6 +27,7 @@ const {
   MapPrototypeSet,
   MathCeil,
   ObjectKeys,
+  ObjectPrototypeHasOwnProperty,
   ObjectPrototypeIsPrototypeOf,
   Promise,
   SafeArrayIterator,
@@ -168,6 +169,9 @@ function assertOps(fn) {
 
     const details = [];
     for (const key in post.ops) {
+      if (!ObjectPrototypeHasOwnProperty(post.ops, key)) {
+        continue;
+      }
       const preOp = pre.ops[key] ??
         { opsDispatchedAsync: 0, opsCompletedAsync: 0 };
       const postOp = post.ops[key];
@@ -1335,10 +1339,10 @@ function createTestContext(desc: TestDescription | TestStepDescription) {
      */
     origin: desc.origin,
     /**
-     * @param nameOrTestDefinition {string | TestStepDefinition}
-     * @param fn {(t: Deno.TestContext) => void | Promise<void>}
+     * @param nameOrFnOrOptions {string | TestStepDefinition | ((t: TestContext) => void | Promise<void>)}
+     * @param maybeFn {((t: TestContext) => void | Promise<void>) | undefined}
      */
-    async step(nameOrTestDefinition: string | Deno.TestStepDefinition, fn: (t: Deno.TestContext) => void | Promise<void>) {
+    async step(nameOrFnOrOptions: string | Deno.TestStepDefinition | ((t: Deno.TestContext) => void | Promise<void>), maybeFn?: (t: Deno.TestContext) => void | Promise<void> | undefined) {
       if (MapPrototypeGet(testStates, desc.id).finalized) {
         throw new Error(
           "Cannot run test step after parent scope has finished execution. " +
@@ -1347,16 +1351,29 @@ function createTestContext(desc: TestDescription | TestStepDescription) {
       }
 
       let stepDesc;
-      if (typeof nameOrTestDefinition === "string") {
-        if (!(ObjectPrototypeIsPrototypeOf(FunctionPrototype, fn))) {
+      if (typeof nameOrFnOrOptions === "string") {
+        if (!(ObjectPrototypeIsPrototypeOf(FunctionPrototype, maybeFn))) {
           throw new TypeError("Expected function for second argument.");
         }
         stepDesc = {
-          name: nameOrTestDefinition,
-          fn,
+          name: nameOrFnOrOptions,
+          fn: maybeFn,
         };
-      } else if (typeof nameOrTestDefinition === "object") {
-        stepDesc = nameOrTestDefinition;
+      } else if (typeof nameOrFnOrOptions === "function") {
+        if (!nameOrFnOrOptions.name) {
+          throw new TypeError("The step function must have a name.");
+        }
+        if (maybeFn != undefined) {
+          throw new TypeError(
+            "Unexpected second argument to TestContext.step()",
+          );
+        }
+        stepDesc = {
+          name: nameOrFnOrOptions.name,
+          fn: nameOrFnOrOptions,
+        };
+      } else if (typeof nameOrFnOrOptions === "object") {
+        stepDesc = nameOrFnOrOptions;
       } else {
         throw new TypeError(
           "Expected a test definition or name and function.",

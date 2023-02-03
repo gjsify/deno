@@ -125,7 +125,7 @@ export class HttpConn {
       return null;
     }
 
-    const [streamRid, method, url] = nextRequest;
+    const { 0: streamRid, 1: method, 2: url } = nextRequest;
     SetPrototypeAdd(this.managedResources, streamRid);
 
     /** @type {ReadableStream<Uint8Array> | undefined} */
@@ -145,7 +145,12 @@ export class HttpConn {
       false,
     );
     const signal = newSignal();
-    const request = fromInnerRequest(innerRequest, signal, "immutable");
+    const request = fromInnerRequest(
+      innerRequest,
+      signal,
+      "immutable",
+      false,
+    );
 
     const respondWith = createRespondWith(
       this,
@@ -159,13 +164,13 @@ export class HttpConn {
   }
 
   /** @returns {void} */
-  close() {
+  close(): void {
     if (!this.#closed) {
       this.#closed = true;
       core.close(this.#rid);
       for (const rid of new SafeSetIterator(this.managedResources)) {
         SetPrototypeDelete(this.managedResources, rid);
-        core.close(rid);
+        core.close(rid as number);
       }
     }
   }

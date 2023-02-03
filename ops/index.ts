@@ -19,6 +19,7 @@ export * from '../ext/node/lib.js';
 export * from '../ext/napi/lib.js';
 export * from '../ext/web/lib.js';
 export * from '../ext/url/lib.js';
+export * from '../ext/flash/lib.js';
 export * from '../cli/ops/mod.js';
 
 import type {
@@ -139,7 +140,7 @@ export const op_webgpu_buffer_unmap = (...args: any[]) => {
 export const op_webgpu_buffer_get_map_async = async (...args: any[]) => {
   console.warn("Not implemented: ops.op_webgpu_buffer_get_map_async");
 }
-export const op_webgpu_create_texture = (options: GPUTextureDescriptor & { deviceRid: number; size: GPUExtent3DDict }) => {
+export const op_webgpu_create_texture = (options: (GPUSamplerDescriptor & Partial<GPUTextureDescriptor>) & { deviceRid: number; size?: GPUExtent3DDict }) => {
   console.warn("Not implemented: ops.op_webgpu_create_texture");
   const err: { type: string, value: string } = { type: 'NotImplemented', value: "Not implemented: ops.op_webgpu_create_sampler" };
   return { rid: options.deviceRid, err };
@@ -441,7 +442,7 @@ export const op_webgpu_write_texture = (...args: any[]) => {
   return { err }
 }
 
-export const op_webgpu_create_shader_module = (rid: number, label: string, code: string, sourceMap: any) => {
+export const op_webgpu_create_shader_module = (rid: number, label: string, code: string, sourceMap?: any) => {
   console.warn("Not implemented: ops.op_webgpu_create_shader_module");
   const err: { type: string, value: string } = { type: 'NotImplemented', value: "Not implemented: ops.op_webgpu_create_shader_module" };
   return { rid, err };
@@ -894,49 +895,10 @@ export const op_ws_try_send_binary = (rid: number, data: TypedArray) => {
   return send;
 }
 
-export const op_flash_make_request = () => {
-  console.warn("Not implemented: ops.op_flash_make_request");
-}
-
-export const op_flash_respond = (server, requestId, response, end, shutdown?) => {
-  console.warn("Not implemented: ops.op_flash_respond");
-  const nwritten = -1;
-  return nwritten;
-}
-
 export const op_flash_upgrade_http = (streamRid: number, serverId: number) => {
   console.warn("Not implemented: ops.op_flash_upgrade_http");
   const connRid = -1;
   return connRid;
-}
-
-export const op_flash_first_packet = (streamRid: number, token) => {
-  console.warn("Not implemented: ops.op_flash_first_packet");
-  const firstRead = null;
-  return firstRead;
-}
-
-export const op_flash_next_server = (serverId: number) => {
-  console.warn("Not implemented: ops.op_flash_next_server");
-}
-
-export const op_flash_path = (serverId: number, index: number) => {
-  console.warn("Not implemented: ops.op_flash_path");
-}
-
-export const op_flash_headers = (serverId: number, index: number): [string, string][] => {
-  console.warn("Not implemented: ops.op_flash_headers");
-  return []
-}
-
-export const op_flash_method = (serverId: number, token) => {
-  console.warn("Not implemented: ops.op_flash_method");
-  const firstRead = null;
-  return firstRead;
-}
-
-export const op_flash_serve = () => {
-  console.warn("Not implemented: ops.op_flash_serve");
 }
 
 export const op_worker_close = () => {

@@ -151,48 +151,66 @@ export class Permissions {
   }
 
   query(desc: { name: string}) {
+    try {
+      return PromiseResolve(this.querySync(desc));
+    } catch (error) {
+      return PromiseReject(error);
+    }
+  }
+
+  querySync(desc: { name: string}) {
     if (!isValidDescriptor(desc)) {
-      return PromiseReject(
-        new TypeError(
-          `The provided value "${desc?.name}" is not a valid permission name.`,
-        ),
+      throw new TypeError(
+        `The provided value "${desc?.name}" is not a valid permission name.`,
       );
     }
 
     formDescriptor(desc);
 
     const state = opQuery(desc);
-    return PromiseResolve(cache(desc, state));
+    return cache(desc, state);
   }
 
-  revoke(desc: { name: string}) {
+  revoke(desc: {name: string}) {
+    try {
+      return PromiseResolve(this.revokeSync(desc));
+    } catch (error) {
+      return PromiseReject(error);
+    }
+  }
+
+  revokeSync(desc: {name: string}) {
     if (!isValidDescriptor(desc)) {
-      return PromiseReject(
-        new TypeError(
-          `The provided value "${desc?.name}" is not a valid permission name.`,
-        ),
+      throw new TypeError(
+        `The provided value "${desc?.name}" is not a valid permission name.`,
       );
     }
 
     formDescriptor(desc);
 
     const state = opRevoke(desc);
-    return PromiseResolve(cache(desc, state));
+    return cache(desc, state);
   }
 
-  request(desc: { name: string}) {
+  request(desc: {name: string}) {
+    try {
+      return PromiseResolve(this.requestSync(desc));
+    } catch (error) {
+      return PromiseReject(error);
+    }
+  }
+
+  requestSync(desc: {name: string}) {
     if (!isValidDescriptor(desc)) {
-      return PromiseReject(
-        new TypeError(
-          `The provided value "${desc?.name}" is not a valid permission name.`,
-        ),
+      throw new TypeError(
+        `The provided value "${desc?.name}" is not a valid permission name.`,
       );
     }
 
     formDescriptor(desc);
 
     const state = opRequest(desc);
-    return PromiseResolve(cache(desc, state));
+    return cache(desc, state);
   }
 }
 
