@@ -238,20 +238,21 @@ export function initializeAsyncOps() {
     );
   }
 
+    // GJSIFY: We define the async ops methods directly, so we do not need this.
     // { <name>: <argc>, ... }
-    const info = ops.asyncOpsInfo();
-    for (const name in info) {
-      if (!ObjectPrototypeHasOwnProperty(info, name)) {
-        continue;
-      }
-      const argc = info[name];
-      const op = ops[name];
-      const args = ArrayPrototypeJoin(
-        ArrayFrom({ length: argc }, (_, i) => `arg${i}`),
-        ", ",
-      );
-      ops[name] = genAsyncOp(op, name, args);
-    }
+    // const info = ops.asyncOpsInfo();
+    // for (const name in info) {
+    //   if (!ObjectPrototypeHasOwnProperty(info, name)) {
+    //     continue;
+    //   }
+    //   const argc = info[name];
+    //   const op = ops[name];
+    //   const args = ArrayPrototypeJoin(
+    //     ArrayFrom({ length: argc }, (_, i) => `arg${i}`),
+    //     ", ",
+    //   );
+    //   ops[name] = genAsyncOp(op, name, args);
+    // }
 }
 
 export function handleOpCallTracing(opName: string, promiseId: number, p: Promise<any>) {
