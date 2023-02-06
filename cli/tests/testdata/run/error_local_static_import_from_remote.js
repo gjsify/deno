@@ -1,1 +1,1 @@
-import "file:///some/dir/file.js";
+import "file:///some/dir/file.ts";
