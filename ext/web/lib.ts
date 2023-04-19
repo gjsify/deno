@@ -1,4 +1,4 @@
-import GLib from '@gjsify/types/GLib-2.0';
+import GLib from 'gi://GLib?version=2.0';
 import { createCancelHandler } from '@gjsify/utils';
 
 export * from './timers.js';

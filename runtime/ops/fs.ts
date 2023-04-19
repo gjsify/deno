@@ -5,8 +5,8 @@ const {
   Uint32Array,
 } = primordials;
 
-import GLib from '@gjsify/types/GLib-2.0';
-import Gio from '@gjsify/types/Gio-2.0';
+import GLib from 'gi://GLib?version=2.0';
+import Gio from 'gi://Gio?version=2.0';
 import { ExtFile } from '@gjsify/gio-2.0';
 
 export interface FileInfoOp {

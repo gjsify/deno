@@ -1,5 +1,6 @@
-import GLib from "@gjsify/types/GLib-2.0";
-import { byteArray } from "@gjsify/types/Gjs";
+import GLib from 'gi://GLib?version=2.0';
+// import { imports } from "@girs/gjs";
+const byteArray = imports.byteArray;
 import { logSignals, parseStackTrace, StackTraceFrame, extractErrorData } from "@gjsify/utils";
 
 let has_tick_scheduled = false;
