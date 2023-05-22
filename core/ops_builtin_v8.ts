@@ -1,5 +1,7 @@
+import "@girs/glib-2.0";
+
 import GLib from 'gi://GLib?version=2.0';
-// import { imports } from "@girs/gjs";
+
 const byteArray = imports.byteArray;
 import { logSignals, parseStackTrace, StackTraceFrame, extractErrorData } from "@gjsify/utils";
 
