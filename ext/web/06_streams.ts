@@ -3911,6 +3911,8 @@ const _resourceBacking = Symbol("[[resourceBacking]]");
 // This distinction exists to prevent unrefable streams being used in
 // regular fast streams that are unaware of refability
 const _resourceBackingUnrefable = Symbol("[[resourceBackingUnrefable]]");
+
+export interface ReadableStream<R = any> extends AsyncIterable<R> {}
 export class ReadableStream<R = any> {
   // @ts-ignore
   [_controller]: ReadableStreamDefaultController | ReadableByteStreamController;

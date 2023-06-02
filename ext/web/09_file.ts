@@ -163,6 +163,9 @@ const _type = Symbol("Type");
 const _size = Symbol("Size");
 const _parts = Symbol("Parts");
 
+// @ts-ignore
+export interface Blob extends globalThis.Blob {}
+
 /** A file-like object of immutable, raw data. Blobs represent data that isn't
  * necessarily in a JavaScript-native format. The File interface is based on
  * Blob, inheriting blob functionality and expanding it to support files on the
@@ -171,6 +174,7 @@ const _parts = Symbol("Parts");
  * @category Web File API
  */
 export class Blob {
+
   // @ts-ignore
   [_type]: string = "";
   // @ts-ignore
