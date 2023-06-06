@@ -1,4 +1,4 @@
-import GLib from 'gi://GLib?version=2.0';
+import GLib from '@girs/glib-2.0';
 import { cli, getOs } from '@gjsify/utils';
 
 const System = imports.system;

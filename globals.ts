@@ -1,6 +1,6 @@
 import '@girs/gjs';
 
-import GLib from 'gi://GLib?version=2.0';
+import GLib from '@girs/glib-2.0';
 import { mainRuntime } from './runtime/js/99_main.js';
 import { getLocale, getPid, getPpid, existsTty, getArgs, parseArgv } from '@gjsify/utils';
 

@@ -1,6 +1,6 @@
 // import { cli } from '@gjsify/utils';
-// import GLib from 'gi://GLib?version=2.0';
-// import Gio from 'gi://Gio?version=2.0';
+// import GLib from '@girs/glib-2.0';
+// import Gio from '@girs/gio-2.0';
 
 export const op_stdin_set_raw = (mode: boolean, cbreak: boolean): void => {
   console.warn("Not implemented: ops.op_stdin_set_raw");
