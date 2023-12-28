@@ -1,10 +1,10 @@
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 
-const core = globalThis.Deno.core;
+import { core, primordials } from "ext:core/mod.js";
 const ops = core.ops;
-const primordials = globalThis.__bootstrap.primordials;
 const {
   ArrayBufferIsView,
+  ArrayBufferPrototype,
   ArrayBufferPrototypeGetByteLength,
   ArrayPrototypeMap,
   ArrayPrototypeJoin,
@@ -31,9 +31,15 @@ const {
   SafeMap,
   SafeArrayIterator,
   SafeWeakMap,
-  SymbolFor,
 } = primordials;
 import { pathFromURL } from "ext:deno_web/00_infra.js";
+const {
+  op_ffi_call_nonblocking,
+  op_ffi_unsafe_callback_ref,
+} = core.ensureFastOps();
+const {
+  op_ffi_call_ptr_nonblocking,
+} = core.ensureFastOps(true);
 
 /**
  * @param {BufferSource} source
@@ -51,8 +57,6 @@ function getBufferSourceByteLength(source) {
   }
   return ArrayBufferPrototypeGetByteLength(source);
 }
-const promiseIdSymbol = SymbolFor("Deno.core.internalPromiseId");
-
 const U32_BUFFER = new Uint32Array(2);
 const U64_BUFFER = new BigUint64Array(TypedArrayPrototypeGetBuffer(U32_BUFFER));
 const I64_BUFFER = new BigInt64Array(TypedArrayPrototypeGetBuffer(U32_BUFFER));
@@ -221,7 +225,24 @@ class UnsafePointer {
     if (ObjectPrototypeIsPrototypeOf(UnsafeCallbackPrototype, value)) {
       return value.pointer;
     }
-    const pointer = ops.op_ffi_ptr_of(value);
+    let pointer;
+    if (ArrayBufferIsView(value)) {
+      if (value.length === 0) {
+        pointer = ops.op_ffi_ptr_of_exact(value);
+      } else {
+        pointer = ops.op_ffi_ptr_of(value);
+      }
+    } else if (ObjectPrototypeIsPrototypeOf(ArrayBufferPrototype, value)) {
+      if (value.length === 0) {
+        pointer = ops.op_ffi_ptr_of_exact(new Uint8Array(value));
+      } else {
+        pointer = ops.op_ffi_ptr_of(new Uint8Array(value));
+      }
+    } else {
+      throw new TypeError(
+        "Expected ArrayBuffer, ArrayBufferView or UnsafeCallbackPrototype",
+      );
+    }
     if (pointer) {
       POINTER_TO_BUFFER_WEAK_MAP.set(pointer, value);
     }
@@ -261,8 +282,7 @@ class UnsafeFnPointer {
   call(...parameters) {
     if (this.definition.nonblocking) {
       if (this.#structSize === null) {
-        return core.opAsync(
-          "op_ffi_call_ptr_nonblocking",
+        return op_ffi_call_ptr_nonblocking(
           this.pointer,
           this.definition,
           parameters,
@@ -270,8 +290,7 @@ class UnsafeFnPointer {
       } else {
         const buffer = new Uint8Array(this.#structSize);
         return PromisePrototypeThen(
-          core.opAsync(
-            "op_ffi_call_ptr_nonblocking",
+          op_ffi_call_ptr_nonblocking(
             this.pointer,
             this.definition,
             parameters,
@@ -404,10 +423,9 @@ class UnsafeCallback {
     if (this.#refcount++ === 0) {
       if (this.#refpromise) {
         // Re-refing
-        core.refOp(this.#refpromise[promiseIdSymbol]);
+        core.refOpPromise(this.#refpromise);
       } else {
-        this.#refpromise = core.opAsync(
-          "op_ffi_unsafe_callback_ref",
+        this.#refpromise = op_ffi_unsafe_callback_ref(
           this.#rid,
         );
       }
@@ -419,7 +437,7 @@ class UnsafeCallback {
     // Only decrement refcount if it is positive, and only
     // unref the callback if refcount reaches zero.
     if (this.#refcount > 0 && --this.#refcount === 0) {
-      core.unrefOp(this.#refpromise[promiseIdSymbol]);
+      core.unrefOpPromise(this.#refpromise);
     }
     return this.#refcount;
   }
@@ -494,8 +512,7 @@ class DynamicLibrary {
             value: (...parameters) => {
               if (isStructResult) {
                 const buffer = new Uint8Array(structSize);
-                const ret = core.opAsync(
-                  "op_ffi_call_nonblocking",
+                const ret = op_ffi_call_nonblocking(
                   this.#rid,
                   symbol,
                   parameters,
@@ -506,8 +523,7 @@ class DynamicLibrary {
                   () => buffer,
                 );
               } else {
-                return core.opAsync(
-                  "op_ffi_call_nonblocking",
+                return op_ffi_call_nonblocking(
                   this.#rid,
                   symbol,
                   parameters,

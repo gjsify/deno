@@ -1,15 +1,14 @@
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 
-// deno-lint-ignore-file camelcase
 /// <reference path="../../core/internal.d.ts" />
 
-const core = globalThis.Deno.core;
+import { core, primordials } from "ext:core/mod.js";
 import { URL } from "ext:deno_url/00_url.js";
 import * as webidl from "ext:deno_webidl/00_webidl.js";
+import { createFilteredInspectProxy } from "ext:deno_console/01_console.js";
 import { HTTP_TOKEN_CODE_POINT_RE } from "ext:deno_web/00_infra.js";
 import DOMException from "ext:deno_web/01_dom_exception.js";
 import {
-  _skipInternalInit,
   CloseEvent,
   defineEventHandler,
   dispatch,
@@ -17,16 +16,16 @@ import {
   Event,
   EventTarget,
   MessageEvent,
+  setIsTrusted,
 } from "ext:deno_web/02_event.js";
 import { Blob, BlobPrototype } from "ext:deno_web/09_file.js";
-const primordials = globalThis.__bootstrap.primordials;
+import { getLocationHref } from "ext:deno_web/12_location.js";
 const {
   ArrayBufferPrototype,
   ArrayBufferIsView,
   ArrayPrototypeJoin,
   ArrayPrototypeMap,
   ArrayPrototypeSome,
-  DataView,
   ErrorPrototypeToString,
   ObjectDefineProperties,
   ObjectPrototypeIsPrototypeOf,
@@ -45,20 +44,20 @@ const {
   SymbolFor,
   TypedArrayPrototypeGetByteLength,
 } = primordials;
-const op_ws_check_permission_and_cancel_handle =
-  core.ops.op_ws_check_permission_and_cancel_handle;
-const {
-  op_ws_create,
+import {
+  op_ws_check_permission_and_cancel_handle,
   op_ws_close,
-  op_ws_send_binary,
-  op_ws_send_text,
-  op_ws_next_event,
+  op_ws_create,
   op_ws_get_buffer,
   op_ws_get_buffer_as_string,
-  op_ws_get_error,
-  op_ws_send_ping,
   op_ws_get_buffered_amount,
-} = core.ensureFastOps();
+  op_ws_get_error,
+  op_ws_next_event,
+  op_ws_send_binary,
+  op_ws_send_binary_ab,
+  op_ws_send_ping,
+  op_ws_send_text,
+} from "ext:deno_websocket/00_ops.js";
 
 webidl.converters["sequence<DOMString> or DOMString"] = (
   V,
@@ -143,9 +142,15 @@ class WebSocket extends EventTarget {
     let wsURL;
 
     try {
-      wsURL = new URL(url);
+      wsURL = new URL(url, getLocationHref());
     } catch (e) {
       throw new DOMException(e.message, "SyntaxError");
+    }
+
+    if (wsURL.protocol === "http:") {
+      wsURL.protocol = "ws:";
+    } else if (wsURL.protocol === "https:") {
+      wsURL.protocol = "wss:";
     }
 
     if (wsURL.protocol !== "ws:" && wsURL.protocol !== "wss:") {
@@ -322,20 +327,17 @@ class WebSocket extends EventTarget {
       throw new DOMException("readyState not OPEN", "InvalidStateError");
     }
 
-    if (ObjectPrototypeIsPrototypeOf(BlobPrototype, data)) {
+    if (ArrayBufferIsView(data)) {
+      op_ws_send_binary(this[_rid], data);
+    } else if (ObjectPrototypeIsPrototypeOf(ArrayBufferPrototype, data)) {
+      // deno-lint-ignore prefer-primordials
+      op_ws_send_binary(this[_rid], new Uint8Array(data));
+    } else if (ObjectPrototypeIsPrototypeOf(BlobPrototype, data)) {
       PromisePrototypeThen(
         // deno-lint-ignore prefer-primordials
         data.slice().arrayBuffer(),
-        (ab) =>
-          op_ws_send_binary(
-            this[_rid],
-            new DataView(ab),
-          ),
+        (ab) => op_ws_send_binary_ab(this[_rid], ab),
       );
-    } else if (ArrayBufferIsView(data)) {
-      op_ws_send_binary(this[_rid], data);
-    } else if (ObjectPrototypeIsPrototypeOf(ArrayBufferPrototype, data)) {
-      op_ws_send_binary(this[_rid], data);
     } else {
       const string = String(data);
       op_ws_send_text(
@@ -422,6 +424,7 @@ class WebSocket extends EventTarget {
             data: op_ws_get_buffer_as_string(rid),
             origin: this[_url],
           });
+          setIsTrusted(event, true);
           dispatch(this, event);
           break;
         }
@@ -440,8 +443,8 @@ class WebSocket extends EventTarget {
           const event = new MessageEvent("message", {
             data,
             origin: this[_url],
-            [_skipInternalInit]: true,
           });
+          setIsTrusted(event, true);
           dispatch(this, event);
           break;
         }
@@ -467,6 +470,7 @@ class WebSocket extends EventTarget {
         default: {
           /* close */
           const code = kind;
+          const reason = code == 1005 ? "" : op_ws_get_error(rid);
           const prevState = this[_readyState];
           this[_readyState] = CLOSED;
           clearTimeout(this[_idleTimeoutTimeout]);
@@ -476,7 +480,7 @@ class WebSocket extends EventTarget {
               await op_ws_close(
                 rid,
                 code,
-                op_ws_get_error(rid),
+                reason,
               );
             } catch {
               // ignore failures
@@ -486,7 +490,7 @@ class WebSocket extends EventTarget {
           const event = new CloseEvent("close", {
             wasClean: true,
             code: code,
-            reason: op_ws_get_error(rid),
+            reason,
           });
           this.dispatchEvent(event);
           core.tryClose(rid);
@@ -532,17 +536,26 @@ class WebSocket extends EventTarget {
     }
   }
 
-  [SymbolFor("Deno.customInspect")](inspect) {
-    return `${this.constructor.name} ${
-      inspect({
-        url: this.url,
-        readyState: this.readyState,
-        extensions: this.extensions,
-        protocol: this.protocol,
-        binaryType: this.binaryType,
-        bufferedAmount: this.bufferedAmount,
-      })
-    }`;
+  [SymbolFor("Deno.privateCustomInspect")](inspect, inspectOptions) {
+    return inspect(
+      createFilteredInspectProxy({
+        object: this,
+        evaluate: ObjectPrototypeIsPrototypeOf(WebSocketPrototype, this),
+        keys: [
+          "url",
+          "readyState",
+          "extensions",
+          "protocol",
+          "binaryType",
+          "bufferedAmount",
+          "onmessage",
+          "onerror",
+          "onclose",
+          "onopen",
+        ],
+      }),
+      inspectOptions,
+    );
   }
 }
 
@@ -566,8 +579,22 @@ defineEventHandler(WebSocket.prototype, "error");
 defineEventHandler(WebSocket.prototype, "close");
 defineEventHandler(WebSocket.prototype, "open");
 
-webidl.configurePrototype(WebSocket);
+webidl.configureInterface(WebSocket);
 const WebSocketPrototype = WebSocket.prototype;
+
+function createWebSocketBranded() {
+  const socket = webidl.createBranded(WebSocket);
+  socket[_rid] = undefined;
+  socket[_role] = undefined;
+  socket[_readyState] = CONNECTING;
+  socket[_extensions] = "";
+  socket[_protocol] = "";
+  socket[_url] = "";
+  socket[_binaryType] = "blob";
+  socket[_idleTimeoutDuration] = 0;
+  socket[_idleTimeoutTimeout] = undefined;
+  return socket;
+}
 
 export {
   _eventLoop,
@@ -579,6 +606,7 @@ export {
   _role,
   _server,
   _serverHandleIdleTimeout,
+  createWebSocketBranded,
   SERVER,
   WebSocket,
 };

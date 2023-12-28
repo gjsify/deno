@@ -1,7 +1,6 @@
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 use std::io::BufRead;
 use std::io::BufReader;
-use std::process::Stdio;
 use std::time::Duration;
 use std::time::Instant;
 use test_util as util;
@@ -20,6 +19,8 @@ util::unit_test_factory!(
     _fs_copy_test = _fs / _fs_copy_test,
     _fs_dir_test = _fs / _fs_dir_test,
     _fs_dirent_test = _fs / _fs_dirent_test,
+    _fs_open_test = _fs / _fs_open_test,
+    _fs_read_test = _fs / _fs_read_test,
     _fs_exists_test = _fs / _fs_exists_test,
     _fs_fdatasync_test = _fs / _fs_fdatasync_test,
     _fs_fstat_test = _fs / _fs_fstat_test,
@@ -45,14 +46,18 @@ util::unit_test_factory!(
     _fs_unlink_test = _fs / _fs_unlink_test,
     _fs_utimes_test = _fs / _fs_utimes_test,
     _fs_watch_test = _fs / _fs_watch_test,
+    _fs_writeFile_test = _fs / _fs_writeFile_test,
     _fs_write_test = _fs / _fs_write_test,
     async_hooks_test,
+    assertion_error_test,
     buffer_test,
     child_process_test,
     crypto_cipher_test = crypto / crypto_cipher_test,
+    crypto_cipher_gcm_test = crypto / crypto_cipher_gcm_test,
     crypto_hash_test = crypto / crypto_hash_test,
     crypto_key_test = crypto / crypto_key_test,
     crypto_sign_test = crypto / crypto_sign_test,
+    events_test,
     fs_test,
     http_test,
     http2_test,
@@ -62,25 +67,31 @@ util::unit_test_factory!(
     pbkdf2_test = internal / pbkdf2_test,
     scrypt_test = internal / scrypt_test,
     module_test,
+    net_test,
     os_test,
+    path_test,
+    perf_hooks_test,
     process_test,
     querystring_test,
     readline_test,
+    repl_test,
+    stream_test,
     string_decoder_test,
     timers_test,
     tls_test,
     tty_test,
     util_test,
     v8_test,
-    worker_threads_test
+    vm_test,
+    worker_threads_test,
+    zlib_test
   ]
 );
 
 fn node_unit_test(test: String) {
   let _g = util::http_server();
 
-  let mut deno = util::deno_cmd();
-  let mut deno = deno
+  let mut deno = util::deno_cmd()
     .current_dir(util::root_path())
     .arg("test")
     .arg("--unstable")
@@ -99,8 +110,8 @@ fn node_unit_test(test: String) {
         .join("unit_node")
         .join(format!("{test}.ts")),
     )
-    .stderr(Stdio::piped())
-    .stdout(Stdio::piped())
+    .envs(env_vars_for_npm_tests())
+    .piped_output()
     .spawn()
     .expect("failed to spawn script");
 

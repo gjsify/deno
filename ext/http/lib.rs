@@ -2,6 +2,9 @@
 
 use async_compression::tokio::write::BrotliEncoder;
 use async_compression::tokio::write::GzipEncoder;
+use async_compression::Level;
+use base64::prelude::BASE64_STANDARD;
+use base64::Engine;
 use cache_control::CacheControl;
 use deno_core::error::custom_error;
 use deno_core::error::AnyError;
@@ -19,8 +22,8 @@ use deno_core::futures::stream::Peekable;
 use deno_core::futures::FutureExt;
 use deno_core::futures::StreamExt;
 use deno_core::futures::TryFutureExt;
-use deno_core::op;
-use deno_core::task::spawn;
+use deno_core::op2;
+use deno_core::unsync::spawn;
 use deno_core::AsyncRefCell;
 use deno_core::AsyncResult;
 use deno_core::BufView;
@@ -28,28 +31,28 @@ use deno_core::ByteString;
 use deno_core::CancelFuture;
 use deno_core::CancelHandle;
 use deno_core::CancelTryFuture;
+use deno_core::JsBuffer;
 use deno_core::OpState;
 use deno_core::RcRef;
 use deno_core::Resource;
 use deno_core::ResourceId;
 use deno_core::StringOrBuffer;
-use deno_core::ZeroCopyBuf;
 use deno_net::raw::NetworkStream;
 use deno_websocket::ws_create_server_stream;
 use flate2::write::GzEncoder;
 use flate2::Compression;
-use fly_accept_encoding::Encoding;
-use hyper::body::Bytes;
-use hyper::body::HttpBody;
-use hyper::body::SizeHint;
-use hyper::header::HeaderName;
-use hyper::header::HeaderValue;
-use hyper::server::conn::Http;
-use hyper::service::Service;
-use hyper::Body;
-use hyper::HeaderMap;
-use hyper::Request;
-use hyper::Response;
+use hyper_util::rt::TokioIo;
+use hyper_v014::body::Bytes;
+use hyper_v014::body::HttpBody;
+use hyper_v014::body::SizeHint;
+use hyper_v014::header::HeaderName;
+use hyper_v014::header::HeaderValue;
+use hyper_v014::server::conn::Http;
+use hyper_v014::service::Service;
+use hyper_v014::Body;
+use hyper_v014::HeaderMap;
+use hyper_v014::Request;
+use hyper_v014::Response;
 use serde::Serialize;
 use std::borrow::Cow;
 use std::cell::RefCell;
@@ -75,15 +78,17 @@ use crate::reader_stream::ExternallyAbortableReaderStream;
 use crate::reader_stream::ShutdownHandle;
 
 pub mod compressible;
+mod fly_accept_encoding;
 mod http_next;
 mod network_buffered_stream;
 mod reader_stream;
 mod request_body;
 mod request_properties;
 mod response_body;
-mod slab;
+mod service;
 mod websocket_upgrade;
 
+use fly_accept_encoding::Encoding;
 pub use request_properties::DefaultHttpPropertyExtractor;
 pub use request_properties::HttpConnectionProperties;
 pub use request_properties::HttpListenProperties;
@@ -103,6 +108,7 @@ deno_core::extension!(
     op_http_write_headers,
     op_http_write_resource,
     op_http_write,
+    http_next::op_http_close_after_finish,
     http_next::op_http_get_request_header,
     http_next::op_http_get_request_headers,
     http_next::op_http_get_request_method_and_url<HTTP>,
@@ -112,16 +118,18 @@ deno_core::extension!(
     http_next::op_http_set_promise_complete,
     http_next::op_http_set_response_body_bytes,
     http_next::op_http_set_response_body_resource,
-    http_next::op_http_set_response_body_stream,
     http_next::op_http_set_response_body_text,
     http_next::op_http_set_response_header,
     http_next::op_http_set_response_headers,
     http_next::op_http_set_response_trailers,
-    http_next::op_http_track,
     http_next::op_http_upgrade_websocket_next,
     http_next::op_http_upgrade_raw,
+    http_next::op_raw_write_vectored,
+    http_next::op_can_write_vectored,
     http_next::op_http_try_wait,
     http_next::op_http_wait,
+    http_next::op_http_close,
+    http_next::op_http_cancel,
   ],
   esm = ["00_serve.js", "01_http.js"],
 );
@@ -149,7 +157,7 @@ struct HttpConnResource {
   addr: HttpSocketAddr,
   scheme: &'static str,
   acceptors_tx: mpsc::UnboundedSender<HttpAcceptor>,
-  closed_fut: Shared<RemoteHandle<Result<(), Arc<hyper::Error>>>>,
+  closed_fut: Shared<RemoteHandle<Result<(), Arc<hyper_v014::Error>>>>,
   cancel_handle: Rc<CancelHandle>, // Closes gracefully and cancels accept ops.
 }
 
@@ -212,10 +220,11 @@ impl HttpConnResource {
       let request = request_rx.await.ok()?;
 
       let accept_encoding = {
-        let encodings = fly_accept_encoding::encodings_iter(request.headers())
-          .filter(|r| {
-            matches!(r, Ok((Some(Encoding::Brotli | Encoding::Gzip), _)))
-          });
+        let encodings =
+          fly_accept_encoding::encodings_iter_http_02(request.headers())
+            .filter(|r| {
+              matches!(r, Ok((Some(Encoding::Brotli | Encoding::Gzip), _)))
+            });
 
         fly_accept_encoding::preferred(encodings)
           .ok()
@@ -461,10 +470,10 @@ impl Default for HttpResponseWriter {
   }
 }
 
-struct BodyUncompressedSender(Option<hyper::body::Sender>);
+struct BodyUncompressedSender(Option<hyper_v014::body::Sender>);
 
 impl BodyUncompressedSender {
-  fn sender(&mut self) -> &mut hyper::body::Sender {
+  fn sender(&mut self) -> &mut hyper_v014::body::Sender {
     // This is safe because we only ever take the sender out of the option
     // inside of the shutdown method.
     self.0.as_mut().unwrap()
@@ -477,8 +486,8 @@ impl BodyUncompressedSender {
   }
 }
 
-impl From<hyper::body::Sender> for BodyUncompressedSender {
-  fn from(sender: hyper::body::Sender) -> Self {
+impl From<hyper_v014::body::Sender> for BodyUncompressedSender {
+  fn from(sender: hyper_v014::body::Sender) -> Self {
     BodyUncompressedSender(Some(sender))
   }
 }
@@ -505,10 +514,11 @@ struct NextRequestResponse(
   String,
 );
 
-#[op]
+#[op2(async)]
+#[serde]
 async fn op_http_accept(
   state: Rc<RefCell<OpState>>,
-  rid: ResourceId,
+  #[smi] rid: ResourceId,
 ) -> Result<Option<NextRequestResponse>, AnyError> {
   let conn = state.borrow().resource_table.get::<HttpConnResource>(rid)?;
 
@@ -525,7 +535,7 @@ async fn op_http_accept(
 }
 
 fn req_url(
-  req: &hyper::Request<hyper::Body>,
+  req: &hyper_v014::Request<hyper_v014::Body>,
   scheme: &'static str,
   addr: &HttpSocketAddr,
 ) -> String {
@@ -591,7 +601,7 @@ fn req_headers(
 
   let mut headers = Vec::with_capacity(header_map.len());
   for (name, value) in header_map.iter() {
-    if name == hyper::header::COOKIE {
+    if name == hyper_v014::header::COOKIE {
       cookies.push(value.as_bytes());
     } else {
       let name: &[u8] = name.as_ref();
@@ -607,13 +617,13 @@ fn req_headers(
   headers
 }
 
-#[op]
+#[op2(async)]
 async fn op_http_write_headers(
   state: Rc<RefCell<OpState>>,
-  rid: u32,
-  status: u16,
-  headers: Vec<(ByteString, ByteString)>,
-  data: Option<StringOrBuffer>,
+  #[smi] rid: u32,
+  #[smi] status: u16,
+  #[serde] headers: Vec<(ByteString, ByteString)>,
+  #[serde] data: Option<StringOrBuffer>,
 ) -> Result<(), AnyError> {
   let stream = state
     .borrow_mut()
@@ -647,10 +657,10 @@ async fn op_http_write_headers(
   if compressing {
     weaken_etag(hmap);
     // Drop 'content-length' header. Hyper will update it using compressed body.
-    hmap.remove(hyper::header::CONTENT_LENGTH);
+    hmap.remove(hyper_v014::header::CONTENT_LENGTH);
     // Content-Encoding header
     hmap.insert(
-      hyper::header::CONTENT_ENCODING,
+      hyper_v014::header::CONTENT_ENCODING,
       HeaderValue::from_static(match encoding {
         Encoding::Brotli => "br",
         Encoding::Gzip => "gzip",
@@ -677,10 +687,11 @@ async fn op_http_write_headers(
   }
 }
 
-#[op]
+#[op2]
+#[serde]
 fn op_http_headers(
   state: &mut OpState,
-  rid: u32,
+  #[smi] rid: u32,
 ) -> Result<Vec<(ByteString, ByteString)>, AnyError> {
   let stream = state.resource_table.get::<HttpStreamResource>(rid)?;
   let rd = RcRef::map(&stream, |r| &r.rd)
@@ -697,7 +708,12 @@ fn http_response(
   data: Option<StringOrBuffer>,
   compressing: bool,
   encoding: Encoding,
-) -> Result<(HttpResponseWriter, hyper::Body), AnyError> {
+) -> Result<(HttpResponseWriter, hyper_v014::Body), AnyError> {
+  // Gzip, after level 1, doesn't produce significant size difference.
+  // This default matches nginx default gzip compression level (1):
+  // https://nginx.org/en/docs/http/ngx_http_gzip_module.html#gzip_comp_level
+  const GZIP_DEFAULT_COMPRESSION_LEVEL: u8 = 1;
+
   match data {
     Some(data) if compressing => match encoding {
       Encoding::Brotli => {
@@ -711,11 +727,10 @@ fn http_response(
         Ok((HttpResponseWriter::Closed, writer.into_inner().into()))
       }
       Encoding::Gzip => {
-        // Gzip, after level 1, doesn't produce significant size difference.
-        // Probably the reason why nginx's default gzip compression level is
-        // 1.
-        // https://nginx.org/en/docs/http/ngx_http_gzip_module.html#gzip_comp_level
-        let mut writer = GzEncoder::new(Vec::new(), Compression::new(1));
+        let mut writer = GzEncoder::new(
+          Vec::new(),
+          Compression::new(GZIP_DEFAULT_COMPRESSION_LEVEL.into()),
+        );
         writer.write_all(&data)?;
         Ok((HttpResponseWriter::Closed, writer.finish()?.into()))
       }
@@ -724,7 +739,7 @@ fn http_response(
     Some(data) => {
       // If a buffer was passed, but isn't compressible, we use it to
       // construct a response body.
-      Ok((HttpResponseWriter::Closed, Bytes::from(data).into()))
+      Ok((HttpResponseWriter::Closed, data.to_vec().into()))
     }
     None if compressing => {
       // Create a one way pipe that implements tokio's async io traits. To do
@@ -734,8 +749,13 @@ fn http_response(
       let (reader, _) = tokio::io::split(a);
       let (_, writer) = tokio::io::split(b);
       let writer: Pin<Box<dyn tokio::io::AsyncWrite>> = match encoding {
-        Encoding::Brotli => Box::pin(BrotliEncoder::new(writer)),
-        Encoding::Gzip => Box::pin(GzipEncoder::new(writer)),
+        Encoding::Brotli => {
+          Box::pin(BrotliEncoder::with_quality(writer, Level::Fastest))
+        }
+        Encoding::Gzip => Box::pin(GzipEncoder::with_quality(
+          writer,
+          Level::Precise(GZIP_DEFAULT_COMPRESSION_LEVEL.into()),
+        )),
         _ => unreachable!(), // forbidden by accepts_compression
       };
       let (stream, shutdown_handle) =
@@ -760,8 +780,8 @@ fn http_response(
 
 // If user provided a ETag header for uncompressed data, we need to
 // ensure it is a Weak Etag header ("W/").
-fn weaken_etag(hmap: &mut hyper::HeaderMap) {
-  if let Some(etag) = hmap.get_mut(hyper::header::ETAG) {
+fn weaken_etag(hmap: &mut hyper_v014::HeaderMap) {
+  if let Some(etag) = hmap.get_mut(hyper_v014::header::ETAG) {
     if !etag.as_bytes().starts_with(b"W/") {
       let mut v = Vec::with_capacity(etag.as_bytes().len() + 2);
       v.extend(b"W/");
@@ -775,8 +795,8 @@ fn weaken_etag(hmap: &mut hyper::HeaderMap) {
 // Note: we set the header irrespective of whether or not we compress the data
 // to make sure cache services do not serve uncompressed data to clients that
 // support compression.
-fn ensure_vary_accept_encoding(hmap: &mut hyper::HeaderMap) {
-  if let Some(v) = hmap.get_mut(hyper::header::VARY) {
+fn ensure_vary_accept_encoding(hmap: &mut hyper_v014::HeaderMap) {
+  if let Some(v) = hmap.get_mut(hyper_v014::header::VARY) {
     if let Ok(s) = v.to_str() {
       if !s.to_lowercase().contains("accept-encoding") {
         *v = format!("Accept-Encoding, {s}").try_into().unwrap()
@@ -785,15 +805,17 @@ fn ensure_vary_accept_encoding(hmap: &mut hyper::HeaderMap) {
     }
   }
   hmap.insert(
-    hyper::header::VARY,
+    hyper_v014::header::VARY,
     HeaderValue::from_static("Accept-Encoding"),
   );
 }
 
-fn should_compress(headers: &hyper::HeaderMap) -> bool {
+fn should_compress(headers: &hyper_v014::HeaderMap) -> bool {
   // skip compression if the cache-control header value is set to "no-transform" or not utf8
-  fn cache_control_no_transform(headers: &hyper::HeaderMap) -> Option<bool> {
-    let v = headers.get(hyper::header::CACHE_CONTROL)?;
+  fn cache_control_no_transform(
+    headers: &hyper_v014::HeaderMap,
+  ) -> Option<bool> {
+    let v = headers.get(hyper_v014::header::CACHE_CONTROL)?;
     let s = match std::str::from_utf8(v.as_bytes()) {
       Ok(s) => s,
       Err(_) => return Some(true),
@@ -804,24 +826,25 @@ fn should_compress(headers: &hyper::HeaderMap) -> bool {
   // we skip compression if the `content-range` header value is set, as it
   // indicates the contents of the body were negotiated based directly
   // with the user code and we can't compress the response
-  let content_range = headers.contains_key(hyper::header::CONTENT_RANGE);
+  let content_range = headers.contains_key(hyper_v014::header::CONTENT_RANGE);
   // assume body is already compressed if Content-Encoding header present, thus avoid recompressing
-  let is_precompressed = headers.contains_key(hyper::header::CONTENT_ENCODING);
+  let is_precompressed =
+    headers.contains_key(hyper_v014::header::CONTENT_ENCODING);
 
   !content_range
     && !is_precompressed
     && !cache_control_no_transform(headers).unwrap_or_default()
     && headers
-      .get(hyper::header::CONTENT_TYPE)
+      .get(hyper_v014::header::CONTENT_TYPE)
       .map(compressible::is_content_compressible)
       .unwrap_or_default()
 }
 
-#[op]
+#[op2(async)]
 async fn op_http_write_resource(
   state: Rc<RefCell<OpState>>,
-  rid: ResourceId,
-  stream: ResourceId,
+  #[smi] rid: ResourceId,
+  #[smi] stream: ResourceId,
 ) -> Result<(), AnyError> {
   let http_stream = state
     .borrow()
@@ -861,7 +884,7 @@ async fn op_http_write_resource(
         }
       }
       HttpResponseWriter::BodyUncompressed(body) => {
-        let bytes = Bytes::from(view);
+        let bytes = view.to_vec().into();
         if let Err(err) = body.sender().send_data(bytes).await {
           assert!(err.is_closed());
           // Pull up the failure associated with the transport connection instead.
@@ -876,11 +899,11 @@ async fn op_http_write_resource(
   Ok(())
 }
 
-#[op]
+#[op2(async)]
 async fn op_http_write(
   state: Rc<RefCell<OpState>>,
-  rid: ResourceId,
-  buf: ZeroCopyBuf,
+  #[smi] rid: ResourceId,
+  #[buffer] buf: JsBuffer,
 ) -> Result<(), AnyError> {
   let stream = state
     .borrow()
@@ -910,7 +933,7 @@ async fn op_http_write(
       }
     }
     HttpResponseWriter::BodyUncompressed(body) => {
-      let bytes = Bytes::from(buf);
+      let bytes = Bytes::from(buf.to_vec());
       match body.sender().send_data(bytes).await {
         Ok(_) => Ok(()),
         Err(err) => {
@@ -929,10 +952,10 @@ async fn op_http_write(
 /// Gracefully closes the write half of the HTTP stream. Note that this does not
 /// remove the HTTP stream resource from the resource table; it still has to be
 /// closed with `Deno.core.close()`.
-#[op]
+#[op2(async)]
 async fn op_http_shutdown(
   state: Rc<RefCell<OpState>>,
-  rid: ResourceId,
+  #[smi] rid: ResourceId,
 ) -> Result<(), AnyError> {
   let stream = state
     .borrow()
@@ -964,19 +987,23 @@ async fn op_http_shutdown(
   Ok(())
 }
 
-#[op]
-fn op_http_websocket_accept_header(key: String) -> Result<String, AnyError> {
+#[op2]
+#[string]
+fn op_http_websocket_accept_header(
+  #[string] key: String,
+) -> Result<String, AnyError> {
   let digest = ring::digest::digest(
     &ring::digest::SHA1_FOR_LEGACY_USE_ONLY,
     format!("{key}258EAFA5-E914-47DA-95CA-C5AB0DC85B11").as_bytes(),
   );
-  Ok(base64::encode(digest))
+  Ok(BASE64_STANDARD.encode(digest))
 }
 
-#[op]
+#[op2(async)]
+#[smi]
 async fn op_http_upgrade_websocket(
   state: Rc<RefCell<OpState>>,
-  rid: ResourceId,
+  #[smi] rid: ResourceId,
 ) -> Result<ResourceId, AnyError> {
   let stream = state
     .borrow_mut()
@@ -992,7 +1019,7 @@ async fn op_http_upgrade_websocket(
   };
 
   let (transport, bytes) =
-    extract_network_stream(hyper::upgrade::on(request).await?);
+    extract_network_stream(hyper_v014::upgrade::on(request).await?);
   let ws_rid =
     ws_create_server_stream(&mut state.borrow_mut(), transport, bytes)?;
   Ok(ws_rid)
@@ -1002,23 +1029,23 @@ async fn op_http_upgrade_websocket(
 #[derive(Clone)]
 struct LocalExecutor;
 
+impl<Fut> hyper_v014::rt::Executor<Fut> for LocalExecutor
+where
+  Fut: Future + 'static,
+  Fut::Output: 'static,
+{
+  fn execute(&self, fut: Fut) {
+    deno_core::unsync::spawn(fut);
+  }
+}
+
 impl<Fut> hyper::rt::Executor<Fut> for LocalExecutor
 where
   Fut: Future + 'static,
   Fut::Output: 'static,
 {
   fn execute(&self, fut: Fut) {
-    deno_core::task::spawn(fut);
-  }
-}
-
-impl<Fut> hyper1::rt::Executor<Fut> for LocalExecutor
-where
-  Fut: Future + 'static,
-  Fut::Output: 'static,
-{
-  fn execute(&self, fut: Fut) {
-    deno_core::task::spawn(fut);
+    deno_core::unsync::spawn(fut);
   }
 }
 
@@ -1028,8 +1055,8 @@ fn http_error(message: &'static str) -> AnyError {
 
 /// Filters out the ever-surprising 'shutdown ENOTCONN' errors.
 fn filter_enotconn(
-  result: Result<(), hyper::Error>,
-) -> Result<(), hyper::Error> {
+  result: Result<(), hyper_v014::Error>,
+) -> Result<(), hyper_v014::Error> {
   if result
     .as_ref()
     .err()
@@ -1055,20 +1082,21 @@ trait CanDowncastUpgrade: Sized {
   ) -> Result<(T, Bytes), Self>;
 }
 
-impl CanDowncastUpgrade for hyper1::upgrade::Upgraded {
-  fn downcast<T: AsyncRead + AsyncWrite + Unpin + 'static>(
-    self,
-  ) -> Result<(T, Bytes), Self> {
-    let hyper1::upgrade::Parts { io, read_buf, .. } = self.downcast()?;
-    Ok((io, read_buf))
-  }
-}
-
 impl CanDowncastUpgrade for hyper::upgrade::Upgraded {
   fn downcast<T: AsyncRead + AsyncWrite + Unpin + 'static>(
     self,
   ) -> Result<(T, Bytes), Self> {
-    let hyper::upgrade::Parts { io, read_buf, .. } = self.downcast()?;
+    let hyper::upgrade::Parts { io, read_buf, .. } =
+      self.downcast::<TokioIo<T>>()?;
+    Ok((io.into_inner(), read_buf))
+  }
+}
+
+impl CanDowncastUpgrade for hyper_v014::upgrade::Upgraded {
+  fn downcast<T: AsyncRead + AsyncWrite + Unpin + 'static>(
+    self,
+  ) -> Result<(T, Bytes), Self> {
+    let hyper_v014::upgrade::Parts { io, read_buf, .. } = self.downcast()?;
     Ok((io, read_buf))
   }
 }

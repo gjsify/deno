@@ -1,13 +1,7 @@
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 
-// deno-lint-ignore-file camelcase
-
-const core = globalThis.Deno.core;
-const internals = globalThis.__bootstrap.internals;
-const primordials = globalThis.__bootstrap.primordials;
+import { core, internals, primordials } from "ext:core/mod.js";
 const { BadResourcePrototype, InterruptedPrototype, ops } = core;
-const { op_http_write } = Deno.core.ensureFastOps();
-import * as webidl from "ext:deno_webidl/00_webidl.js";
 import { InnerBody } from "ext:deno_fetch/22_body.js";
 import { Event, setEventTargetData } from "ext:deno_web/02_event.js";
 import { BlobPrototype } from "ext:deno_web/09_file.js";
@@ -33,6 +27,7 @@ import {
   _role,
   _server,
   _serverHandleIdleTimeout,
+  createWebSocketBranded,
   SERVER,
   WebSocket,
 } from "ext:deno_websocket/01_websocket.js";
@@ -46,6 +41,7 @@ import {
   ReadableStreamPrototype,
 } from "ext:deno_web/06_streams.js";
 import { serve } from "ext:deno_http/00_serve.js";
+import { SymbolDispose } from "ext:deno_web/00_infra.js";
 const {
   ArrayPrototypeIncludes,
   ArrayPrototypeMap,
@@ -67,9 +63,21 @@ const {
   Uint8Array,
   Uint8ArrayPrototype,
 } = primordials;
+const {
+  op_http_accept,
+  op_http_shutdown,
+  op_http_upgrade,
+  op_http_write,
+  op_http_upgrade_websocket,
+  op_http_write_headers,
+  op_http_write_resource,
+} = core.ensureFastOps();
 
 const connErrorSymbol = Symbol("connError");
 const _deferred = Symbol("upgradeHttpDeferred");
+
+/** @type {(self: HttpConn, rid: number) => boolean} */
+let deleteManagedResource;
 
 class HttpConn {
   #rid = 0;
@@ -81,7 +89,12 @@ class HttpConn {
   // that were created during lifecycle of this request.
   // When the connection is closed these resources should be closed
   // as well.
-  managedResources = new SafeSet();
+  #managedResources = new SafeSet();
+
+  static {
+    deleteManagedResource = (self, rid) =>
+      SetPrototypeDelete(self.#managedResources, rid);
+  }
 
   constructor(rid, remoteAddr, localAddr) {
     this.#rid = rid;
@@ -98,7 +111,7 @@ class HttpConn {
   async nextRequest() {
     let nextRequest;
     try {
-      nextRequest = await core.opAsync("op_http_accept", this.#rid);
+      nextRequest = await op_http_accept(this.#rid);
     } catch (error) {
       this.close();
       // A connection error seen here would cause disrupted responses to throw
@@ -125,7 +138,7 @@ class HttpConn {
     }
 
     const { 0: streamRid, 1: method, 2: url } = nextRequest;
-    SetPrototypeAdd(this.managedResources, streamRid);
+    SetPrototypeAdd(this.#managedResources, streamRid);
 
     /** @type {ReadableStream<Uint8Array> | undefined} */
     let body = null;
@@ -169,10 +182,18 @@ class HttpConn {
     if (!this.#closed) {
       this.#closed = true;
       core.close(this.#rid);
-      for (const rid of new SafeSetIterator(this.managedResources)) {
-        SetPrototypeDelete(this.managedResources, rid);
+      for (const rid of new SafeSetIterator(this.#managedResources)) {
+        SetPrototypeDelete(this.#managedResources, rid);
         core.close(rid);
       }
+    }
+  }
+
+  [SymbolDispose]() {
+    core.tryClose(this.#rid);
+    for (const rid of new SafeSetIterator(this.#managedResources)) {
+      SetPrototypeDelete(this.#managedResources, rid);
+      core.tryClose(rid);
     }
   }
 
@@ -254,8 +275,7 @@ function createRespondWith(
         ObjectPrototypeIsPrototypeOf(Uint8ArrayPrototype, respBody)
       );
       try {
-        await core.opAsync(
-          "op_http_write_headers",
+        await op_http_write_headers(
           streamRid,
           innerResp.status ?? 200,
           innerResp.headerList,
@@ -293,10 +313,9 @@ function createRespondWith(
           if (respBody.locked) {
             throw new TypeError("ReadableStream is locked.");
           }
-          reader = respBody.getReader(); // Aquire JS lock.
+          reader = respBody.getReader(); // Acquire JS lock.
           try {
-            await core.opAsync(
-              "op_http_write_resource",
+            await op_http_write_resource(
               streamRid,
               resourceBacking.rid,
             );
@@ -344,7 +363,7 @@ function createRespondWith(
 
         if (success) {
           try {
-            await core.opAsync("op_http_shutdown", streamRid);
+            await op_http_shutdown(streamRid);
           } catch (error) {
             await reader.cancel(error);
             throw error;
@@ -354,7 +373,7 @@ function createRespondWith(
 
       const deferred = request[_deferred];
       if (deferred) {
-        const res = await core.opAsync("op_http_upgrade", streamRid);
+        const res = await op_http_upgrade(streamRid);
         let conn;
         if (res.connType === "tcp") {
           conn = new TcpConn(res.connRid, remoteAddr, localAddr);
@@ -370,8 +389,7 @@ function createRespondWith(
       }
       const ws = resp[_ws];
       if (ws) {
-        const wsRid = await core.opAsync(
-          "op_http_upgrade_websocket",
+        const wsRid = await op_http_upgrade_websocket(
           streamRid,
         );
         ws[_rid] = wsRid;
@@ -397,7 +415,7 @@ function createRespondWith(
       abortController.abort(error);
       throw error;
     } finally {
-      if (SetPrototypeDelete(httpConn.managedResources, streamRid)) {
+      if (deleteManagedResource(httpConn, streamRid)) {
         core.close(streamRid);
       }
     }
@@ -459,7 +477,7 @@ function upgradeWebSocket(request, options = {}) {
     }
   }
 
-  const socket = webidl.createBranded(WebSocket);
+  const socket = createWebSocketBranded(WebSocket);
   setEventTargetData(socket);
   socket[_server] = true;
   socket[_idleTimeoutDuration] = options.idleTimeout ?? 120;

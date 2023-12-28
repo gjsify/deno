@@ -1,18 +1,19 @@
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 
-const core = globalThis.Deno.core;
+import { core, primordials } from "ext:core/mod.js";
 const ops = core.ops;
-const primordials = globalThis.__bootstrap.primordials;
 const {
   ArrayPrototypeFilter,
   Error,
   ObjectPrototypeIsPrototypeOf,
   String,
   StringPrototypeStartsWith,
+  SymbolFor,
   SymbolIterator,
   SymbolToStringTag,
 } = primordials;
 import * as webidl from "ext:deno_webidl/00_webidl.js";
+import { createFilteredInspectProxy } from "ext:deno_console/01_console.js";
 import { URL } from "ext:deno_url/00_url.js";
 import { getLocationHref } from "ext:deno_web/12_location.js";
 import { serializePermissions } from "ext:runtime/10_permissions.js";
@@ -22,12 +23,17 @@ import {
   ErrorEvent,
   EventTarget,
   MessageEvent,
+  setIsTrusted,
 } from "ext:deno_web/02_event.js";
 import {
   deserializeJsMessageData,
   MessagePortPrototype,
   serializeJsMessageData,
 } from "ext:deno_web/13_message_port.js";
+const {
+  op_host_recv_ctrl,
+  op_host_recv_message,
+} = core.ensureFastOps();
 
 function createWorker(
   specifier,
@@ -56,11 +62,11 @@ function hostPostMessage(id, data) {
 }
 
 function hostRecvCtrl(id) {
-  return core.opAsync("op_host_recv_ctrl", id);
+  return op_host_recv_ctrl(id);
 }
 
 function hostRecvMessage(id) {
-  return core.opAsync("op_host_recv_message", id);
+  return op_host_recv_message(id);
 }
 
 class Worker extends EventTarget {
@@ -187,6 +193,7 @@ class Worker extends EventTarget {
           cancelable: false,
           data: err,
         });
+        setIsTrusted(event, true);
         this.dispatchEvent(event);
         return;
       }
@@ -198,6 +205,7 @@ class Worker extends EventTarget {
           (t) => ObjectPrototypeIsPrototypeOf(MessagePortPrototype, t),
         ),
       });
+      setIsTrusted(event, true);
       this.dispatchEvent(event);
     }
   };
@@ -239,8 +247,25 @@ class Worker extends EventTarget {
     }
   }
 
+  [SymbolFor("Deno.privateCustomInspect")](inspect, inspectOptions) {
+    return inspect(
+      createFilteredInspectProxy({
+        object: this,
+        evaluate: ObjectPrototypeIsPrototypeOf(WorkerPrototype, this),
+        keys: [
+          "onerror",
+          "onmessage",
+          "onmessageerror",
+        ],
+      }),
+      inspectOptions,
+    );
+  }
+
   [SymbolToStringTag] = "Worker";
 }
+
+const WorkerPrototype = Worker.prototype;
 
 defineEventHandler(Worker.prototype, "error");
 defineEventHandler(Worker.prototype, "message");

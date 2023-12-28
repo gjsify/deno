@@ -3,9 +3,8 @@
 import {
   assertEquals,
   assertInstanceOf,
-} from "../../../test_util/std/testing/asserts.ts";
+} from "../../../test_util/std/assert/mod.ts";
 import { delay } from "../../../test_util/std/async/delay.ts";
-import { deferred } from "../../../test_util/std/async/deferred.ts";
 import { fromFileUrl, join } from "../../../test_util/std/path/mod.ts";
 import { serveTls } from "../../../test_util/std/http/server.ts";
 import * as tls from "node:tls";
@@ -56,8 +55,40 @@ Connection: close
   await serve;
 });
 
+// https://github.com/denoland/deno/pull/20120
+Deno.test("tls.connect mid-read tcp->tls upgrade", async () => {
+  const ctl = new AbortController();
+  const serve = serveTls(() => new Response("hello"), {
+    port: 8443,
+    key,
+    cert,
+    signal: ctl.signal,
+  });
+
+  await delay(200);
+
+  const conn = tls.connect({
+    host: "localhost",
+    port: 8443,
+    secureContext: {
+      ca: rootCaCert,
+      // deno-lint-ignore no-explicit-any
+    } as any,
+  });
+
+  conn.setEncoding("utf8");
+  conn.write(`GET / HTTP/1.1\nHost: www.google.com\n\n`);
+
+  conn.on("data", (_) => {
+    conn.destroy();
+    ctl.abort();
+  });
+
+  await serve;
+});
+
 Deno.test("tls.createServer creates a TLS server", async () => {
-  const p = deferred();
+  const deferred = Promise.withResolvers<void>();
   const server = tls.createServer(
     // deno-lint-ignore no-explicit-any
     { host: "0.0.0.0", key, cert } as any,
@@ -99,9 +130,9 @@ Deno.test("tls.createServer creates a TLS server", async () => {
 
     conn.close();
     server.close();
-    p.resolve();
+    deferred.resolve();
   });
-  await p;
+  await deferred.promise;
 });
 
 Deno.test("TLSSocket can construct without options", () => {

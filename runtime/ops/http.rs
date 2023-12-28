@@ -7,18 +7,18 @@ use deno_core::error::bad_resource;
 use deno_core::error::bad_resource_id;
 use deno_core::error::custom_error;
 use deno_core::error::AnyError;
-use deno_core::op;
+use deno_core::op2;
 use deno_core::OpState;
 use deno_core::RcRef;
 use deno_core::ResourceId;
-use deno_core::ZeroCopyBuf;
+use deno_core::ToJsBuffer;
 use deno_http::http_create_conn_resource;
 use deno_http::HttpRequestReader;
 use deno_http::HttpStreamResource;
 use deno_net::io::TcpStreamResource;
 use deno_net::ops_tls::TlsStream;
 use deno_net::ops_tls::TlsStreamResource;
-use hyper::upgrade::Parts;
+use hyper_v014::upgrade::Parts;
 use serde::Serialize;
 use tokio::net::TcpStream;
 
@@ -27,15 +27,18 @@ use deno_net::io::UnixStreamResource;
 #[cfg(unix)]
 use tokio::net::UnixStream;
 
+pub const UNSTABLE_FEATURE_NAME: &str = "http";
+
 deno_core::extension!(
   deno_http_runtime,
   ops = [op_http_start, op_http_upgrade],
 );
 
-#[op]
+#[op2(fast)]
+#[smi]
 fn op_http_start(
   state: &mut OpState,
-  tcp_stream_rid: ResourceId,
+  #[smi] tcp_stream_rid: ResourceId,
 ) -> Result<ResourceId, AnyError> {
   if let Ok(resource_rc) = state
     .resource_table
@@ -62,8 +65,8 @@ fn op_http_start(
     let resource = Rc::try_unwrap(resource_rc)
       .map_err(|_| bad_resource("TLS stream is currently in use"))?;
     let (read_half, write_half) = resource.into_inner();
-    let tls_stream = read_half.reunite(write_half);
-    let addr = tls_stream.get_ref().0.local_addr()?;
+    let tls_stream = read_half.unsplit(write_half);
+    let addr = tls_stream.local_addr()?;
     return http_create_conn_resource(state, tls_stream, addr, "https");
   }
 
@@ -72,7 +75,7 @@ fn op_http_start(
     .resource_table
     .take::<deno_net::io::UnixStreamResource>(tcp_stream_rid)
   {
-    super::check_unstable(state, "Deno.serveHttp");
+    super::check_unstable(state, UNSTABLE_FEATURE_NAME, "Deno.serveHttp");
 
     // This UNIX socket might be used somewhere else. If it's the case, we cannot proceed with the
     // process of starting a HTTP server on top of this UNIX socket, so we just return a bad
@@ -93,14 +96,14 @@ fn op_http_start(
 pub struct HttpUpgradeResult {
   conn_rid: ResourceId,
   conn_type: &'static str,
-  read_buf: ZeroCopyBuf,
+  read_buf: ToJsBuffer,
 }
 
-#[op]
+#[op2(async)]
+#[serde]
 async fn op_http_upgrade(
   state: Rc<RefCell<OpState>>,
-  rid: ResourceId,
-  _: (),
+  #[smi] rid: ResourceId,
 ) -> Result<HttpUpgradeResult, AnyError> {
   let stream = state
     .borrow_mut()
@@ -118,7 +121,7 @@ async fn op_http_upgrade(
     }
   };
 
-  let transport = hyper::upgrade::on(request).await?;
+  let transport = hyper_v014::upgrade::on(request).await?;
   let transport = match transport.downcast::<TcpStream>() {
     Ok(Parts {
       io: tcp_stream,

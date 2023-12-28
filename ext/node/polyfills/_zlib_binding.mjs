@@ -45,6 +45,9 @@ export const UNZIP = 7;
 
 const { core } = globalThis.__bootstrap;
 const { ops } = core;
+const {
+  op_zlib_write_async,
+} = core.ensureFastOps();
 
 const writeResult = new Uint32Array(2);
 
@@ -91,7 +94,7 @@ class Zlib {
     switch (err) {
       case Z_BUF_ERROR:
         this.#error("unexpected end of file", err);
-        return false;      
+        return false;
       case Z_OK:
       case Z_STREAM_END:
         // normal statuses, not fatal
@@ -117,10 +120,9 @@ class Zlib {
     out_off,
     out_len,
   ) {
-    core.opAsync(
-      "op_zlib_write_async",
+    op_zlib_write_async(
       this.#handle,
-      flush,
+      flush ?? Z_NO_FLUSH,
       input,
       in_off,
       in_len,
@@ -141,15 +143,15 @@ class Zlib {
     level,
     memLevel,
     strategy,
-    dictionary, 
-  ) { 
+    dictionary,
+  ) {
     const err = ops.op_zlib_init(
       this.#handle,
       level,
       windowBits,
       memLevel,
       strategy,
-      dictionary,
+      dictionary ?? new Uint8Array(0),
     );
 
     if (err != Z_OK) {

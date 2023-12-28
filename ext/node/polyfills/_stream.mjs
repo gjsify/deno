@@ -5,7 +5,7 @@
 import { nextTick } from "ext:deno_node/_next_tick.ts";
 import { AbortController } from "ext:deno_web/03_abort_signal.js";
 import { Blob } from "ext:deno_web/09_file.js";
-import { StringDecoder } from "ext:deno_node/string_decoder.ts";
+import { StringDecoder } from "node:string_decoder";
 import {
   createDeferredPromise,
   kEmptyObject,
@@ -49,9 +49,9 @@ import {
 // $ esbuild --bundle --legal-comments=none --target=es2022 --tree-shaking=true --format=esm .
 // ... then making sure the file uses the existing ext:deno_node stuff instead of bundling it
 const __process$ = { nextTick };
-import __buffer$ from "ext:deno_node/buffer.ts";
-import __string_decoder$ from "ext:deno_node/string_decoder.ts";
-import __events$ from "ext:deno_node/events.ts";
+import __buffer$ from "node:buffer";
+import __string_decoder$ from "node:string_decoder";
+import __events$ from "node:events";
 
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __commonJS = (cb, mod) =>
@@ -1669,9 +1669,11 @@ var require_destroy = __commonJS({
         }
       }
       try {
-        stream._construct(onConstruct);
+        stream._construct((err) => {
+          nextTick(onConstruct, err);
+        });
       } catch (err) {
-        onConstruct(err);
+        nextTick(onConstruct, err);
       }
     }
     function emitConstructNT(stream) {
@@ -4472,6 +4474,7 @@ var require_duplexify = __commonJS({
           readable: false,
         });
       }
+
       if (typeof body === "function") {
         const { value, write, final, destroy } = fromAsyncGen(body);
         if (isIterable(value)) {
@@ -4667,8 +4670,6 @@ var require_duplexify = __commonJS({
           cb(err);
         } else if (err) {
           d.destroy(err);
-        } else if (!readable && !writable) {
-          d.destroy();
         }
       }
       d = new Duplexify({
@@ -5722,7 +5723,7 @@ import {
   isWritable,
   isWritableEnded,
 } from "ext:deno_node/internal/streams/utils.mjs";
-import { ReadableStream, WritableStream } from "ext:deno_node/stream/web.ts";
+import { ReadableStream, WritableStream } from "node:stream/web";
 import {
   validateBoolean,
   validateObject,

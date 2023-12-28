@@ -3,7 +3,7 @@
 // TODO(ry) The unit test functions in this module are too coarse. They should
 // be broken up into smaller bits.
 
-// TODO(ry) These tests currentl strip all the ANSI colors out. We don't have a
+// TODO(ry) These tests currently strip all the ANSI colors out. We don't have a
 // good way to control whether we produce color output or not since
 // std/fmt/colors auto determines whether to put colors in or not. We need
 // better infrastructure here so we can properly test the colors.
@@ -269,6 +269,14 @@ Deno.test(function consoleTestStringifyCircular() {
   );
   assertEquals(stringify(new Set([1, 2, 3])), "Set(3) { 1, 2, 3 }");
   assertEquals(
+    stringify(new Set([1, 2, 3]).values()),
+    "[Set Iterator] { 1, 2, 3 }",
+  );
+  assertEquals(
+    stringify(new Set([1, 2, 3]).entries()),
+    "[Set Entries] { [ 1, 1 ], [ 2, 2 ], [ 3, 3 ] }",
+  );
+  assertEquals(
     stringify(
       new Map([
         [1, "one"],
@@ -276,6 +284,14 @@ Deno.test(function consoleTestStringifyCircular() {
       ]),
     ),
     `Map(2) { 1 => "one", 2 => "two" }`,
+  );
+  assertEquals(
+    stringify(new Map([[1, "one"], [2, "two"]]).values()),
+    `[Map Iterator] { "one", "two" }`,
+  );
+  assertEquals(
+    stringify(new Map([[1, "one"], [2, "two"]]).entries()),
+    `[Map Entries] { [ 1, "one" ], [ 2, "two" ] }`,
   );
   assertEquals(stringify(new WeakSet()), "WeakSet { <items unknown> }");
   assertEquals(stringify(new WeakMap()), "WeakMap { <items unknown> }");
@@ -378,13 +394,16 @@ Deno.test(function consoleTestStringifyFunctionWithPrototypeRemoved() {
   assertEquals(stringify(f), "[Function (null prototype): f]");
   const af = async function af() {};
   Reflect.setPrototypeOf(af, null);
-  assertEquals(stringify(af), "[Function (null prototype): af]");
+  assertEquals(stringify(af), "[AsyncFunction (null prototype): af]");
   const gf = function* gf() {};
   Reflect.setPrototypeOf(gf, null);
-  assertEquals(stringify(gf), "[Function (null prototype): gf]");
+  assertEquals(stringify(gf), "[GeneratorFunction (null prototype): gf]");
   const agf = async function* agf() {};
   Reflect.setPrototypeOf(agf, null);
-  assertEquals(stringify(agf), "[Function (null prototype): agf]");
+  assertEquals(
+    stringify(agf),
+    "[AsyncGeneratorFunction (null prototype): agf]",
+  );
 });
 
 Deno.test(function consoleTestStringifyFunctionWithProperties() {
@@ -500,6 +519,7 @@ Deno.test(function consoleTestStringifyFunctionWithProperties() {
   [isArray]: [Function: isArray] { [length]: 1, [name]: "isArray" },
   [from]: [Function: from] { [length]: 1, [name]: "from" },
   [of]: [Function: of] { [length]: 0, [name]: "of" },
+  [fromAsync]: [Function: fromAsync] { [length]: 1, [name]: "fromAsync" },
   [Symbol(Symbol.species)]: [Getter]
 }`,
   );
@@ -1001,6 +1021,26 @@ Deno.test(function consoleTestStringifyIterableWhenGrouped() {
   );
 });
 
+Deno.test(function consoleTestIteratorValueAreNotConsumed() {
+  const setIterator = new Set([1, 2, 3]).values();
+  assertEquals(
+    stringify(setIterator),
+    "[Set Iterator] { 1, 2, 3 }",
+  );
+  assertEquals([...setIterator], [1, 2, 3]);
+});
+
+Deno.test(function consoleTestWeakSetAndWeakMapWithShowHidden() {
+  assertEquals(
+    stripColor(Deno.inspect(new WeakSet([{}]), { showHidden: true })),
+    "WeakSet { {} }",
+  );
+  assertEquals(
+    stripColor(Deno.inspect(new WeakMap([[{}, "foo"]]), { showHidden: true })),
+    'WeakMap { {} => "foo" }',
+  );
+});
+
 Deno.test(async function consoleTestStringifyPromises() {
   const pendingPromise = new Promise((_res, _rej) => {});
   assertEquals(stringify(pendingPromise), "Promise { <pending> }");
@@ -1051,6 +1091,18 @@ Deno.test(function consoleTestWithCustomInspectorUsingInspectFunc() {
   assertEquals(stringify(new A()), "b { c: 1 }");
 });
 
+Deno.test(function consoleTestWithConstructorError() {
+  const obj = new Proxy({}, {
+    getOwnPropertyDescriptor(_target, name) {
+      if (name == "constructor") {
+        throw "yikes";
+      }
+      return undefined;
+    },
+  });
+  assertEquals(Deno.inspect(obj), "{}");
+});
+
 Deno.test(function consoleTestWithCustomInspectorError() {
   class A {
     [customInspect](): never {
@@ -1069,7 +1121,7 @@ Deno.test(function consoleTestWithCustomInspectorError() {
     () => stringify(a),
     Error,
     "BOOM",
-    "Inpsect should fail and maintain a clear CTX_STACK",
+    "Inspect should fail and maintain a clear CTX_STACK",
   );
 });
 
@@ -1152,9 +1204,12 @@ Deno.test(function consoleParseCssColor() {
   assertEquals(parseCssColor("darkmagenta"), [139, 0, 139]);
   assertEquals(parseCssColor("slateblue"), [106, 90, 205]);
   assertEquals(parseCssColor("#ffaa00"), [255, 170, 0]);
-  assertEquals(parseCssColor("#ffaa00"), [255, 170, 0]);
-  assertEquals(parseCssColor("#18d"), [16, 128, 208]);
-  assertEquals(parseCssColor("#18D"), [16, 128, 208]);
+  assertEquals(parseCssColor("#ffAA00"), [255, 170, 0]);
+  assertEquals(parseCssColor("#fa0"), [255, 170, 0]);
+  assertEquals(parseCssColor("#FA0"), [255, 170, 0]);
+  assertEquals(parseCssColor("#18d"), [17, 136, 221]);
+  assertEquals(parseCssColor("#18D"), [17, 136, 221]);
+  assertEquals(parseCssColor("#1188DD"), [17, 136, 221]);
   assertEquals(parseCssColor("rgb(100, 200, 50)"), [100, 200, 50]);
   assertEquals(parseCssColor("rgb(+100.3, -200, .5)"), [100, 0, 1]);
   assertEquals(parseCssColor("hsl(75, 60%, 40%)"), [133, 163, 41]);
@@ -1779,7 +1834,7 @@ Deno.test(function consoleLogShouldNotThrowErrorWhenInvalidCssColorsAreGiven() {
 });
 
 // console.log(Invalid Date) test
-Deno.test(function consoleLogShoultNotThrowErrorWhenInvalidDateIsPassed() {
+Deno.test(function consoleLogShouldNotThrowErrorWhenInvalidDateIsPassed() {
   mockConsole((console, out) => {
     const invalidDate = new Date("test");
     console.log(invalidDate);
@@ -2263,7 +2318,7 @@ Deno.test(function inspectWithPrototypePollution() {
 Deno.test(function inspectPromiseLike() {
   assertEquals(
     Deno.inspect(Object.create(Promise.prototype)),
-    "Promise { <unknown> }",
+    "Promise {}",
   );
 });
 

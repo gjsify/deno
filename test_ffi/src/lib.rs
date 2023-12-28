@@ -15,7 +15,7 @@ pub extern "C" fn print_something() {
 
 /// # Safety
 ///
-/// The pointer to the buffer must be valid and initalized, and the length must
+/// The pointer to the buffer must be valid and initialized, and the length must
 /// not be longer than the buffer's allocation.
 #[no_mangle]
 pub unsafe extern "C" fn print_buffer(ptr: *const u8, len: usize) {
@@ -25,7 +25,7 @@ pub unsafe extern "C" fn print_buffer(ptr: *const u8, len: usize) {
 
 /// # Safety
 ///
-/// The pointer to the buffer must be valid and initalized, and the length must
+/// The pointer to the buffer must be valid and initialized, and the length must
 /// not be longer than the buffer's allocation.
 #[no_mangle]
 pub unsafe extern "C" fn print_buffer2(
@@ -117,7 +117,7 @@ pub extern "C" fn sleep_blocking(ms: u64) {
 
 /// # Safety
 ///
-/// The pointer to the buffer must be valid and initalized, and the length must
+/// The pointer to the buffer must be valid and initialized, and the length must
 /// not be longer than the buffer's allocation.
 #[no_mangle]
 pub unsafe extern "C" fn fill_buffer(value: u8, buf: *mut u8, len: usize) {
@@ -129,7 +129,7 @@ pub unsafe extern "C" fn fill_buffer(value: u8, buf: *mut u8, len: usize) {
 
 /// # Safety
 ///
-/// The pointer to the buffer must be valid and initalized, and the length must
+/// The pointer to the buffer must be valid and initialized, and the length must
 /// not be longer than the buffer's allocation.
 #[no_mangle]
 pub unsafe extern "C" fn nonblocking_buffer(ptr: *const u8, len: usize) {
@@ -254,6 +254,20 @@ pub extern "C" fn call_stored_function_thread_safe_and_log() {
       }
       STORED_FUNCTION.unwrap()();
       println!("STORED_FUNCTION called");
+    }
+  });
+}
+
+#[no_mangle]
+pub extern "C" fn call_stored_function_2_thread_safe(arg: u8) {
+  std::thread::spawn(move || {
+    std::thread::sleep(std::time::Duration::from_millis(1500));
+    unsafe {
+      if STORED_FUNCTION_2.is_none() {
+        return;
+      }
+      println!("Calling");
+      STORED_FUNCTION_2.unwrap()(arg);
     }
   });
 }
@@ -517,7 +531,7 @@ pub struct Mixed {
 
 /// # Safety
 ///
-/// The array pointer to the buffer must be valid and initalized, and the length must
+/// The array pointer to the buffer must be valid and initialized, and the length must
 /// be 2.
 #[no_mangle]
 pub unsafe extern "C" fn create_mixed(

@@ -26,9 +26,7 @@ impl Emitter {
     parsed_source_cache: Arc<ParsedSourceCache>,
     emit_options: deno_ast::EmitOptions,
   ) -> Self {
-    let emit_options_hash = FastInsecureHasher::new()
-      .write_hashable(&emit_options)
-      .finish();
+    let emit_options_hash = FastInsecureHasher::hash(&emit_options);
     Self {
       emit_cache,
       parsed_source_cache,
@@ -64,7 +62,7 @@ impl Emitter {
   }
 
   /// Gets a cached emit if the source matches the hash found in the cache.
-  pub fn maybed_cached_emit(
+  pub fn maybe_cached_emit(
     &self,
     specifier: &ModuleSpecifier,
     source: &str,
@@ -101,6 +99,26 @@ impl Emitter {
       );
       Ok(transpiled_source.text.into())
     }
+  }
+
+  /// Expects a file URL, panics otherwise.
+  pub async fn load_and_emit_for_hmr(
+    &self,
+    specifier: &ModuleSpecifier,
+  ) -> Result<String, AnyError> {
+    let media_type = MediaType::from_specifier(specifier);
+    let source_code = tokio::fs::read_to_string(
+      ModuleSpecifier::to_file_path(specifier).unwrap(),
+    )
+    .await?;
+    let source_arc: Arc<str> = source_code.into();
+    let parsed_source = self
+      .parsed_source_cache
+      .get_or_parse_module(specifier, source_arc, media_type)?;
+    let mut options = self.emit_options.clone();
+    options.inline_source_map = false;
+    let transpiled_source = parsed_source.transpile(&options)?;
+    Ok(transpiled_source.text)
   }
 
   /// A hashing function that takes the source code and uses the global emit

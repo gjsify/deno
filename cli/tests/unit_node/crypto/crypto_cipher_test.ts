@@ -6,7 +6,7 @@ import { buffer, text } from "node:stream/consumers";
 import {
   assertEquals,
   assertThrows,
-} from "../../../../test_util/std/testing/asserts.ts";
+} from "../../../../test_util/std/assert/mod.ts";
 
 const rsaPrivateKey = Deno.readTextFileSync(
   new URL("../testdata/rsa_private.pem", import.meta.url),
@@ -25,6 +25,21 @@ Deno.test({
   name: "rsa public encrypt and private decrypt",
   fn() {
     const encrypted = crypto.publicEncrypt(Buffer.from(rsaPublicKey), input);
+    const decrypted = crypto.privateDecrypt(
+      Buffer.from(rsaPrivateKey),
+      Buffer.from(encrypted),
+    );
+    assertEquals(decrypted, input);
+  },
+});
+
+Deno.test({
+  name: "rsa public encrypt (options) and private decrypt",
+  fn() {
+    const encrypted = crypto.publicEncrypt(
+      { key: Buffer.from(rsaPublicKey) },
+      input,
+    );
     const decrypted = crypto.privateDecrypt(
       Buffer.from(rsaPrivateKey),
       Buffer.from(encrypted),
@@ -93,6 +108,16 @@ Deno.test({
         "66e94bd4ef8a2c3b884cfa59ca342b2e66e94bd4ef8a2c3b884cfa59ca342b2e66e94bd4ef8a2c3b884cfa59ca342b2e",
         "baf823258ca2e6994f638daa3515e986",
       ],
+      [
+        ["aes-192-ecb", 24, 0],
+        "aae06992acbf52a3e8f4a96ec9300bd7aae06992acbf52a3e8f4a96ec9300bd7aae06992acbf52a3e8f4a96ec9300bd7",
+        "2e0f33b51bb184654311ead507ea55fc",
+      ],
+      [
+        ["aes-256-ecb", 32, 0],
+        "dc95c078a2408989ad48a21492842087dc95c078a2408989ad48a21492842087dc95c078a2408989ad48a21492842087",
+        "0ac1d7e8655254c6814b46753932df88",
+      ],
     ] as const;
     for (
       const [[alg, keyLen, ivLen], expectedUpdate, expectedFinal] of table
@@ -153,6 +178,14 @@ Deno.test({
         ["aes-128-ecb", 16, 0],
         "66e94bd4ef8a2c3b884cfa59ca342b2e66e94bd4ef8a2c3b884cfa59ca342b2e66e94bd4ef8a2c3b884cfa59ca342b2e66e94bd4ef8a2c3b884cfa59ca342b2e66e94bd4ef8a2c3b884cfa59ca342b2ec29a917cbaf72fa9bc32129bb0d17663",
       ],
+      [
+        ["aes-192-ecb", 24, 0],
+        "aae06992acbf52a3e8f4a96ec9300bd7aae06992acbf52a3e8f4a96ec9300bd7aae06992acbf52a3e8f4a96ec9300bd7aae06992acbf52a3e8f4a96ec9300bd7aae06992acbf52a3e8f4a96ec9300bd7ab40eb56b6fc2aacf2e9254685cce891",
+      ],
+      [
+        ["aes-256-ecb", 32, 0],
+        "dc95c078a2408989ad48a21492842087dc95c078a2408989ad48a21492842087dc95c078a2408989ad48a21492842087dc95c078a2408989ad48a21492842087dc95c078a2408989ad48a214928420877c45b49560579dd1ffc7ec626de2a968",
+      ],
     ] as const;
     for (
       const [[alg, keyLen, ivLen], input] of table
@@ -182,5 +215,29 @@ Deno.test({
       new Uint8Array(16),
     ));
     assertEquals(await text(stream), "foo".repeat(15));
+  },
+});
+
+Deno.test({
+  name: "createCipheriv - invalid algorithm",
+  fn() {
+    assertThrows(
+      () =>
+        crypto.createCipheriv("foo", new Uint8Array(16), new Uint8Array(16)),
+      TypeError,
+      "Unknown cipher",
+    );
+  },
+});
+
+Deno.test({
+  name: "createDecipheriv - invalid algorithm",
+  fn() {
+    assertThrows(
+      () =>
+        crypto.createDecipheriv("foo", new Uint8Array(16), new Uint8Array(16)),
+      TypeError,
+      "Unknown cipher",
+    );
   },
 });

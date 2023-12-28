@@ -57,7 +57,11 @@ pub fn os_release() -> String {
       _ => String::from(""),
     }
   }
-  #[cfg(target_vendor = "apple")]
+  #[cfg(any(
+    target_vendor = "apple",
+    target_os = "freebsd",
+    target_os = "openbsd"
+  ))]
   {
     let mut s = [0u8; 256];
     let mut mib = [libc::CTL_KERN, libc::KERN_OSRELEASE];
@@ -207,10 +211,22 @@ pub fn mem_info() -> Option<MemInfo> {
       mem_info.swap_free = info.freeswap * mem_unit;
       mem_info.total = info.totalram * mem_unit;
       mem_info.free = info.freeram * mem_unit;
+      mem_info.available = mem_info.free;
       mem_info.buffers = info.bufferram * mem_unit;
     }
+
+    // Gets the available memory from /proc/meminfo in linux for compatibility
+    #[allow(clippy::disallowed_methods)]
+    if let Ok(meminfo) = std::fs::read_to_string("/proc/meminfo") {
+      let line = meminfo.lines().find(|l| l.starts_with("MemAvailable:"));
+      if let Some(line) = line {
+        let mem = line.split_whitespace().nth(1);
+        let mem = mem.and_then(|v| v.parse::<u64>().ok());
+        mem_info.available = mem.unwrap_or(0);
+      }
+    }
   }
-  #[cfg(any(target_vendor = "apple"))]
+  #[cfg(target_vendor = "apple")]
   {
     let mut mib: [i32; 2] = [0, 0];
     mib[0] = libc::CTL_HW;
@@ -385,7 +401,7 @@ pub fn os_uptime() -> u64 {
   #[cfg(target_family = "windows")]
   // SAFETY: windows API usage
   unsafe {
-    // Windows is the only one that returns `uptime` in milisecond precision,
+    // Windows is the only one that returns `uptime` in millisecond precision,
     // so we need to get the seconds out of it to be in sync with other envs.
     uptime = winapi::um::sysinfoapi::GetTickCount64() / 1000;
   }

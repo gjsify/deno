@@ -17,6 +17,7 @@ use deno_core::error::AnyError;
 use deno_core::parking_lot::Mutex;
 use deno_core::BufMutView;
 use deno_core::BufView;
+use deno_core::ResourceHandleFd;
 use deno_runtime::deno_fs::FsDirEntry;
 use deno_runtime::deno_io;
 use deno_runtime::deno_io::fs::FsError;
@@ -91,31 +92,42 @@ impl VfsBuilder {
       if file_type.is_dir() {
         self.add_dir_recursive_internal(&path)?;
       } else if file_type.is_file() {
-        let file_bytes = std::fs::read(&path)
-          .with_context(|| format!("Reading {}", path.display()))?;
-        self.add_file(&path, file_bytes)?;
+        self.add_file_at_path(&path)?;
       } else if file_type.is_symlink() {
-        let target = util::fs::canonicalize_path(&path)
-          .with_context(|| format!("Reading symlink {}", path.display()))?;
-        if let Err(StripRootError { .. }) = self.add_symlink(&path, &target) {
-          if target.is_file() {
-            // this may change behavior, so warn the user about it
+        match util::fs::canonicalize_path(&path) {
+          Ok(target) => {
+            if let Err(StripRootError { .. }) = self.add_symlink(&path, &target)
+            {
+              if target.is_file() {
+                // this may change behavior, so warn the user about it
+                log::warn!(
+                  "{} Symlink target is outside '{}'. Inlining symlink at '{}' to '{}' as file.",
+                  crate::colors::yellow("Warning"),
+                  self.root_path.display(),
+                  path.display(),
+                  target.display(),
+                );
+                // inline the symlink and make the target file
+                let file_bytes = std::fs::read(&target)
+                  .with_context(|| format!("Reading {}", path.display()))?;
+                self.add_file(&path, file_bytes)?;
+              } else {
+                log::warn!(
+                  "{} Symlink target is outside '{}'. Excluding symlink at '{}' with target '{}'.",
+                  crate::colors::yellow("Warning"),
+                  self.root_path.display(),
+                  path.display(),
+                  target.display(),
+                );
+              }
+            }
+          }
+          Err(err) => {
             log::warn!(
-              "Symlink target is outside '{}'. Inlining symlink at '{}' to '{}' as file.",
-              self.root_path.display(),
+              "{} Failed resolving symlink. Ignoring.\n    Path: {}\n    Message: {:#}",
+              crate::colors::yellow("Warning"),
               path.display(),
-              target.display(),
-            );
-            // inline the symlink and make the target file
-            let file_bytes = std::fs::read(&target)
-              .with_context(|| format!("Reading {}", path.display()))?;
-            self.add_file(&path, file_bytes)?;
-          } else {
-            log::warn!(
-              "Symlink target is outside '{}'. Excluding symlink at '{}' with target '{}'.",
-              self.root_path.display(),
-              path.display(),
-              target.display(),
+              err
             );
           }
         }
@@ -160,6 +172,12 @@ impl VfsBuilder {
     }
 
     Ok(current_dir)
+  }
+
+  pub fn add_file_at_path(&mut self, path: &Path) -> Result<(), AnyError> {
+    let file_bytes = std::fs::read(path)
+      .with_context(|| format!("Reading {}", path.display()))?;
+    self.add_file(path, file_bytes)
   }
 
   fn add_file(&mut self, path: &Path, data: Vec<u8>) -> Result<(), AnyError> {
@@ -697,12 +715,7 @@ impl deno_io::fs::File for FileBackedVfsFile {
   fn as_stdio(self: Rc<Self>) -> FsResult<std::process::Stdio> {
     Err(FsError::NotSupported)
   }
-  #[cfg(unix)]
-  fn backing_fd(self: Rc<Self>) -> Option<std::os::unix::prelude::RawFd> {
-    None
-  }
-  #[cfg(windows)]
-  fn backing_fd(self: Rc<Self>) -> Option<std::os::windows::io::RawHandle> {
+  fn backing_fd(self: Rc<Self>) -> Option<ResourceHandleFd> {
     None
   }
   fn try_clone_inner(self: Rc<Self>) -> FsResult<Rc<dyn deno_io::fs::File>> {

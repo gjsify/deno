@@ -1,9 +1,9 @@
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 
 use deno_core::error::AnyError;
-use deno_core::op;
-use deno_core::task::spawn_blocking;
-use deno_core::ZeroCopyBuf;
+use deno_core::op2;
+use deno_core::unsync::spawn_blocking;
+use deno_core::ToJsBuffer;
 use elliptic_curve::rand_core::OsRng;
 use num_traits::FromPrimitive;
 use once_cell::sync::Lazy;
@@ -42,10 +42,11 @@ pub enum GenerateKeyOptions {
   },
 }
 
-#[op]
+#[op2(async)]
+#[serde]
 pub async fn op_crypto_generate_key(
-  opts: GenerateKeyOptions,
-) -> Result<ZeroCopyBuf, AnyError> {
+  #[serde] opts: GenerateKeyOptions,
+) -> Result<ToJsBuffer, AnyError> {
   let fun = || match opts {
     GenerateKeyOptions::Rsa {
       modulus_length,
@@ -135,7 +136,7 @@ fn generate_key_hmac(
 
     length
   } else {
-    hash.digest_algorithm().block_len
+    hash.digest_algorithm().block_len()
   };
 
   let rng = ring::rand::SystemRandom::new();

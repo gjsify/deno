@@ -1,15 +1,14 @@
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
-// deno-lint-ignore-file camelcase
-const core = globalThis.Deno.core;
-const primordials = globalThis.__bootstrap.primordials;
-const internals = globalThis.__bootstrap.internals;
 
-const { BadResourcePrototype } = core;
+import { core, internals, primordials } from "ext:core/mod.js";
+
+const { BadResourcePrototype, InterruptedPrototype } = core;
 import { InnerBody } from "ext:deno_fetch/22_body.js";
 import { Event } from "ext:deno_web/02_event.js";
 import {
   fromInnerResponse,
   newInnerResponse,
+  ResponsePrototype,
   toInnerResponse,
 } from "ext:deno_fetch/23_response.js";
 import { fromInnerRequest, toInnerRequest } from "ext:deno_fetch/23_request.js";
@@ -30,29 +29,27 @@ import {
 import {
   Deferred,
   getReadableStreamResourceBacking,
-  readableStreamClose,
   readableStreamForRid,
   ReadableStreamPrototype,
+  resourceForReadableStream,
 } from "ext:deno_web/06_streams.js";
-import { listen, TcpConn } from "ext:deno_net/01_net.js";
+import { listen, listenOptionApiName, TcpConn } from "ext:deno_net/01_net.js";
 import { listenTls } from "ext:deno_net/02_tls.js";
+import { SymbolAsyncDispose } from "ext:deno_web/00_infra.js";
 const {
   ArrayPrototypePush,
-  Error,
+  ObjectHasOwn,
   ObjectPrototypeIsPrototypeOf,
   PromisePrototypeCatch,
-  SafeSet,
-  SafeSetIterator,
-  SetPrototypeAdd,
-  SetPrototypeDelete,
+  PromisePrototypeThen,
   Symbol,
-  SymbolFor,
   TypeError,
   Uint8Array,
   Uint8ArrayPrototype,
 } = primordials;
 
 const {
+  op_http_close_after_finish,
   op_http_get_request_headers,
   op_http_get_request_method_and_url,
   op_http_read_request_body,
@@ -61,7 +58,6 @@ const {
   op_http_set_promise_complete,
   op_http_set_response_body_bytes,
   op_http_set_response_body_resource,
-  op_http_set_response_body_stream,
   op_http_set_response_body_text,
   op_http_set_response_header,
   op_http_set_response_headers,
@@ -70,6 +66,8 @@ const {
   op_http_upgrade_websocket_next,
   op_http_try_wait,
   op_http_wait,
+  op_http_cancel,
+  op_http_close,
 } = core.ensureFastOps();
 const _upgraded = Symbol("_upgraded");
 
@@ -119,29 +117,26 @@ function upgradeHttpRaw(req, conn) {
 
 function addTrailers(resp, headerList) {
   const inner = toInnerResponse(resp);
-  op_http_set_response_trailers(inner.slabId, headerList);
+  op_http_set_response_trailers(inner.external, headerList);
 }
 
 class InnerRequest {
-  #slabId;
+  #external;
   #context;
   #methodAndUri;
   #streamRid;
   #body;
   #upgraded;
+  #urlValue;
 
-  constructor(slabId, context) {
-    this.#slabId = slabId;
+  constructor(external, context) {
+    this.#external = external;
     this.#context = context;
     this.#upgraded = false;
   }
 
   close() {
-    if (this.#streamRid !== undefined) {
-      core.close(this.#streamRid);
-      this.#streamRid = undefined;
-    }
-    this.#slabId = undefined;
+    this.#external = null;
   }
 
   get [_upgraded]() {
@@ -152,7 +147,7 @@ class InnerRequest {
     if (this.#upgraded) {
       throw new Deno.errors.Http("already upgraded");
     }
-    if (this.#slabId === undefined) {
+    if (this.#external === null) {
       throw new Deno.errors.Http("already closed");
     }
 
@@ -164,7 +159,7 @@ class InnerRequest {
 
     // upgradeHttpRaw is sync
     if (upgradeType == "upgradeHttpRaw") {
-      const slabId = this.#slabId;
+      const external = this.#external;
       const underlyingConn = originalArgs[0];
 
       this.url();
@@ -173,7 +168,7 @@ class InnerRequest {
 
       this.#upgraded = () => {};
 
-      const upgradeRid = op_http_upgrade_raw(slabId);
+      const upgradeRid = op_http_upgrade_raw(external);
 
       const conn = new TcpConn(
         upgradeRid,
@@ -189,7 +184,7 @@ class InnerRequest {
       const response = originalArgs[0];
       const ws = originalArgs[1];
 
-      const slabId = this.#slabId;
+      const external = this.#external;
 
       this.url();
       this.headerList;
@@ -199,15 +194,16 @@ class InnerRequest {
       this.#upgraded = () => {
         goAhead.resolve();
       };
+      const wsPromise = op_http_upgrade_websocket_next(
+        external,
+        response.headerList,
+      );
 
       // Start the upgrade in the background.
       (async () => {
         try {
           // Returns the upgraded websocket connection
-          const wsRid = await op_http_upgrade_websocket_next(
-            slabId,
-            response.headerList,
-          );
+          const wsRid = await wsPromise;
 
           // We have to wait for the go-ahead signal
           await goAhead;
@@ -236,48 +232,60 @@ class InnerRequest {
   }
 
   url() {
+    if (this.#urlValue !== undefined) {
+      return this.#urlValue;
+    }
+
     if (this.#methodAndUri === undefined) {
-      if (this.#slabId === undefined) {
+      if (this.#external === null) {
         throw new TypeError("request closed");
       }
       // TODO(mmastrac): This is quite slow as we're serializing a large number of values. We may want to consider
       // splitting this up into multiple ops.
-      this.#methodAndUri = op_http_get_request_method_and_url(this.#slabId);
+      this.#methodAndUri = op_http_get_request_method_and_url(this.#external);
     }
 
     const path = this.#methodAndUri[2];
 
     // * is valid for OPTIONS
     if (path === "*") {
-      return "*";
+      return this.#urlValue = "*";
     }
 
     // If the path is empty, return the authority (valid for CONNECT)
     if (path == "") {
-      return this.#methodAndUri[1];
+      return this.#urlValue = this.#methodAndUri[1];
     }
 
     // CONNECT requires an authority
     if (this.#methodAndUri[0] == "CONNECT") {
-      return this.#methodAndUri[1];
+      return this.#urlValue = this.#methodAndUri[1];
     }
 
     const hostname = this.#methodAndUri[1];
     if (hostname) {
       // Construct a URL from the scheme, the hostname, and the path
-      return this.#context.scheme + hostname + path;
+      return this.#urlValue = this.#context.scheme + hostname + path;
     }
 
     // Construct a URL from the scheme, the fallback hostname, and the path
-    return this.#context.scheme + this.#context.fallbackHost + path;
+    return this.#urlValue = this.#context.scheme + this.#context.fallbackHost +
+      path;
   }
 
   get remoteAddr() {
+    const transport = this.#context.listener?.addr.transport;
+    if (transport === "unix" || transport === "unixpacket") {
+      return {
+        transport,
+        path: this.#context.listener.addr.path,
+      };
+    }
     if (this.#methodAndUri === undefined) {
-      if (this.#slabId === undefined) {
+      if (this.#external === null) {
         throw new TypeError("request closed");
       }
-      this.#methodAndUri = op_http_get_request_method_and_url(this.#slabId);
+      this.#methodAndUri = op_http_get_request_method_and_url(this.#external);
     }
     return {
       transport: "tcp",
@@ -288,16 +296,16 @@ class InnerRequest {
 
   get method() {
     if (this.#methodAndUri === undefined) {
-      if (this.#slabId === undefined) {
+      if (this.#external === null) {
         throw new TypeError("request closed");
       }
-      this.#methodAndUri = op_http_get_request_method_and_url(this.#slabId);
+      this.#methodAndUri = op_http_get_request_method_and_url(this.#external);
     }
     return this.#methodAndUri[0];
   }
 
   get body() {
-    if (this.#slabId === undefined) {
+    if (this.#external === null) {
       throw new TypeError("request closed");
     }
     if (this.#body !== undefined) {
@@ -309,48 +317,53 @@ class InnerRequest {
       this.#body = null;
       return null;
     }
-    this.#streamRid = op_http_read_request_body(this.#slabId);
+    this.#streamRid = op_http_read_request_body(this.#external);
     this.#body = new InnerBody(readableStreamForRid(this.#streamRid, false));
     return this.#body;
   }
 
   get headerList() {
-    if (this.#slabId === undefined) {
+    if (this.#external === null) {
       throw new TypeError("request closed");
     }
     const headers = [];
-    const reqHeaders = op_http_get_request_headers(this.#slabId);
+    const reqHeaders = op_http_get_request_headers(this.#external);
     for (let i = 0; i < reqHeaders.length; i += 2) {
       ArrayPrototypePush(headers, [reqHeaders[i], reqHeaders[i + 1]]);
     }
     return headers;
   }
 
-  get slabId() {
-    return this.#slabId;
+  get external() {
+    return this.#external;
   }
 }
 
 class CallbackContext {
   abortController;
-  responseBodies;
   scheme;
   fallbackHost;
   serverRid;
   closed;
+  /** @type {Promise<void> | undefined} */
+  closing;
+  listener;
 
-  constructor(signal, args) {
+  constructor(signal, args, listener) {
+    // The abort signal triggers a non-graceful shutdown
     signal?.addEventListener(
       "abort",
-      () => this.close(),
+      () => {
+        op_http_cancel(this.serverRid, false);
+      },
       { once: true },
     );
     this.abortController = new AbortController();
-    this.responseBodies = new SafeSet();
     this.serverRid = args[0];
     this.scheme = args[1];
     this.fallbackHost = args[2];
     this.closed = false;
+    this.listener = listener;
   }
 
   close() {
@@ -363,135 +376,65 @@ class CallbackContext {
   }
 }
 
-function fastSyncResponseOrStream(req, respBody) {
+class ServeHandlerInfo {
+  #inner = null;
+  constructor(inner) {
+    this.#inner = inner;
+  }
+  get remoteAddr() {
+    return this.#inner.remoteAddr;
+  }
+}
+
+function fastSyncResponseOrStream(req, respBody, status, innerRequest) {
   if (respBody === null || respBody === undefined) {
     // Don't set the body
-    return null;
+    innerRequest?.close();
+    op_http_set_promise_complete(req, status);
+    return;
   }
 
   const stream = respBody.streamOrStatic;
   const body = stream.body;
 
   if (ObjectPrototypeIsPrototypeOf(Uint8ArrayPrototype, body)) {
-    op_http_set_response_body_bytes(req, body);
-    return null;
+    innerRequest?.close();
+    op_http_set_response_body_bytes(req, body, status);
+    return;
   }
 
   if (typeof body === "string") {
-    op_http_set_response_body_text(req, body);
-    return null;
+    innerRequest?.close();
+    op_http_set_response_body_text(req, body, status);
+    return;
   }
 
   // At this point in the response it needs to be a stream
   if (!ObjectPrototypeIsPrototypeOf(ReadableStreamPrototype, stream)) {
+    innerRequest?.close();
     throw TypeError("invalid response");
   }
   const resourceBacking = getReadableStreamResourceBacking(stream);
+  let rid, autoClose;
   if (resourceBacking) {
+    rid = resourceBacking.rid;
+    autoClose = resourceBacking.autoClose;
+  } else {
+    rid = resourceForReadableStream(stream);
+    autoClose = true;
+  }
+  PromisePrototypeThen(
     op_http_set_response_body_resource(
       req,
-      resourceBacking.rid,
-      resourceBacking.autoClose,
-    );
-    return null;
-  }
-
-  return stream;
-}
-
-async function asyncResponse(responseBodies, req, status, stream) {
-  const reader = stream.getReader();
-  let responseRid;
-  let closed = false;
-  let timeout;
-
-  try {
-    // IMPORTANT: We get a performance boost from this optimization, but V8 is very
-    // sensitive to the order and structure. Benchmark any changes to this code.
-
-    // Optimize for streams that are done in zero or one packets. We will not
-    // have to allocate a resource in this case.
-    const { value: value1, done: done1 } = await reader.read();
-    if (done1) {
-      closed = true;
-      // Exit 1: no response body at all, extreme fast path
-      // Reader will be closed by finally block
-      return;
-    }
-
-    // The second value cannot block indefinitely, as someone may be waiting on a response
-    // of the first packet that may influence this packet. We set this timeout arbitrarily to 250ms
-    // and we race it.
-    let timeoutPromise;
-    timeout = setTimeout(() => {
-      responseRid = op_http_set_response_body_stream(req);
-      SetPrototypeAdd(responseBodies, responseRid);
-      op_http_set_promise_complete(req, status);
-      timeoutPromise = core.writeAll(responseRid, value1);
-    }, 250);
-    const { value: value2, done: done2 } = await reader.read();
-
-    if (timeoutPromise) {
-      await timeoutPromise;
-      if (done2) {
-        closed = true;
-        // Exit 2(a): read 2 is EOS, and timeout resolved.
-        // Reader will be closed by finally block
-        // Response stream will be closed by finally block.
-        return;
-      }
-
-      // Timeout resolved, value1 written but read2 is not EOS. Carry value2 forward.
-    } else {
-      clearTimeout(timeout);
-      timeout = undefined;
-
-      if (done2) {
-        // Exit 2(b): read 2 is EOS, and timeout did not resolve as we read fast enough.
-        // Reader will be closed by finally block
-        // No response stream
-        closed = true;
-        op_http_set_response_body_bytes(req, value1);
-        return;
-      }
-
-      responseRid = op_http_set_response_body_stream(req);
-      SetPrototypeAdd(responseBodies, responseRid);
-      op_http_set_promise_complete(req, status);
-      // Write our first packet
-      await core.writeAll(responseRid, value1);
-    }
-
-    await core.writeAll(responseRid, value2);
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) {
-        closed = true;
-        break;
-      }
-      await core.writeAll(responseRid, value);
-    }
-  } catch (error) {
-    closed = true;
-    try {
-      await reader.cancel(error);
-    } catch {
-      // Pass
-    }
-  } finally {
-    if (!closed) {
-      readableStreamClose(reader);
-    }
-    if (timeout !== undefined) {
-      clearTimeout(timeout);
-    }
-    if (responseRid) {
-      core.tryClose(responseRid);
-      SetPrototypeDelete(responseBodies, responseRid);
-    } else {
-      op_http_set_promise_complete(req, status);
-    }
-  }
+      rid,
+      autoClose,
+      status,
+    ),
+    () => {
+      innerRequest?.close();
+      op_http_close_after_finish(req);
+    },
+  );
 }
 
 /**
@@ -502,10 +445,7 @@ async function asyncResponse(responseBodies, req, status, stream) {
  * This function returns a promise that will only reject in the case of abnormal exit.
  */
 function mapToCallback(context, callback, onError) {
-  const responseBodies = context.responseBodies;
   const signal = context.abortController.signal;
-  const hasCallback = callback.length > 0;
-  const hasOneCallback = callback.length === 1;
 
   return async function (req) {
     // Get the response from the user-provided callback. If that fails, use onError. If that fails, return a fallback
@@ -513,30 +453,31 @@ function mapToCallback(context, callback, onError) {
     let innerRequest;
     let response;
     try {
-      if (hasCallback) {
-        innerRequest = new InnerRequest(req, context);
-        const request = fromInnerRequest(innerRequest, signal, "immutable");
-        if (hasOneCallback) {
-          response = await callback(request);
-        } else {
-          response = await callback(request, {
-            get remoteAddr() {
-              return innerRequest.remoteAddr;
-            },
-          });
-        }
-      } else {
-        response = await callback();
+      innerRequest = new InnerRequest(req, context);
+      response = await callback(
+        fromInnerRequest(innerRequest, signal, "immutable"),
+        new ServeHandlerInfo(innerRequest),
+      );
+
+      // Throwing Error if the handler return value is not a Response class
+      if (!ObjectPrototypeIsPrototypeOf(ResponsePrototype, response)) {
+        throw TypeError(
+          "Return value from serve handler must be a response or a promise resolving to a response",
+        );
       }
     } catch (error) {
       try {
         response = await onError(error);
+        if (!ObjectPrototypeIsPrototypeOf(ResponsePrototype, response)) {
+          throw TypeError(
+            "Return value from onError handler must be a response or a promise resolving to a response",
+          );
+        }
       } catch (error) {
         console.error("Exception in onError while handling exception", error);
         response = internalServerError();
       }
     }
-
     const inner = toInnerResponse(response);
     if (innerRequest?.[_upgraded]) {
       // We're done here as the connection has been upgraded during the callback and no longer requires servicing.
@@ -551,8 +492,8 @@ function mapToCallback(context, callback, onError) {
     // Did everything shut down while we were waiting?
     if (context.closed) {
       // We're shutting down, so this status shouldn't make it back to the client but "Service Unavailable" seems appropriate
-      op_http_set_promise_complete(req, 503);
       innerRequest?.close();
+      op_http_set_promise_complete(req, 503);
       return;
     }
 
@@ -566,16 +507,7 @@ function mapToCallback(context, callback, onError) {
       }
     }
 
-    // Attempt to respond quickly to this request, otherwise extract the stream
-    const stream = fastSyncResponseOrStream(req, inner.body);
-    if (stream !== null) {
-      // Handle the stream asynchronously
-      await asyncResponse(responseBodies, req, status, stream);
-    } else {
-      op_http_set_promise_complete(req, status);
-    }
-
-    innerRequest?.close();
+    fastSyncResponseOrStream(req, inner.body, status, innerRequest);
   };
 }
 
@@ -606,16 +538,45 @@ function serve(arg1, arg2) {
   }
 
   const wantsHttps = options.cert || options.key;
+  const wantsUnix = ObjectHasOwn(options, "path");
   const signal = options.signal;
   const onError = options.onError ?? function (error) {
     console.error(error);
     return internalServerError();
   };
+
+  if (wantsUnix) {
+    const listener = listen({
+      transport: "unix",
+      path: options.path,
+      [listenOptionApiName]: "Deno.serve",
+    });
+    const path = listener.addr.path;
+    return serveHttpOnListener(listener, signal, handler, onError, () => {
+      if (options.onListen) {
+        options.onListen({ path });
+      } else {
+        console.log(`Listening on ${path}`);
+      }
+    });
+  }
+
   const listenOpts = {
     hostname: options.hostname ?? "0.0.0.0",
-    port: options.port ?? (wantsHttps ? 9000 : 8000),
+    port: options.port ?? 8000,
     reusePort: options.reusePort ?? false,
   };
+
+  if (options.certFile || options.keyFile) {
+    throw new TypeError(
+      "Unsupported 'certFile' / 'keyFile' options provided: use 'cert' / 'key' instead.",
+    );
+  }
+  if (options.alpnProtocols) {
+    throw new TypeError(
+      "Unsupported 'alpnProtocols' option provided. 'h2' and 'http/1.1' are automatically supported.",
+    );
+  }
 
   let listener;
   if (wantsHttps) {
@@ -657,7 +618,11 @@ function serve(arg1, arg2) {
  * Serve HTTP/1.1 and/or HTTP/2 on an arbitrary listener.
  */
 function serveHttpOnListener(listener, signal, handler, onError, onListen) {
-  const context = new CallbackContext(signal, op_http_serve(listener.rid));
+  const context = new CallbackContext(
+    signal,
+    op_http_serve(listener.rid),
+    listener,
+  );
   const callback = mapToCallback(context, handler, onError);
 
   onListen(context.scheme);
@@ -669,7 +634,11 @@ function serveHttpOnListener(listener, signal, handler, onError, onListen) {
  * Serve HTTP/1.1 and/or HTTP/2 on an arbitrary connection.
  */
 function serveHttpOnConnection(connection, signal, handler, onError, onListen) {
-  const context = new CallbackContext(signal, op_http_serve_on(connection.rid));
+  const context = new CallbackContext(
+    signal,
+    op_http_serve_on(connection.rid),
+    null,
+  );
   const callback = mapToCallback(context, handler, onError);
 
   onListen(context.scheme);
@@ -680,7 +649,6 @@ function serveHttpOnConnection(connection, signal, handler, onError, onListen) {
 function serveHttpOn(context, callback) {
   let ref = true;
   let currentPromise = null;
-  const promiseIdSymbol = SymbolFor("Deno.core.internalPromiseId");
 
   const promiseErrorHandler = (error) => {
     // Abnormal exit
@@ -699,12 +667,12 @@ function serveHttpOn(context, callback) {
       try {
         // Attempt to pull as many requests out of the queue as possible before awaiting. This API is
         // a synchronous, non-blocking API that returns u32::MAX if anything goes wrong.
-        while ((req = op_http_try_wait(rid)) !== 0xffffffff) {
+        while ((req = op_http_try_wait(rid)) !== null) {
           PromisePrototypeCatch(callback(req), promiseErrorHandler);
         }
         currentPromise = op_http_wait(rid);
         if (!ref) {
-          core.unrefOp(currentPromise[promiseIdSymbol]);
+          core.unrefOpPromise(currentPromise);
         }
         req = await currentPromise;
         currentPromise = null;
@@ -712,37 +680,51 @@ function serveHttpOn(context, callback) {
         if (ObjectPrototypeIsPrototypeOf(BadResourcePrototype, error)) {
           break;
         }
+        if (ObjectPrototypeIsPrototypeOf(InterruptedPrototype, error)) {
+          break;
+        }
         throw new Deno.errors.Http(error);
       }
-      if (req === 0xffffffff) {
+      if (req === null) {
         break;
       }
       PromisePrototypeCatch(callback(req), promiseErrorHandler);
     }
 
-    for (const streamRid of new SafeSetIterator(context.responseBodies)) {
-      core.tryClose(streamRid);
+    if (!context.closing && !context.closed) {
+      context.closing = op_http_close(rid, false);
+      context.close();
     }
+
+    await context.closing;
+    context.close();
+    context.closed = true;
   })();
 
   return {
     finished,
-    then() {
-      throw new Error(
-        "Deno.serve no longer returns a promise. await server.finished instead of server.",
-      );
+    async shutdown() {
+      if (!context.closing && !context.closed) {
+        // Shut this HTTP server down gracefully
+        context.closing = op_http_close(context.serverRid, true);
+      }
+      await context.closing;
+      context.closed = true;
     },
     ref() {
       ref = true;
       if (currentPromise) {
-        core.refOp(currentPromise[promiseIdSymbol]);
+        core.refOpPromise(currentPromise);
       }
     },
     unref() {
       ref = false;
       if (currentPromise) {
-        core.unrefOp(currentPromise[promiseIdSymbol]);
+        core.unrefOpPromise(currentPromise);
       }
+    },
+    [SymbolAsyncDispose]() {
+      return this.shutdown();
     },
   };
 }

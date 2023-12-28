@@ -25,10 +25,16 @@
 // - https://github.com/nodejs/node/blob/master/src/util.cc
 // - https://github.com/nodejs/node/blob/master/src/util.h
 
-import { notImplemented } from "ext:deno_node/_utils.ts";
+// TODO(petamoriken): enable prefer-primordials for node polyfills
+// deno-lint-ignore-file prefer-primordials
 
-export function guessHandleType(_fd: number): string {
-  notImplemented("util.guessHandleType");
+import { core } from "ext:core/mod.js";
+const ops = core.ops;
+
+const handleTypes = ["TCP", "TTY", "UDP", "FILE", "PIPE", "UNKNOWN"];
+export function guessHandleType(fd: number): string {
+  const type = ops.op_node_guess_handle_type(fd);
+  return handleTypes[type];
 }
 
 export const ALL_PROPERTIES = 0;
@@ -82,7 +88,6 @@ export function isArrayIndex(value: unknown): value is number | string {
 }
 
 export function getOwnNonIndexProperties(
-  // deno-lint-ignore ban-types
   obj: object,
   filter: number,
 ): (string | symbol)[] {

@@ -258,6 +258,46 @@ Deno.test(
 
 Deno.test(
   { permissions: { run: true, read: true } },
+  // deno lint bug, see https://github.com/denoland/deno_lint/issues/1206
+  // deno-lint-ignore require-await
+  async function childProcessExplicitResourceManagement() {
+    let dead = undefined;
+    {
+      const command = new Deno.Command(Deno.execPath(), {
+        args: ["eval", "setTimeout(() => {}, 10000)"],
+        stdout: "null",
+        stderr: "null",
+      });
+      await using child = command.spawn();
+      child.status.then(({ signal }) => {
+        dead = signal;
+      });
+    }
+
+    if (Deno.build.os == "windows") {
+      assertEquals(dead, null);
+    } else {
+      assertEquals(dead, "SIGTERM");
+    }
+  },
+);
+
+Deno.test(
+  { permissions: { run: true, read: true } },
+  async function childProcessExplicitResourceManagementManualClose() {
+    const command = new Deno.Command(Deno.execPath(), {
+      args: ["eval", "setTimeout(() => {}, 10000)"],
+      stdout: "null",
+      stderr: "null",
+    });
+    await using child = command.spawn();
+    child.kill("SIGTERM");
+    await child.status;
+  },
+);
+
+Deno.test(
+  { permissions: { run: true, read: true } },
   async function commandKillFailed() {
     const command = new Deno.Command(Deno.execPath(), {
       args: ["eval", "setTimeout(() => {}, 5000)"],
@@ -423,6 +463,31 @@ Deno.test({ permissions: { run: true } }, function commandSyncNotFound() {
     Deno.errors.NotFound,
   );
 });
+
+Deno.test({ permissions: { run: true, read: true } }, function cwdNotFound() {
+  assertThrows(
+    () =>
+      new Deno.Command(Deno.execPath(), {
+        cwd: Deno.cwd() + "/non-existent-directory",
+      }).output(),
+    Deno.errors.NotFound,
+    "No such cwd",
+  );
+});
+
+Deno.test(
+  { permissions: { run: true, read: true } },
+  function cwdNotDirectory() {
+    assertThrows(
+      () =>
+        new Deno.Command(Deno.execPath(), {
+          cwd: Deno.execPath(),
+        }).output(),
+      Deno.errors.NotFound,
+      "cwd is not a directory",
+    );
+  },
+);
 
 Deno.test(
   { permissions: { run: true, read: true } },
@@ -797,7 +862,7 @@ setInterval(() => {
     Deno.writeFileSync(`${cwd}/${programFile}`, enc.encode(program));
     Deno.writeFileSync(`${cwd}/${childProgramFile}`, enc.encode(childProgram));
     // In this subprocess we are spawning another subprocess which has
-    // an infite interval set. Following call would never resolve unless
+    // an infinite interval set. Following call would never resolve unless
     // child process gets unrefed.
     const { success, stdout, stderr } = await new Deno.Command(
       Deno.execPath(),
@@ -882,6 +947,22 @@ Deno.test(
       () => child.kill(),
       TypeError,
       "Child process has already terminated.",
+    );
+  },
+);
+
+Deno.test(
+  "process that fails to spawn, prints its name in error",
+  async () => {
+    assertThrows(
+      () => new Deno.Command("doesntexist").outputSync(),
+      Error,
+      "Failed to spawn 'doesntexist'",
+    );
+    await assertRejects(
+      async () => await new Deno.Command("doesntexist").output(),
+      Error,
+      "Failed to spawn 'doesntexist'",
     );
   },
 );

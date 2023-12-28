@@ -80,7 +80,7 @@ itest!(only {
 });
 
 itest!(multifile_summary {
-  args: "bench bench/group_baseline.ts bench/pass.ts bench/group_baseline.ts",
+  args: "bench bench/group_baseline.ts bench/pass.ts bench/multiple_group.ts",
   exit_code: 0,
   output: "bench/multifile_summary.out",
 });
@@ -179,6 +179,17 @@ itest!(check_local_by_default2 {
   output: "bench/check_local_by_default2.out",
   http_server: true,
   exit_code: 1,
+});
+
+itest!(bench_explicit_start_end {
+  args: "bench --quiet -A bench/explicit_start_and_end.ts",
+  output: "bench/explicit_start_and_end.out",
+  exit_code: 1,
+});
+
+itest_flaky!(bench_explicit_start_end_low_precision {
+  args: "bench --quiet -A bench/explicit_start_and_end_low_precision.ts",
+  output: "bench/explicit_start_and_end_low_precision.out",
 });
 
 itest!(bench_with_config {

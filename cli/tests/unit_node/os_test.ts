@@ -5,8 +5,9 @@ import os from "node:os";
 import {
   assert,
   assertEquals,
+  assertNotEquals,
   assertThrows,
-} from "../../../test_util/std/testing/asserts.ts";
+} from "../../../test_util/std/assert/mod.ts";
 
 Deno.test({
   name: "build architecture is a string",
@@ -240,40 +241,74 @@ Deno.test({
     assertEquals(os.cpus().length, navigator.hardwareConcurrency);
 
     for (const cpu of os.cpus()) {
-      assertEquals(cpu.model, "");
-      assertEquals(cpu.speed, 0);
-      assertEquals(cpu.times.user, 0);
-      assertEquals(cpu.times.nice, 0);
-      assertEquals(cpu.times.sys, 0);
-      assertEquals(cpu.times.idle, 0);
-      assertEquals(cpu.times.irq, 0);
+      assert(cpu.model.length > 0);
+      assert(cpu.speed >= 0);
+      assert(cpu.times.user > 0);
+      assert(cpu.times.sys > 0);
+      assert(cpu.times.idle > 0);
     }
   },
 });
 
 Deno.test({
-  name: "APIs not yet implemented",
+  name: "os.setPriority() & os.getPriority()",
+  // disabled because os.getPriority() doesn't work without sudo
+  ignore: true,
   fn() {
-    assertThrows(
-      () => {
-        os.getPriority();
-      },
-      Error,
-      "Not implemented",
+    const child = new Deno.Command(Deno.execPath(), {
+      args: ["eval", "while (true) { console.log('foo') }"],
+    }).spawn();
+    const originalPriority = os.getPriority(child.pid);
+    assertNotEquals(originalPriority, os.constants.priority.PRIORITY_HIGH);
+    os.setPriority(child.pid, os.constants.priority.PRIORITY_HIGH);
+    assertEquals(
+      os.getPriority(child.pid),
+      os.constants.priority.PRIORITY_HIGH,
     );
+    os.setPriority(child.pid, originalPriority);
+    assertEquals(os.getPriority(child.pid), originalPriority);
+    child.kill();
+  },
+});
+
+Deno.test({
+  name:
+    "os.setPriority() throw os permission denied error & os.getPriority() doesn't",
+  async fn() {
+    const child = new Deno.Command(Deno.execPath(), {
+      args: ["eval", "while (true) { console.log('foo') }"],
+    }).spawn();
     assertThrows(
-      () => {
-        os.setPriority(0);
-      },
-      Error,
-      "Not implemented",
+      () => os.setPriority(child.pid, os.constants.priority.PRIORITY_HIGH),
+      Deno.errors.PermissionDenied,
     );
-    assertThrows(
-      () => {
-        os.userInfo();
-      },
-      Error,
-      "Not implemented",
-    );
+    os.getPriority(child.pid);
+    child.kill();
+    await child.status;
+  },
+});
+
+// Gets the diff in log_10 scale
+function diffLog10(a: number, b: number): number {
+  return Math.abs(Math.log10(a) - Math.log10(b));
+}
+
+Deno.test({
+  name:
+    "os.freemem() is equivalent of Deno.systemMemoryInfo().free except on linux",
+  ignore: Deno.build.os === "linux",
+  fn() {
+    const diff = diffLog10(os.freemem(), Deno.systemMemoryInfo().free);
+    assert(diff < 1);
+  },
+});
+
+Deno.test({
+  name:
+    "os.freemem() is equivalent of Deno.systemMemoryInfo().available on linux",
+  ignore: Deno.build.os !== "linux",
+  fn() {
+    const diff = diffLog10(os.freemem(), Deno.systemMemoryInfo().available);
+    assert(diff < 1);
   },
 });

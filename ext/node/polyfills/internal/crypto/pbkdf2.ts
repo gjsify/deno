@@ -1,9 +1,14 @@
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
-import { Buffer } from "ext:deno_node/buffer.ts";
+
+// TODO(petamoriken): enable prefer-primordials for node polyfills
+// deno-lint-ignore-file prefer-primordials
+
+import { Buffer } from "node:buffer";
 import { HASH_DATA } from "ext:deno_node/internal/crypto/types.ts";
 
 const { core } = globalThis.__bootstrap;
 const { ops } = core;
+const { op_node_pbkdf2_async } = core.ensureFastOps();
 
 export const MAX_ALLOC = Math.pow(2, 30) - 1;
 
@@ -73,8 +78,7 @@ export function pbkdf2(
     throw new TypeError("Bad key length");
   }
 
-  core.opAsync(
-    "op_node_pbkdf2_async",
+  op_node_pbkdf2_async(
     password,
     salt,
     iterations,

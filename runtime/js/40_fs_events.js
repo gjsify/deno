@@ -1,14 +1,18 @@
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 
-const core = globalThis.Deno.core;
+import { core, primordials } from "ext:core/mod.js";
 const { BadResourcePrototype, InterruptedPrototype, ops } = core;
-const primordials = globalThis.__bootstrap.primordials;
 const {
   ArrayIsArray,
   ObjectPrototypeIsPrototypeOf,
   PromiseResolve,
   SymbolAsyncIterator,
 } = primordials;
+import { SymbolDispose } from "ext:deno_web/00_infra.js";
+const {
+  op_fs_events_poll,
+} = core.ensureFastOps();
+
 class FsWatcher {
   #rid = 0;
 
@@ -23,7 +27,7 @@ class FsWatcher {
 
   async next() {
     try {
-      const value = await core.opAsync("op_fs_events_poll", this.rid);
+      const value = await op_fs_events_poll(this.rid);
       return value ? { value, done: false } : { value: undefined, done: true };
     } catch (error) {
       if (ObjectPrototypeIsPrototypeOf(BadResourcePrototype, error)) {
@@ -50,6 +54,10 @@ class FsWatcher {
 
   [SymbolAsyncIterator]() {
     return this;
+  }
+
+  [SymbolDispose]() {
+    core.tryClose(this.#rid);
   }
 }
 

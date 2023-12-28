@@ -101,6 +101,7 @@ export async function runSingleTest(
       "run",
       "-A",
       "--unstable",
+      "--v8-flags=--expose-gc",
     ];
 
     if (inspectBrk) {
@@ -154,7 +155,6 @@ export async function runSingleTest(
         harnessStatus = JSON.parse(line.slice(5));
       } else {
         stderr += line + "\n";
-        console.error(line);
       }
     }
 
@@ -186,7 +186,10 @@ async function generateBundle(location: URL): Promise<string> {
   if (title) {
     const url = new URL(`#${inlineScriptCount}`, location);
     inlineScriptCount++;
-    scriptContents.push([url.href, `globalThis.META_TITLE="${title}"`]);
+    scriptContents.push([
+      url.href,
+      `globalThis.META_TITLE=${JSON.stringify(title)}`,
+    ]);
   }
   for (const script of scripts) {
     const src = script.getAttribute("src");

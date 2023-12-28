@@ -2,21 +2,29 @@
 
 /// <reference path="../../core/internal.d.ts" />
 
-const core = globalThis.Deno.core;
+import { core, primordials } from "ext:core/mod.js";
 const ops = core.ops;
 import * as webidl from "ext:deno_webidl/00_webidl.js";
+import { createFilteredInspectProxy } from "ext:deno_console/01_console.js";
 import {
   defineEventHandler,
   EventTarget,
+  setIsTrusted,
   setTarget,
 } from "ext:deno_web/02_event.js";
+import { defer } from "ext:deno_web/02_timers.js";
 import DOMException from "ext:deno_web/01_dom_exception.js";
-const primordials = globalThis.__bootstrap.primordials;
+const {
+  op_broadcast_recv,
+  op_broadcast_send,
+} = core.ensureFastOps();
 const {
   ArrayPrototypeIndexOf,
-  ArrayPrototypeSplice,
   ArrayPrototypePush,
+  ArrayPrototypeSplice,
+  ObjectPrototypeIsPrototypeOf,
   Symbol,
+  SymbolFor,
   Uint8Array,
 } = primordials;
 
@@ -28,7 +36,7 @@ let rid = null;
 
 async function recv() {
   while (channels.length > 0) {
-    const message = await core.opAsync("op_broadcast_recv", rid);
+    const message = await op_broadcast_recv(rid);
 
     if (message === null) {
       break;
@@ -56,6 +64,7 @@ function dispatch(source, name, data) {
         data: core.deserialize(data), // TODO(bnoordhuis) Cache immutables.
         origin: "http://127.0.0.1",
       });
+      setIsTrusted(event, true);
       setTarget(event, channel);
       channel.dispatchEvent(event);
     };
@@ -63,14 +72,6 @@ function dispatch(source, name, data) {
     defer(go);
   }
 }
-
-// Defer to avoid starving the event loop. Not using queueMicrotask()
-// for that reason: it lets promises make forward progress but can
-// still starve other parts of the event loop.
-function defer(go) {
-  setTimeout(go, 1);
-}
-
 class BroadcastChannel extends EventTarget {
   [_name];
   [_closed] = false;
@@ -121,7 +122,7 @@ class BroadcastChannel extends EventTarget {
     // Send to listeners in other VMs.
     defer(() => {
       if (!this[_closed]) {
-        core.opAsync("op_broadcast_send", rid, this[_name], data);
+        op_broadcast_send(rid, this[_name], data);
       }
     });
   }
@@ -137,6 +138,21 @@ class BroadcastChannel extends EventTarget {
     if (channels.length === 0) {
       ops.op_broadcast_unsubscribe(rid);
     }
+  }
+
+  [SymbolFor("Deno.privateCustomInspect")](inspect, inspectOptions) {
+    return inspect(
+      createFilteredInspectProxy({
+        object: this,
+        evaluate: ObjectPrototypeIsPrototypeOf(BroadcastChannelPrototype, this),
+        keys: [
+          "name",
+          "onmessage",
+          "onmessageerror",
+        ],
+      }),
+      inspectOptions,
+    );
   }
 }
 

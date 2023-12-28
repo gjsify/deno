@@ -2,9 +2,7 @@
 
 /// <reference path="../../core/internal.d.ts" />
 
-const core = globalThis.Deno.core;
-const internals = globalThis.__bootstrap.internals;
-const primordials = globalThis.__bootstrap.primordials;
+import { core, internals, primordials } from "ext:core/mod.js";
 const {
   AggregateErrorPrototype,
   Array,
@@ -41,6 +39,7 @@ const {
   FunctionPrototypeBind,
   FunctionPrototypeCall,
   FunctionPrototypeToString,
+  NumberIsNaN,
   MapPrototype,
   MapPrototypeDelete,
   MapPrototypeEntries,
@@ -75,7 +74,6 @@ const {
   ObjectPrototype,
   ObjectPrototypeIsPrototypeOf,
   ObjectPrototypePropertyIsEnumerable,
-  ObjectPrototypeToString,
   ObjectSetPrototypeOf,
   ObjectValues,
   Proxy,
@@ -134,17 +132,23 @@ const {
   Uint8Array,
   WeakMapPrototypeHas,
   WeakSetPrototypeHas,
-  isNaN,
 } = primordials;
+const ops = core.ops;
 
-let noColor = false;
+let noColor = () => false;
 
-function setNoColor(value) {
-  noColor = value;
+function setNoColorFn(fn) {
+  noColor = fn;
 }
 
 function getNoColor() {
-  return noColor;
+  return noColor();
+}
+
+function assert(cond, msg = "Assertion failed.") {
+  if (!cond) {
+    throw new AssertionError(msg);
+  }
 }
 
 // Don't use 'blue' not visible on cmd.exe
@@ -263,19 +267,15 @@ function isObjectLike(value) {
   return value !== null && typeof value === "object";
 }
 
-export function isAnyArrayBuffer(value) {
-  return isArrayBuffer(value) || isSharedArrayBuffer(value);
+function isAnyArrayBuffer(value) {
+  return ops.op_is_any_arraybuffer(value);
 }
 
-export function isArgumentsObject(value) {
-  return (
-    isObjectLike(value) &&
-    value[SymbolToStringTag] === undefined &&
-    ObjectPrototypeToString(value) === "[object Arguments]"
-  );
+function isArgumentsObject(value) {
+  return ops.op_is_arguments_object(value);
 }
 
-export function isArrayBuffer(value) {
+function isArrayBuffer(value) {
   try {
     ArrayBufferPrototypeGetByteLength(value);
     return true;
@@ -284,21 +284,11 @@ export function isArrayBuffer(value) {
   }
 }
 
-export function isAsyncFunction(value) {
-  return (
-    typeof value === "function" &&
-    (value[SymbolToStringTag] === "AsyncFunction")
-  );
+function isAsyncFunction(value) {
+  return ops.op_is_async_function(value);
 }
 
-export function isAsyncGeneratorFunction(value) {
-  return (
-    typeof value === "function" &&
-    (value[SymbolToStringTag] === "AsyncGeneratorFunction")
-  );
-}
-
-export function isBooleanObject(value) {
+function isBooleanObject(value) {
   if (!isObjectLike(value)) {
     return false;
   }
@@ -311,7 +301,7 @@ export function isBooleanObject(value) {
   }
 }
 
-export function isBoxedPrimitive(
+function isBoxedPrimitive(
   value,
 ) {
   return (
@@ -323,27 +313,22 @@ export function isBoxedPrimitive(
   );
 }
 
-export function isDataView(value) {
+function isDataView(value) {
   return (
     ArrayBufferIsView(value) &&
     TypedArrayPrototypeGetSymbolToStringTag(value) === undefined
   );
 }
 
-export function isTypedArray(value) {
+function isTypedArray(value) {
   return TypedArrayPrototypeGetSymbolToStringTag(value) !== undefined;
 }
 
-export function isGeneratorFunction(
-  value,
-) {
-  return (
-    typeof value === "function" &&
-    value[SymbolToStringTag] === "GeneratorFunction"
-  );
+function isGeneratorFunction(value) {
+  return ops.op_is_generator_function(value);
 }
 
-export function isMap(value) {
+function isMap(value) {
   try {
     MapPrototypeGetSize(value);
     return true;
@@ -352,33 +337,19 @@ export function isMap(value) {
   }
 }
 
-export function isMapIterator(
-  value,
-) {
-  return (
-    isObjectLike(value) &&
-    value[SymbolToStringTag] === "Map Iterator"
-  );
+function isMapIterator(value) {
+  return ops.op_is_map_iterator(value);
 }
 
-export function isModuleNamespaceObject(
-  value,
-) {
-  return (
-    isObjectLike(value) &&
-    value[SymbolToStringTag] === "Module"
-  );
+function isModuleNamespaceObject(value) {
+  return ops.op_is_module_namespace_object(value);
 }
 
-export function isNativeError(value) {
-  return (
-    isObjectLike(value) &&
-    value[SymbolToStringTag] === undefined &&
-    ObjectPrototypeToString(value) === "[object Error]"
-  );
+function isNativeError(value) {
+  return ops.op_is_native_error(value);
 }
 
-export function isNumberObject(value) {
+function isNumberObject(value) {
   if (!isObjectLike(value)) {
     return false;
   }
@@ -391,7 +362,7 @@ export function isNumberObject(value) {
   }
 }
 
-export function isBigIntObject(value) {
+function isBigIntObject(value) {
   if (!isObjectLike(value)) {
     return false;
   }
@@ -404,21 +375,15 @@ export function isBigIntObject(value) {
   }
 }
 
-export function isPromise(value) {
-  return (
-    isObjectLike(value) &&
-    value[SymbolToStringTag] === "Promise"
-  );
-}
-export function isRegExp(value) {
-  return (
-    isObjectLike(value) &&
-    value[SymbolToStringTag] === undefined &&
-    ObjectPrototypeToString(value) === "[object RegExp]"
-  );
+function isPromise(value) {
+  return ops.op_is_promise(value);
 }
 
-export function isSet(value) {
+function isRegExp(value) {
+  return ops.op_is_reg_exp(value);
+}
+
+function isSet(value) {
   try {
     SetPrototypeGetSize(value);
     return true;
@@ -427,27 +392,11 @@ export function isSet(value) {
   }
 }
 
-export function isSetIterator(
-  value,
-) {
-  return (
-    isObjectLike(value) &&
-    value[SymbolToStringTag] === "Set Iterator"
-  );
+function isSetIterator(value) {
+  return ops.op_is_set_iterator(value);
 }
 
-export function isSharedArrayBuffer(
-  value,
-) {
-  try {
-    getSharedArrayBufferByteLength(value);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export function isStringObject(value) {
+function isStringObject(value) {
   if (!isObjectLike(value)) {
     return false;
   }
@@ -460,7 +409,7 @@ export function isStringObject(value) {
   }
 }
 
-export function isSymbolObject(value) {
+function isSymbolObject(value) {
   if (!isObjectLike(value)) {
     return false;
   }
@@ -473,7 +422,7 @@ export function isSymbolObject(value) {
   }
 }
 
-export function isWeakMap(
+function isWeakMap(
   value,
 ) {
   try {
@@ -484,7 +433,7 @@ export function isWeakMap(
   }
 }
 
-export function isWeakSet(
+function isWeakSet(
   value,
 ) {
   try {
@@ -772,9 +721,6 @@ function getFunctionBase(value, constructor, tag) {
   if (isAsyncFunction(value)) {
     type = `Async${type}`;
   }
-  if (isAsyncGeneratorFunction(value)) {
-    type = `AsyncGenerator${type}`;
-  }
   let base = `[${type}`;
   if (constructor === null) {
     base += " (null prototype)";
@@ -845,7 +791,7 @@ function formatRaw(ctx, value, recurseTimes, typedArray, proxyDetails) {
         const prefix = (constructor !== "Array" || tag !== "")
           ? getPrefix(constructor, tag, "Array", `(${value.length})`)
           : "";
-        keys = core.ops.op_get_non_index_property_names(value, filter);
+        keys = ops.op_get_non_index_property_names(value, filter);
         braces = [`${prefix}[`, "]"];
         if (
           value.length === 0 && keys.length === 0 && protoProps === undefined
@@ -944,7 +890,7 @@ function formatRaw(ctx, value, recurseTimes, typedArray, proxyDetails) {
         }
       } else if (ObjectPrototypeIsPrototypeOf(DatePrototype, value)) {
         const date = proxyDetails ? proxyDetails[0] : value;
-        if (isNaN(DatePrototypeGetTime(date))) {
+        if (NumberIsNaN(DatePrototypeGetTime(date))) {
           return ctx.stylize("Invalid Date", "date");
         } else {
           base = DatePrototypeToISOString(date);
@@ -1196,7 +1142,12 @@ function getConstructorName(obj, ctx, recurseTimes, protoProps) {
   let firstProto;
   const tmp = obj;
   while (obj || isUndetectableObject(obj)) {
-    const descriptor = ObjectGetOwnPropertyDescriptor(obj, "constructor");
+    let descriptor;
+    try {
+      descriptor = ObjectGetOwnPropertyDescriptor(obj, "constructor");
+    } catch {
+      /* this could fail */
+    }
     if (
       descriptor !== undefined &&
       typeof descriptor.value === "function" &&
@@ -1402,7 +1353,7 @@ function formatSet(value, ctx, _ignored, recurseTimes) {
   return output;
 }
 
-function formatMap(value, ctx, _gnored, recurseTimes) {
+function formatMap(value, ctx, _ignored, recurseTimes) {
   ctx.indentationLvl += 2;
 
   const values = [...new SafeMapIterator(value)];
@@ -1439,7 +1390,7 @@ function formatTypedArray(
 ) {
   const maxLength = MathMin(MathMax(0, ctx.maxArrayLength), length);
   const remaining = value.length - maxLength;
-  const output = new Array(maxLength);
+  const output = [];
   const elementFormatter = value.length > 0 && typeof value[0] === "number"
     ? formatNumber
     : formatBigInt;
@@ -1482,9 +1433,7 @@ function getIteratorBraces(type, tag) {
 
 const iteratorRegExp = new SafeRegExp(" Iterator] {$");
 function formatIterator(braces, ctx, value, recurseTimes) {
-  // TODO(wafuwafu13): Implement
-  // const { 0: entries, 1: isKeyValue } = previewEntries(value, true);
-  const { 0: entries, 1: isKeyValue } = value;
+  const { 0: entries, 1: isKeyValue } = ops.op_preview_entries(value, true);
   if (isKeyValue) {
     // Mark entry iterators as such.
     braces[0] = StringPrototypeReplace(
@@ -1601,7 +1550,7 @@ function inspectError(value, ctx) {
 
 const hexSliceLookupTable = function () {
   const alphabet = "0123456789abcdef";
-  const table = new Array(256);
+  const table = [];
   for (let i = 0; i < 16; ++i) {
     const i16 = i * 16;
     for (let j = 0; j < 16; ++j) {
@@ -1665,14 +1614,7 @@ const PromiseState = {
 
 function formatPromise(ctx, value, recurseTimes) {
   let output;
-  let opResult;
-  // This op will fail for non-promises, but we get here for some promise-likes.
-  try {
-    opResult = core.getPromiseDetails(value);
-  } catch {
-    return [ctx.stylize("<unknown>", "special")];
-  }
-  const { 0: state, 1: result } = opResult;
+  const { 0: state, 1: result } = core.getPromiseDetails(value);
   if (state === PromiseState.Pending) {
     output = [ctx.stylize("<pending>", "special")];
   } else {
@@ -1693,16 +1635,12 @@ function formatWeakCollection(ctx) {
 }
 
 function formatWeakSet(ctx, value, recurseTimes) {
-  // TODO(wafuwafu13): Implement
-  // const entries = previewEntries(value);
-  const entries = value;
+  const entries = ops.op_preview_entries(value, false);
   return formatSetIterInner(ctx, recurseTimes, entries, kWeak);
 }
 
 function formatWeakMap(ctx, value, recurseTimes) {
-  // TODO(wafuwafu13): Implement
-  // const entries = previewEntries(value);
-  const entries = value;
+  const entries = ops.op_preview_entries(value, false);
   return formatMapIterInner(ctx, recurseTimes, entries, kWeak);
 }
 
@@ -1823,7 +1761,7 @@ function formatNamespaceObject(
   value,
   recurseTimes,
 ) {
-  const output = new Array(keys.length);
+  const output = [];
   for (let i = 0; i < keys.length; i++) {
     try {
       output[i] = formatProperty(
@@ -2042,7 +1980,7 @@ function groupArrayElements(ctx, output, value) {
     outputLength--;
   }
   const separatorSpace = 2; // Add 1 for the space and 1 for the separator.
-  const dataLen = new Array(outputLength);
+  const dataLen = [];
   // Calculate the total length of all output entries and the individual max
   // entries length of all output entries. We have to remove colors first,
   // otherwise the length would not be calculated properly.
@@ -2156,7 +2094,7 @@ function formatMapIterInner(
   const len = entries.length / 2;
   const remaining = len - maxArrayLength;
   const maxLength = MathMin(maxArrayLength, len);
-  const output = new Array(maxLength);
+  const output = [];
   let i = 0;
   ctx.indentationLvl += 2;
   if (state === kWeak) {
@@ -2207,7 +2145,7 @@ function formatSetIterInner(
 ) {
   const maxArrayLength = MathMax(ctx.maxArrayLength, 0);
   const maxLength = MathMin(maxArrayLength, entries.length);
-  const output = new Array(maxLength);
+  const output = [];
   ctx.indentationLvl += 2;
   for (let i = 0; i < maxLength; i++) {
     output[i] = formatValue(ctx, entries[i], recurseTimes);
@@ -2535,7 +2473,7 @@ function replaceEscapeSequences(string) {
       ESCAPE_PATTERN,
       (c) => ESCAPE_MAP[c],
     ),
-    new SafeRegExp(ESCAPE_PATTERN2),
+    ESCAPE_PATTERN2,
     (c) =>
       "\\x" +
       StringPrototypePadStart(
@@ -2731,34 +2669,34 @@ const HSL_PATTERN = new SafeRegExp(
 );
 
 function parseCssColor(colorString) {
-  if (MapPrototypeHas(colorKeywords, colorString)) {
-    colorString = MapPrototypeGet(colorKeywords, colorString);
+  if (colorKeywords.has(colorString)) {
+    colorString = colorKeywords.get(colorString);
   }
   // deno-fmt-ignore
   const hashMatch = StringPrototypeMatch(colorString, HASH_PATTERN);
   if (hashMatch != null) {
     return [
-      Number(`0x${hashMatch[1]}`),
-      Number(`0x${hashMatch[2]}`),
-      Number(`0x${hashMatch[3]}`),
+      NumberParseInt(hashMatch[1], 16),
+      NumberParseInt(hashMatch[2], 16),
+      NumberParseInt(hashMatch[3], 16),
     ];
   }
   // deno-fmt-ignore
   const smallHashMatch = StringPrototypeMatch(colorString, SMALL_HASH_PATTERN);
   if (smallHashMatch != null) {
     return [
-      Number(`0x${smallHashMatch[1]}0`),
-      Number(`0x${smallHashMatch[2]}0`),
-      Number(`0x${smallHashMatch[3]}0`),
+      NumberParseInt(`${smallHashMatch[1]}${smallHashMatch[1]}`, 16),
+      NumberParseInt(`${smallHashMatch[2]}${smallHashMatch[2]}`, 16),
+      NumberParseInt(`${smallHashMatch[3]}${smallHashMatch[3]}`, 16),
     ];
   }
   // deno-fmt-ignore
   const rgbMatch = StringPrototypeMatch(colorString, RGB_PATTERN);
   if (rgbMatch != null) {
     return [
-      MathRound(MathMax(0, MathMin(255, Number(rgbMatch[1])))),
-      MathRound(MathMax(0, MathMin(255, Number(rgbMatch[2])))),
-      MathRound(MathMax(0, MathMin(255, Number(rgbMatch[3])))),
+      MathRound(MathMax(0, MathMin(255, rgbMatch[1]))),
+      MathRound(MathMax(0, MathMin(255, rgbMatch[2]))),
+      MathRound(MathMax(0, MathMin(255, rgbMatch[3]))),
     ];
   }
   // deno-fmt-ignore
@@ -2769,8 +2707,8 @@ function parseCssColor(colorString) {
     if (h < 0) {
       h += 360;
     }
-    const s = MathMax(0, MathMin(100, Number(hslMatch[2]))) / 100;
-    const l = MathMax(0, MathMin(100, Number(hslMatch[3]))) / 100;
+    const s = MathMax(0, MathMin(100, hslMatch[2])) / 100;
+    const l = MathMax(0, MathMin(100, hslMatch[3])) / 100;
     const c = (1 - MathAbs(2 * l - 1)) * s;
     const x = c * (1 - MathAbs((h / 60) % 2 - 1));
     const m = l - c / 2;
@@ -3323,7 +3261,7 @@ class Console {
     if (properties !== undefined && !ArrayIsArray(properties)) {
       throw new Error(
         "The 'properties' argument must be of type Array. " +
-          "Received type string",
+          "Received type " + typeof properties,
       );
     }
 
@@ -3430,7 +3368,7 @@ class Console {
     label = String(label);
 
     if (!MapPrototypeHas(timerMap, label)) {
-      this.warn(`Timer '${label}' does not exists`);
+      this.warn(`Timer '${label}' does not exist`);
       return;
     }
 
@@ -3635,7 +3573,7 @@ export {
   inspect,
   inspectArgs,
   quoteString,
-  setNoColor,
+  setNoColorFn,
   styles,
   wrapConsole,
 };

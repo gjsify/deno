@@ -20,15 +20,21 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import { notImplemented } from "ext:deno_node/_utils.ts";
+// TODO(petamoriken): enable prefer-primordials for node polyfills
+// deno-lint-ignore-file prefer-primordials
+
+const core = globalThis.__bootstrap.core;
 import { validateIntegerRange } from "ext:deno_node/_utils.ts";
-import process from "ext:deno_node/process.ts";
+import process from "node:process";
 import { isWindows, osType } from "ext:deno_node/_util/os.ts";
+import { ERR_OS_NO_HOMEDIR } from "ext:deno_node/internal/errors.ts";
 import { os } from "ext:deno_node/internal_binding/constants.ts";
 import { osUptime } from "ext:runtime/30_os.js";
-export const constants = os;
+import { Buffer } from "ext:deno_node/internal/buffer.mjs";
 
-const SEE_GITHUB_ISSUE = "See https://github.com/denoland/deno_std/issues/1436";
+const ops = core.ops;
+
+export const constants = os;
 
 interface CPUTimes {
   /** The number of milliseconds the CPU has spent in user mode */
@@ -90,14 +96,17 @@ interface UserInfo {
   username: string;
   uid: number;
   gid: number;
-  shell: string;
-  homedir: string;
+  shell: string | null;
+  homedir: string | null;
 }
 
 export function arch(): string {
   return process.arch;
 }
 
+// deno-lint-ignore no-explicit-any
+(availableParallelism as any)[Symbol.toPrimitive] = (): number =>
+  availableParallelism();
 // deno-lint-ignore no-explicit-any
 (arch as any)[Symbol.toPrimitive] = (): string => process.arch;
 // deno-lint-ignore no-explicit-any
@@ -122,19 +131,7 @@ export function arch(): string {
 (uptime as any)[Symbol.toPrimitive] = (): number => uptime();
 
 export function cpus(): CPUCoreInfo[] {
-  return Array.from(Array(navigator.hardwareConcurrency)).map(() => {
-    return {
-      model: "",
-      speed: 0,
-      times: {
-        user: 0,
-        nice: 0,
-        sys: 0,
-        idle: 0,
-        irq: 0,
-      },
-    };
-  });
+  return ops.op_cpus();
 }
 
 /**
@@ -152,13 +149,20 @@ export function endianness(): "BE" | "LE" {
 
 /** Return free memory amount */
 export function freemem(): number {
-  return Deno.systemMemoryInfo().free;
+  if (Deno.build.os === "linux") {
+    // On linux, use 'available' memory
+    // https://github.com/libuv/libuv/blob/a5c01d4de3695e9d9da34cfd643b5ff0ba582ea7/src/unix/linux.c#L2064
+    return Deno.systemMemoryInfo().available;
+  } else {
+    // Use 'free' memory on other platforms
+    return Deno.systemMemoryInfo().free;
+  }
 }
 
 /** Not yet implemented */
 export function getPriority(pid = 0): number {
   validateIntegerRange(pid, "pid");
-  notImplemented(SEE_GITHUB_ISSUE);
+  return core.ops.op_node_os_get_priority(pid);
 }
 
 /** Returns the string path of the current user's home directory. */
@@ -254,7 +258,7 @@ export function setPriority(pid: number, priority?: number) {
   validateIntegerRange(pid, "pid");
   validateIntegerRange(priority, "priority", -20, 19);
 
-  notImplemented(SEE_GITHUB_ISSUE);
+  core.ops.op_node_os_set_priority(pid, priority);
 }
 
 /** Returns the operating system's default directory for temporary files as a string. */
@@ -314,16 +318,52 @@ export function uptime(): number {
 
 /** Not yet implemented */
 export function userInfo(
-  // deno-lint-ignore no-unused-vars
   options: UserInfoOptions = { encoding: "utf-8" },
 ): UserInfo {
-  notImplemented(SEE_GITHUB_ISSUE);
+  let uid = Deno.uid();
+  let gid = Deno.gid();
+
+  if (isWindows) {
+    uid = -1;
+    gid = -1;
+  }
+
+  // TODO(@crowlKats): figure out how to do this correctly:
+  //  The value of homedir returned by os.userInfo() is provided by the operating system.
+  //  This differs from the result of os.homedir(), which queries environment
+  //  variables for the home directory before falling back to the operating system response.
+  let _homedir = homedir();
+  if (!_homedir) {
+    throw new ERR_OS_NO_HOMEDIR();
+  }
+  let shell = isWindows ? (Deno.env.get("SHELL") || null) : null;
+  let username = core.ops.op_node_os_username();
+
+  if (options?.encoding === "buffer") {
+    _homedir = _homedir ? Buffer.from(_homedir) : _homedir;
+    shell = shell ? Buffer.from(shell) : shell;
+    username = Buffer.from(username);
+  }
+
+  return {
+    uid,
+    gid,
+    homedir: _homedir,
+    shell,
+    username,
+  };
+}
+
+/* Returns an estimate of the default amount of parallelism a program should use. */
+export function availableParallelism(): number {
+  return navigator.hardwareConcurrency;
 }
 
 export const EOL = isWindows ? "\r\n" : "\n";
 export const devNull = isWindows ? "\\\\.\\nul" : "/dev/null";
 
 export default {
+  availableParallelism,
   arch,
   cpus,
   endianness,

@@ -23,7 +23,18 @@
 
 // These are simplified versions of the "real" errors in Node.
 
+import { primordials } from "ext:core/mod.js";
 import { nextTick } from "ext:deno_node/_next_tick.ts";
+const {
+  ArrayPrototypePop,
+  Error,
+  FunctionPrototypeApply,
+  FunctionPrototypeBind,
+  ObjectDefineProperties,
+  ObjectGetOwnPropertyDescriptors,
+  PromisePrototypeThen,
+  TypeError,
+} = primordials;
 
 class NodeFalsyValueRejectionError extends Error {
   public reason: unknown;
@@ -95,25 +106,26 @@ function callbackify<ResultT>(
   }
 
   const callbackified = function (this: unknown, ...args: unknown[]) {
-    const maybeCb = args.pop();
+    const maybeCb = ArrayPrototypePop(args);
     if (typeof maybeCb !== "function") {
       throw new NodeInvalidArgTypeError("last");
     }
     const cb = (...args: unknown[]) => {
-      maybeCb.apply(this, args);
+      FunctionPrototypeApply(maybeCb, this, args);
     };
-    original.apply(this, args).then(
+    PromisePrototypeThen(
+      FunctionPrototypeApply(this, args),
       (ret: unknown) => {
-        nextTick(cb.bind(this, null, ret));
+        nextTick(FunctionPrototypeBind(cb, this, null, ret));
       },
       (rej: unknown) => {
         rej = rej || new NodeFalsyValueRejectionError(rej);
-        nextTick(cb.bind(this, rej));
+        nextTick(FunctionPrototypeBind(cb, this, rej));
       },
     );
   };
 
-  const descriptors = Object.getOwnPropertyDescriptors(original);
+  const descriptors = ObjectGetOwnPropertyDescriptors(original);
   // It is possible to manipulate a functions `length` or `name` property. This
   // guards against the manipulation.
   if (typeof descriptors.length.value === "number") {
@@ -122,7 +134,7 @@ function callbackify<ResultT>(
   if (typeof descriptors.name.value === "string") {
     descriptors.name.value += "Callbackified";
   }
-  Object.defineProperties(callbackified, descriptors);
+  ObjectDefineProperties(callbackified, descriptors);
   return callbackified;
 }
 

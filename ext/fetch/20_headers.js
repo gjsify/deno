@@ -19,24 +19,17 @@ import {
   HTTP_TOKEN_CODE_POINT_RE,
   httpTrim,
 } from "ext:deno_web/00_infra.js";
-const primordials = globalThis.__bootstrap.primordials;
+import { primordials } from "ext:core/mod.js";
 const {
   ArrayIsArray,
-  ArrayPrototypeMap,
   ArrayPrototypePush,
   ArrayPrototypeSort,
   ArrayPrototypeJoin,
   ArrayPrototypeSplice,
-  ArrayPrototypeFilter,
-  ObjectEntries,
+  ObjectFromEntries,
   ObjectHasOwn,
-  RegExpPrototypeExec,
-  SafeArrayIterator,
-  SafeMap,
-  MapPrototypeGet,
-  MapPrototypeHas,
-  MapPrototypeSet,
-  MapPrototypeClear,
+  ObjectPrototypeIsPrototypeOf,
+  RegExpPrototypeTest,
   Symbol,
   SymbolFor,
   SymbolIterator,
@@ -47,7 +40,9 @@ const {
 
 const _headerList = Symbol("header list");
 const _iterableHeaders = Symbol("iterable headers");
+const _iterableHeadersCache = Symbol("iterable headers cache");
 const _guard = Symbol("guard");
+const _brand = webidl.brand;
 
 /**
  * @typedef Header
@@ -104,19 +99,23 @@ function checkForInvalidValueChars(value) {
   return true;
 }
 
-const HEADER_NAME_CACHE = new SafeMap();
+let HEADER_NAME_CACHE = {};
+let HEADER_CACHE_SIZE = 0;
 const HEADER_NAME_CACHE_SIZE_BOUNDARY = 4096;
 function checkHeaderNameForHttpTokenCodePoint(name) {
-  if (MapPrototypeHas(HEADER_NAME_CACHE, name)) {
-    return MapPrototypeGet(HEADER_NAME_CACHE, name);
+  const fromCache = HEADER_NAME_CACHE[name];
+  if (fromCache !== undefined) {
+    return fromCache;
   }
 
-  const valid = RegExpPrototypeExec(HTTP_TOKEN_CODE_POINT_RE, name) !== null;
+  const valid = RegExpPrototypeTest(HTTP_TOKEN_CODE_POINT_RE, name);
 
-  if (HEADER_NAME_CACHE.size > HEADER_NAME_CACHE_SIZE_BOUNDARY) {
-    MapPrototypeClear(HEADER_NAME_CACHE);
+  if (HEADER_CACHE_SIZE > HEADER_NAME_CACHE_SIZE_BOUNDARY) {
+    HEADER_NAME_CACHE = {};
+    HEADER_CACHE_SIZE = 0;
   }
-  MapPrototypeSet(HEADER_NAME_CACHE, name, valid);
+  HEADER_CACHE_SIZE++;
+  HEADER_NAME_CACHE[name] = valid;
 
   return valid;
 }
@@ -163,13 +162,13 @@ function appendHeader(headers, name, value) {
  */
 function getHeader(list, name) {
   const lowercaseName = byteLowerCase(name);
-  const entries = ArrayPrototypeMap(
-    ArrayPrototypeFilter(
-      list,
-      (entry) => byteLowerCase(entry[0]) === lowercaseName,
-    ),
-    (entry) => entry[1],
-  );
+  const entries = [];
+  for (let i = 0; i < list.length; i++) {
+    if (byteLowerCase(list[i][0]) === lowercaseName) {
+      ArrayPrototypePush(entries, list[i][1]);
+    }
+  }
+
   if (entries.length === 0) {
     return null;
   } else {
@@ -232,10 +231,17 @@ class Headers {
   get [_iterableHeaders]() {
     const list = this[_headerList];
 
+    if (
+      this[_guard] === "immutable" &&
+      this[_iterableHeadersCache] !== undefined
+    ) {
+      return this[_iterableHeadersCache];
+    }
+
     // The order of steps are not similar to the ones suggested by the
     // spec but produce the same result.
-    const headers = {};
-    const cookies = [];
+    const seenHeaders = {};
+    const entries = [];
     for (let i = 0; i < list.length; ++i) {
       const entry = list[i];
       const name = byteLowerCase(entry[0]);
@@ -246,27 +252,27 @@ class Headers {
       // so must be given to the user as multiple headers.
       // The else block of the if statement is spec compliant again.
       if (name === "set-cookie") {
-        ArrayPrototypePush(cookies, [name, value]);
+        ArrayPrototypePush(entries, [name, value]);
       } else {
         // The following code has the same behaviour as getHeader()
         // at the end of loop. But it avoids looping through the entire
         // list to combine multiple values with same header name. It
         // instead gradually combines them as they are found.
-        let header = headers[name];
-        if (header && header.length > 0) {
-          header += "\x2C\x20" + value;
+        const seenHeaderIndex = seenHeaders[name];
+        if (seenHeaderIndex !== undefined) {
+          const entryValue = entries[seenHeaderIndex][1];
+          entries[seenHeaderIndex][1] = entryValue.length > 0
+            ? entryValue + "\x2C\x20" + value
+            : value;
         } else {
-          header = value;
+          seenHeaders[name] = entries.length; // store header index in entries array
+          ArrayPrototypePush(entries, [name, value]);
         }
-        headers[name] = header;
       }
     }
 
-    return ArrayPrototypeSort(
-      [
-        ...new SafeArrayIterator(ObjectEntries(headers)),
-        ...new SafeArrayIterator(cookies),
-      ],
+    ArrayPrototypeSort(
+      entries,
       (a, b) => {
         const akey = a[0];
         const bkey = b[0];
@@ -275,16 +281,25 @@ class Headers {
         return 0;
       },
     );
+
+    this[_iterableHeadersCache] = entries;
+
+    return entries;
   }
 
   /** @param {HeadersInit} [init] */
   constructor(init = undefined) {
+    if (init === _brand) {
+      this[_brand] = _brand;
+      return;
+    }
+
     const prefix = "Failed to construct 'Headers'";
     if (init !== undefined) {
       init = webidl.converters["HeadersInit"](init, prefix, "Argument 1");
     }
 
-    this[webidl.brand] = webidl.brand;
+    this[_brand] = _brand;
     this[_guard] = "none";
     if (init !== undefined) {
       fillHeaders(this, init);
@@ -308,6 +323,7 @@ class Headers {
    * @param {string} name
    */
   delete(name) {
+    webidl.assertBranded(this, HeadersPrototype);
     const prefix = "Failed to execute 'delete' on 'Headers'";
     webidl.requiredArguments(arguments.length, 1, prefix);
     name = webidl.converters["ByteString"](name, prefix, "Argument 1");
@@ -333,6 +349,7 @@ class Headers {
    * @param {string} name
    */
   get(name) {
+    webidl.assertBranded(this, HeadersPrototype);
     const prefix = "Failed to execute 'get' on 'Headers'";
     webidl.requiredArguments(arguments.length, 1, prefix);
     name = webidl.converters["ByteString"](name, prefix, "Argument 1");
@@ -345,10 +362,25 @@ class Headers {
     return getHeader(list, name);
   }
 
+  getSetCookie() {
+    webidl.assertBranded(this, HeadersPrototype);
+    const list = this[_headerList];
+
+    const entries = [];
+    for (let i = 0; i < list.length; i++) {
+      if (byteLowerCase(list[i][0]) === "set-cookie") {
+        ArrayPrototypePush(entries, list[i][1]);
+      }
+    }
+
+    return entries;
+  }
+
   /**
    * @param {string} name
    */
   has(name) {
+    webidl.assertBranded(this, HeadersPrototype);
     const prefix = "Failed to execute 'has' on 'Headers'";
     webidl.requiredArguments(arguments.length, 1, prefix);
     name = webidl.converters["ByteString"](name, prefix, "Argument 1");
@@ -411,19 +443,20 @@ class Headers {
     }
   }
 
-  [SymbolFor("Deno.privateCustomInspect")](inspect) {
-    const headers = {};
-    // deno-lint-ignore prefer-primordials
-    for (const header of this) {
-      headers[header[0]] = header[1];
+  [SymbolFor("Deno.privateCustomInspect")](inspect, inspectOptions) {
+    if (ObjectPrototypeIsPrototypeOf(HeadersPrototype, this)) {
+      return `${this.constructor.name} ${
+        inspect(ObjectFromEntries(this), inspectOptions)
+      }`;
+    } else {
+      return `${this.constructor.name} ${inspect({}, inspectOptions)}`;
     }
-    return `Headers ${inspect(headers)}`;
   }
 }
 
 webidl.mixinPairIterable("Headers", Headers, _iterableHeaders, 0, 1);
 
-webidl.configurePrototype(Headers);
+webidl.configureInterface(Headers);
 const HeadersPrototype = Headers.prototype;
 
 webidl.converters["HeadersInit"] = (V, prefix, context, opts) => {
@@ -462,7 +495,7 @@ webidl.converters["Headers"] = webidl.createInterfaceConverter(
  * @returns {Headers}
  */
 function headersFromHeaderList(list, guard) {
-  const headers = webidl.createBranded(Headers);
+  const headers = new Headers(_brand);
   headers[_headerList] = list;
   headers[_guard] = guard;
   return headers;
@@ -484,6 +517,14 @@ function guardFromHeaders(headers) {
   return headers[_guard];
 }
 
+/**
+ * @param {Headers} headers
+ * @returns {[string, string][]}
+ */
+function headersEntries(headers) {
+  return headers[_iterableHeaders];
+}
+
 export {
   fillHeaders,
   getDecodeSplitHeader,
@@ -491,5 +532,6 @@ export {
   guardFromHeaders,
   headerListFromHeaders,
   Headers,
+  headersEntries,
   headersFromHeaderList,
 };

@@ -1,5 +1,10 @@
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
-const ops = globalThis.Deno.core.ops;
+
+// TODO(petamoriken): enable prefer-primordials for node polyfills
+// deno-lint-ignore-file prefer-primordials
+
+import { core } from "ext:core/mod.js";
+const ops = core.ops;
 
 export default function randomInt(max: number): number;
 export default function randomInt(min: number, max: number): number;

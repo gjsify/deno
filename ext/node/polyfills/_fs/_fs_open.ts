@@ -1,4 +1,8 @@
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
+
+// TODO(petamoriken): enable prefer-primordials for node polyfills
+// deno-lint-ignore-file prefer-primordials
+
 import {
   O_APPEND,
   O_CREAT,
@@ -12,7 +16,7 @@ import { parseFileMode } from "ext:deno_node/internal/validators.mjs";
 import { ERR_INVALID_ARG_TYPE } from "ext:deno_node/internal/errors.ts";
 import { getValidatedPath } from "ext:deno_node/internal/fs/utils.mjs";
 import { FileHandle } from "ext:deno_node/internal/fs/handle.ts";
-import type { Buffer } from "ext:deno_node/buffer.ts";
+import type { Buffer } from "node:buffer";
 
 function existsSync(filePath: string | URL): boolean {
   try {
@@ -53,8 +57,8 @@ function convertFlagAndModeToOptions(
   flag?: openFlags,
   mode?: number,
 ): Deno.OpenOptions | undefined {
-  if (!flag && !mode) return undefined;
-  if (!flag && mode) return { mode };
+  if (flag === undefined && mode === undefined) return undefined;
+  if (flag === undefined && mode) return { mode };
   return { ...getOpenOptions(flag), mode };
 }
 

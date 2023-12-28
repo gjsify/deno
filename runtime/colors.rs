@@ -1,8 +1,8 @@
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 
-use atty;
 use once_cell::sync::Lazy;
 use std::fmt;
+use std::io::IsTerminal;
 use std::io::Write;
 use termcolor::Ansi;
 use termcolor::Color::Ansi256;
@@ -22,10 +22,13 @@ use termcolor::BufferWriter;
 #[cfg(windows)]
 use termcolor::ColorChoice;
 
-static NO_COLOR: Lazy<bool> =
-  Lazy::new(|| std::env::var_os("NO_COLOR").is_some());
+static NO_COLOR: Lazy<bool> = Lazy::new(|| {
+  std::env::var_os("NO_COLOR")
+    .map(|v| !v.is_empty())
+    .unwrap_or(false)
+});
 
-static IS_TTY: Lazy<bool> = Lazy::new(|| atty::is(atty::Stream::Stdout));
+static IS_TTY: Lazy<bool> = Lazy::new(|| std::io::stdout().is_terminal());
 
 pub fn is_tty() -> bool {
   *IS_TTY
@@ -105,6 +108,13 @@ pub fn cyan<S: AsRef<str>>(s: S) -> impl fmt::Display {
   style_spec.set_fg(Some(Cyan));
   style(s, style_spec)
 }
+
+pub fn cyan_with_underline<S: AsRef<str>>(s: S) -> impl fmt::Display {
+  let mut style_spec = ColorSpec::new();
+  style_spec.set_fg(Some(Cyan)).set_underline(true);
+  style(s, style_spec)
+}
+
 pub fn cyan_bold<S: AsRef<str>>(s: S) -> impl fmt::Display {
   let mut style_spec = ColorSpec::new();
   style_spec.set_fg(Some(Cyan)).set_bold(true);

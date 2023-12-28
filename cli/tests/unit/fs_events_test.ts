@@ -14,14 +14,14 @@ Deno.test({ permissions: { read: true } }, function watchFsInvalidPath() {
   if (Deno.build.os === "windows") {
     assertThrows(
       () => {
-        Deno.watchFs("non-existant.file");
+        Deno.watchFs("non-existent.file");
       },
       Error,
       "Input watch path is neither a file nor a directory",
     );
   } else {
     assertThrows(() => {
-      Deno.watchFs("non-existant.file");
+      Deno.watchFs("non-existent.file");
     }, Deno.errors.NotFound);
   }
 });
@@ -51,7 +51,7 @@ Deno.test(
     const testDir = await makeTempDir();
     const iter = Deno.watchFs(testDir);
 
-    // Asynchornously capture two fs events.
+    // Asynchronously capture two fs events.
     const eventsPromise = getTwoEvents(iter);
 
     // Make some random file system activity.
@@ -105,5 +105,35 @@ Deno.test(
     // Expect zero events.
     const events = await eventsPromise;
     assertEquals(events, []);
+  },
+);
+
+Deno.test(
+  { permissions: { read: true, write: true } },
+  async function watchFsExplicitResourceManagement() {
+    let res;
+    {
+      const testDir = await makeTempDir();
+      using iter = Deno.watchFs(testDir);
+
+      res = iter[Symbol.asyncIterator]().next();
+    }
+
+    const { done } = await res;
+    assert(done);
+  },
+);
+
+Deno.test(
+  { permissions: { read: true, write: true } },
+  async function watchFsExplicitResourceManagementManualClose() {
+    const testDir = await makeTempDir();
+    using iter = Deno.watchFs(testDir);
+
+    const res = iter[Symbol.asyncIterator]().next();
+
+    iter.close();
+    const { done } = await res;
+    assert(done);
   },
 );

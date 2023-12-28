@@ -1,5 +1,10 @@
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
-import { assert, assertEquals, assertThrows } from "./test_util.ts";
+import {
+  assert,
+  assertEquals,
+  assertStrictEquals,
+  assertThrows,
+} from "./test_util.ts";
 
 Deno.test(function btoaSuccess() {
   const text = "hello world";
@@ -250,17 +255,17 @@ Deno.test(function toStringShouldBeWebCompatibility() {
 
 Deno.test(function textEncoderShouldCoerceToString() {
   const encoder = new TextEncoder();
-  const fixutreText = "text";
+  const fixtureText = "text";
   const fixture = {
     toString() {
-      return fixutreText;
+      return fixtureText;
     },
   };
 
   const bytes = encoder.encode(fixture as unknown as string);
   const decoder = new TextDecoder();
   const decoded = decoder.decode(bytes);
-  assertEquals(decoded, fixutreText);
+  assertEquals(decoded, fixtureText);
 });
 
 Deno.test(function binaryEncode() {
@@ -319,3 +324,27 @@ Deno.test(function binaryEncode() {
     assertEquals(Array.from(bytes), decodeBinary(binaryString));
   }
 });
+
+Deno.test(
+  { permissions: { read: true } },
+  async function textDecoderStreamCleansUpOnCancel() {
+    let cancelled = false;
+    const readable = new ReadableStream({
+      start: (controller) => {
+        controller.enqueue(new Uint8Array(12));
+      },
+      cancel: () => {
+        cancelled = true;
+      },
+    }).pipeThrough(new TextDecoderStream());
+    const chunks = [];
+    for await (const chunk of readable) {
+      chunks.push(chunk);
+      // breaking out of the loop prevents normal shutdown at end of async iterator values and triggers the cancel method of the stream instead
+      break;
+    }
+    assertEquals(chunks.length, 1);
+    assertEquals(chunks[0].length, 12);
+    assertStrictEquals(cancelled, true);
+  },
+);

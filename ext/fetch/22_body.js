@@ -11,7 +11,7 @@
 /// <reference path="./lib.deno_fetch.d.ts" />
 /// <reference lib="esnext" />
 
-const core = globalThis.Deno.core;
+import { core, primordials } from "ext:core/mod.js";
 import * as webidl from "ext:deno_webidl/00_webidl.js";
 import {
   parseUrlEncoded,
@@ -33,9 +33,9 @@ import {
   readableStreamCollectIntoUint8Array,
   readableStreamDisturb,
   ReadableStreamPrototype,
+  readableStreamTee,
   readableStreamThrowIfErrored,
 } from "ext:deno_web/06_streams.js";
-const primordials = globalThis.__bootstrap.primordials;
 const {
   ArrayBufferPrototype,
   ArrayBufferIsView,
@@ -194,7 +194,7 @@ class InnerBody {
    * @returns {InnerBody}
    */
   clone() {
-    const { 0: out1, 1: out2 } = this.stream.tee();
+    const { 0: out1, 1: out2 } = readableStreamTee(this.stream, true);
     this.streamOrStatic = out1;
     const second = new InnerBody(out2);
     second.source = core.deserialize(core.serialize(this.source));

@@ -1,5 +1,10 @@
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 
+import { primordials } from "ext:core/mod.js";
+const {
+  Error,
+} = primordials;
+
 /** Assertion error class for node compat layer's internal code. */
 export class NodeCompatAssertionError extends Error {
   constructor(message: string) {

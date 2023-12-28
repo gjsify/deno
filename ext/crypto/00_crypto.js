@@ -6,10 +6,20 @@
 /// <reference path="../webidl/internal.d.ts" />
 /// <reference path="../web/lib.deno_web.d.ts" />
 
-const core = globalThis.Deno.core;
+import { core, primordials } from "ext:core/mod.js";
 const ops = core.ops;
-const primordials = globalThis.__bootstrap.primordials;
+const {
+  op_crypto_decrypt,
+  op_crypto_derive_bits,
+  op_crypto_encrypt,
+  op_crypto_generate_key,
+  op_crypto_sign_key,
+  op_crypto_subtle_digest,
+  op_crypto_verify_key,
+} = core.ensureFastOps();
+
 import * as webidl from "ext:deno_webidl/00_webidl.js";
+import { createFilteredInspectProxy } from "ext:deno_console/01_console.js";
 import DOMException from "ext:deno_web/01_dom_exception.js";
 const {
   ArrayBufferIsView,
@@ -349,19 +359,24 @@ class CryptoKey {
     return this[_algorithm];
   }
 
-  [SymbolFor("Deno.customInspect")](inspect) {
-    return `${this.constructor.name} ${
-      inspect({
-        type: this.type,
-        extractable: this.extractable,
-        algorithm: this.algorithm,
-        usages: this.usages,
-      })
-    }`;
+  [SymbolFor("Deno.privateCustomInspect")](inspect, inspectOptions) {
+    return inspect(
+      createFilteredInspectProxy({
+        object: this,
+        evaluate: ObjectPrototypeIsPrototypeOf(CryptoKeyPrototype, this),
+        keys: [
+          "type",
+          "extractable",
+          "algorithm",
+          "usages",
+        ],
+      }),
+      inspectOptions,
+    );
   }
 }
 
-webidl.configurePrototype(CryptoKey);
+webidl.configureInterface(CryptoKey);
 const CryptoKeyPrototype = CryptoKey.prototype;
 
 /**
@@ -486,8 +501,7 @@ class SubtleCrypto {
 
     algorithm = normalizeAlgorithm(algorithm, "digest");
 
-    const result = await core.opAsync(
-      "op_crypto_subtle_digest",
+    const result = await op_crypto_subtle_digest(
       algorithm.name,
       data,
     );
@@ -600,7 +614,7 @@ class SubtleCrypto {
 
         // 3-5.
         const hashAlgorithm = key[_algorithm].hash.name;
-        const plainText = await core.opAsync("op_crypto_decrypt", {
+        const plainText = await op_crypto_decrypt({
           key: keyData,
           algorithm: "RSA-OAEP",
           hash: hashAlgorithm,
@@ -621,7 +635,7 @@ class SubtleCrypto {
           );
         }
 
-        const plainText = await core.opAsync("op_crypto_decrypt", {
+        const plainText = await op_crypto_decrypt({
           key: keyData,
           algorithm: "AES-CBC",
           iv: normalizedAlgorithm.iv,
@@ -655,7 +669,7 @@ class SubtleCrypto {
         }
 
         // 3.
-        const cipherText = await core.opAsync("op_crypto_decrypt", {
+        const cipherText = await op_crypto_decrypt({
           key: keyData,
           algorithm: "AES-CTR",
           keyLength: key[_algorithm].length,
@@ -723,7 +737,7 @@ class SubtleCrypto {
         }
 
         // 5-8.
-        const plaintext = await core.opAsync("op_crypto_decrypt", {
+        const plaintext = await op_crypto_decrypt({
           key: keyData,
           algorithm: "AES-GCM",
           length: key[_algorithm].length,
@@ -796,7 +810,7 @@ class SubtleCrypto {
 
         // 2.
         const hashAlgorithm = key[_algorithm].hash.name;
-        const signature = await core.opAsync("op_crypto_sign_key", {
+        const signature = await op_crypto_sign_key({
           key: keyData,
           algorithm: "RSASSA-PKCS1-v1_5",
           hash: hashAlgorithm,
@@ -815,7 +829,7 @@ class SubtleCrypto {
 
         // 2.
         const hashAlgorithm = key[_algorithm].hash.name;
-        const signature = await core.opAsync("op_crypto_sign_key", {
+        const signature = await op_crypto_sign_key({
           key: keyData,
           algorithm: "RSA-PSS",
           hash: hashAlgorithm,
@@ -852,7 +866,7 @@ class SubtleCrypto {
           );
         }
 
-        const signature = await core.opAsync("op_crypto_sign_key", {
+        const signature = await op_crypto_sign_key({
           key: keyData,
           algorithm: "ECDSA",
           hash: hashAlgorithm,
@@ -864,7 +878,7 @@ class SubtleCrypto {
       case "HMAC": {
         const hashAlgorithm = key[_algorithm].hash.name;
 
-        const signature = await core.opAsync("op_crypto_sign_key", {
+        const signature = await op_crypto_sign_key({
           key: keyData,
           algorithm: "HMAC",
           hash: hashAlgorithm,
@@ -1211,7 +1225,7 @@ class SubtleCrypto {
     const length = getKeyLength(normalizedDerivedKeyAlgorithmLength);
 
     // 14.
-    const secret = await this.deriveBits(
+    const secret = await deriveBits(
       normalizedAlgorithm,
       baseKey,
       length,
@@ -1292,7 +1306,7 @@ class SubtleCrypto {
         }
 
         const hashAlgorithm = key[_algorithm].hash.name;
-        return await core.opAsync("op_crypto_verify_key", {
+        return await op_crypto_verify_key({
           key: keyData,
           algorithm: "RSASSA-PKCS1-v1_5",
           hash: hashAlgorithm,
@@ -1308,16 +1322,17 @@ class SubtleCrypto {
         }
 
         const hashAlgorithm = key[_algorithm].hash.name;
-        return await core.opAsync("op_crypto_verify_key", {
+        return await op_crypto_verify_key({
           key: keyData,
           algorithm: "RSA-PSS",
           hash: hashAlgorithm,
           signature,
+          saltLength: normalizedAlgorithm.saltLength,
         }, data);
       }
       case "HMAC": {
         const hash = key[_algorithm].hash.name;
-        return await core.opAsync("op_crypto_verify_key", {
+        return await op_crypto_verify_key({
           key: keyData,
           algorithm: "HMAC",
           hash,
@@ -1346,7 +1361,7 @@ class SubtleCrypto {
         }
 
         // 3-8.
-        return await core.opAsync("op_crypto_verify_key", {
+        return await op_crypto_verify_key({
           key: keyData,
           algorithm: "ECDSA",
           hash,
@@ -1709,6 +1724,10 @@ class SubtleCrypto {
 
     return result;
   }
+
+  [SymbolFor("Deno.privateCustomInspect")](inspect, inspectOptions) {
+    return `${this.constructor.name} ${inspect({}, inspectOptions)}`;
+  }
 }
 const SubtleCryptoPrototype = SubtleCrypto.prototype;
 
@@ -1729,8 +1748,7 @@ async function generateKey(normalizedAlgorithm, extractable, usages) {
       }
 
       // 2.
-      const keyData = await core.opAsync(
-        "op_crypto_generate_key",
+      const keyData = await op_crypto_generate_key(
         {
           algorithm: "RSA",
           modulusLength: normalizedAlgorithm.modulusLength,
@@ -1789,8 +1807,7 @@ async function generateKey(normalizedAlgorithm, extractable, usages) {
       }
 
       // 2.
-      const keyData = await core.opAsync(
-        "op_crypto_generate_key",
+      const keyData = await op_crypto_generate_key(
         {
           algorithm: "RSA",
           modulusLength: normalizedAlgorithm.modulusLength,
@@ -1853,7 +1870,7 @@ async function generateKey(normalizedAlgorithm, extractable, usages) {
           namedCurve,
         )
       ) {
-        const keyData = await core.opAsync("op_crypto_generate_key", {
+        const keyData = await op_crypto_generate_key({
           algorithm: "EC",
           namedCurve,
         });
@@ -1913,7 +1930,7 @@ async function generateKey(normalizedAlgorithm, extractable, usages) {
           namedCurve,
         )
       ) {
-        const keyData = await core.opAsync("op_crypto_generate_key", {
+        const keyData = await op_crypto_generate_key({
           algorithm: "EC",
           namedCurve,
         });
@@ -2097,7 +2114,7 @@ async function generateKey(normalizedAlgorithm, extractable, usages) {
       }
 
       // 3-4.
-      const keyData = await core.opAsync("op_crypto_generate_key", {
+      const keyData = await op_crypto_generate_key({
         algorithm: "HMAC",
         hash: normalizedAlgorithm.hash.name,
         length,
@@ -2273,18 +2290,13 @@ function importKeyEd25519(
       }
 
       // 5.
-      if (jwk.alg !== undefined && jwk.alg !== "EdDSA") {
-        throw new DOMException("Invalid algorithm", "DataError");
-      }
-
-      // 6.
       if (
         keyUsages.length > 0 && jwk.use !== undefined && jwk.use !== "sig"
       ) {
         throw new DOMException("Invalid key usage", "DataError");
       }
 
-      // 7.
+      // 6.
       if (jwk.key_ops !== undefined) {
         if (
           ArrayPrototypeFind(
@@ -2311,12 +2323,12 @@ function importKeyEd25519(
         }
       }
 
-      // 8.
+      // 7.
       if (jwk.ext !== undefined && jwk.ext === false && extractable) {
         throw new DOMException("Invalid key extractability", "DataError");
       }
 
-      // 9.
+      // 8.
       if (jwk.d !== undefined) {
         // https://www.rfc-editor.org/rfc/rfc8037#section-2
         let privateKeyData;
@@ -2666,7 +2678,7 @@ function importKeyAES(
           TypedArrayPrototypeGetByteLength(keyData) * 8,
         )
       ) {
-        throw new DOMException("Invalid key length", "Datarror");
+        throw new DOMException("Invalid key length", "DataError");
       }
 
       break;
@@ -4089,7 +4101,6 @@ function exportKeyEd25519(format, key, innerKey) {
         : ops.op_crypto_base64url_encode(innerKey);
       const jwk = {
         kty: "OKP",
-        alg: "EdDSA",
         crv: "Ed25519",
         x,
         "key_ops": key.usages,
@@ -4314,7 +4325,7 @@ async function generateKeyAES(normalizedAlgorithm, extractable, usages) {
   }
 
   // 3.
-  const keyData = await core.opAsync("op_crypto_generate_key", {
+  const keyData = await op_crypto_generate_key({
     algorithm: "AES",
     length: normalizedAlgorithm.length,
   });
@@ -4363,7 +4374,7 @@ async function deriveBits(normalizedAlgorithm, baseKey, length) {
 
       normalizedAlgorithm.salt = copyBuffer(normalizedAlgorithm.salt);
 
-      const buf = await core.opAsync("op_crypto_derive_bits", {
+      const buf = await op_crypto_derive_bits({
         key: keyData,
         algorithm: "PBKDF2",
         hash: normalizedAlgorithm.hash.name,
@@ -4412,12 +4423,12 @@ async function deriveBits(normalizedAlgorithm, baseKey, length) {
         const publicKeyhandle = publicKey[_handle];
         const publicKeyData = WeakMapPrototypeGet(KEY_STORE, publicKeyhandle);
 
-        const buf = await core.opAsync("op_crypto_derive_bits", {
+        const buf = await op_crypto_derive_bits({
           key: baseKeyData,
           publicKey: publicKeyData,
           algorithm: "ECDH",
           namedCurve: publicKey[_algorithm].namedCurve,
-          length,
+          length: length ?? 0,
         });
 
         // 8.
@@ -4449,7 +4460,7 @@ async function deriveBits(normalizedAlgorithm, baseKey, length) {
 
       normalizedAlgorithm.info = copyBuffer(normalizedAlgorithm.info);
 
-      const buf = await core.opAsync("op_crypto_derive_bits", {
+      const buf = await op_crypto_derive_bits({
         key: keyDerivationKey,
         algorithm: "HKDF",
         hash: normalizedAlgorithm.hash.name,
@@ -4536,7 +4547,7 @@ async function encrypt(normalizedAlgorithm, key, data) {
 
       // 3-5.
       const hashAlgorithm = key[_algorithm].hash.name;
-      const cipherText = await core.opAsync("op_crypto_encrypt", {
+      const cipherText = await op_crypto_encrypt({
         key: keyData,
         algorithm: "RSA-OAEP",
         hash: hashAlgorithm,
@@ -4558,7 +4569,7 @@ async function encrypt(normalizedAlgorithm, key, data) {
       }
 
       // 2.
-      const cipherText = await core.opAsync("op_crypto_encrypt", {
+      const cipherText = await op_crypto_encrypt({
         key: keyData,
         algorithm: "AES-CBC",
         length: key[_algorithm].length,
@@ -4592,7 +4603,7 @@ async function encrypt(normalizedAlgorithm, key, data) {
       }
 
       // 3.
-      const cipherText = await core.opAsync("op_crypto_encrypt", {
+      const cipherText = await op_crypto_encrypt({
         key: keyData,
         algorithm: "AES-CTR",
         keyLength: key[_algorithm].length,
@@ -4660,7 +4671,7 @@ async function encrypt(normalizedAlgorithm, key, data) {
         );
       }
       // 6-7.
-      const cipherText = await core.opAsync("op_crypto_encrypt", {
+      const cipherText = await op_crypto_encrypt({
         key: keyData,
         algorithm: "AES-GCM",
         length: key[_algorithm].length,
@@ -4677,7 +4688,7 @@ async function encrypt(normalizedAlgorithm, key, data) {
   }
 }
 
-webidl.configurePrototype(SubtleCrypto);
+webidl.configureInterface(SubtleCrypto);
 const subtle = webidl.createBranded(SubtleCrypto);
 
 class Crypto {
@@ -4735,12 +4746,19 @@ class Crypto {
     return subtle;
   }
 
-  [SymbolFor("Deno.customInspect")](inspect) {
-    return `${this.constructor.name} ${inspect({})}`;
+  [SymbolFor("Deno.privateCustomInspect")](inspect, inspectOptions) {
+    return inspect(
+      createFilteredInspectProxy({
+        object: this,
+        evaluate: ObjectPrototypeIsPrototypeOf(CryptoPrototype, this),
+        keys: ["subtle"],
+      }),
+      inspectOptions,
+    );
   }
 }
 
-webidl.configurePrototype(Crypto);
+webidl.configureInterface(Crypto);
 const CryptoPrototype = Crypto.prototype;
 
 const crypto = webidl.createBranded(Crypto);
