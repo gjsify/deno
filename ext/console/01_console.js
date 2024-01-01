@@ -1,6 +1,6 @@
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 
-/// <reference path="../../core/internal.d.ts" />
+/// <reference lib="@gjsify/deno-core/internal.d.ts" />
 
 import { core, internals, primordials } from "ext:core/mod.js";
 const {

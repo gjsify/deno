@@ -1,6 +1,6 @@
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 
-/// <reference path="../../core/internal.d.ts" />
+/// <reference lib="@gjsify/deno-core/internal.d.ts" />
 
 import { URL } from "ext:deno_url/00_url.js";
 import DOMException from "ext:deno_web/01_dom_exception.js";

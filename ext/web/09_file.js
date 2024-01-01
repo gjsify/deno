@@ -2,8 +2,8 @@
 
 // @ts-check
 /// <reference no-default-lib="true" />
-/// <reference path="../../core/lib.deno_core.d.ts" />
-/// <reference path="../../core/internal.d.ts" />
+/// <reference lib="@gjsify/deno-core/lib.deno_core.d.ts" />
+/// <reference lib="@gjsify/deno-core/internal.d.ts" />
 /// <reference path="../webidl/internal.d.ts" />
 /// <reference path="../web/internal.d.ts" />
 /// <reference path="../web/lib.deno_web.d.ts" />

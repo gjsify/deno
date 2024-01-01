@@ -1,7 +1,7 @@
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 
 // @ts-check
-/// <reference path="../../core/internal.d.ts" />
+/// <reference lib="@gjsify/deno-core/internal.d.ts" />
 
 import * as webidl from "ext:deno_webidl/00_webidl.js";
 import { assert } from "ext:deno_web/00_infra.js";

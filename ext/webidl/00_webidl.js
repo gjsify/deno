@@ -4,7 +4,7 @@
 // Copyright Domenic Denicola. Licensed under BSD-2-Clause License.
 // Original license at https://github.com/jsdom/webidl-conversions/blob/master/LICENSE.md.
 
-/// <reference path="../../core/internal.d.ts" />
+/// <reference lib="@gjsify/deno-core/internal.d.ts" />
 
 import { core, primordials } from "ext:core/mod.js";
 const {
