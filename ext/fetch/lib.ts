@@ -66,7 +66,7 @@ ops.op_fetch = async (method: string, url: string, headers: [string, string][], 
  * @throws {Error} If the request is cancelled or an error occurs while sending the request.
  */
 ops.op_fetch_send = async (rid: number): Promise<any> => {
-  let request = state.resource_table.take<any>(rid);
+  let request = state.resourceTable.take<any>(rid);
 
   let res;
   try {
@@ -89,7 +89,7 @@ ops.op_fetch_send = async (rid: number): Promise<any> => {
   let contentLength = res.response_body.length;
   let remoteAddr = res.remote_address;
 
-  let responseRid = state.resource_table.add(res);
+  let responseRid = state.resourceTable.add(res);
 
   return {
     status: status,
@@ -112,7 +112,7 @@ ops.op_fetch_send = async (rid: number): Promise<any> => {
  * @throws {Error} If the fetch response cannot be upgraded.
  */
 ops.op_fetch_response_upgrade = async (rid: number): Promise<number> => {
-  let rawResponse = state.resource_table.take<any>(rid);
+  let rawResponse = state.resourceTable.take<any>(rid);
 
   console.log('op_fetch_response_upgrade', rid, rawResponse);
 
@@ -127,7 +127,7 @@ ops.op_fetch_response_upgrade = async (rid: number): Promise<number> => {
   // let readRx = readWrite.get_input_stream();
   // let writeTx = readWrite.get_output_stream();
 
-  // let upgradedRid = state.resource_table.add(readWrite);
+  // let upgradedRid = state.resourceTable.add(readWrite);
 
   // return upgradedRid;
   return 0;

@@ -3,7 +3,9 @@ import GLib from '@girs/glib-2.0';
 
 import '@gjsify/deno-core/mod.js';
 import './ext/web/lib.js';
+import './ext/net/lib.js';
 import './ext/fetch/lib.ts';
+import './ext/ffi/lib.ts';
 import './runtime/js/99_main.js';
 
 import { getLocale, getPid, getPpid, existsTty, getArgs, parseArgv } from '@gjsify/utils';
