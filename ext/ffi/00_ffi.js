@@ -5,7 +5,6 @@ import './lib.ts';
 const ops = core.ops;
 const {
   ArrayBufferIsView,
-  ArrayBufferPrototype,
   ArrayBufferPrototypeGetByteLength,
   ArrayPrototypeMap,
   ArrayPrototypeJoin,
@@ -17,7 +16,6 @@ const {
   NumberIsSafeInteger,
   TypedArrayPrototypeGetBuffer,
   TypedArrayPrototypeGetByteLength,
-  TypedArrayPrototypeGetSymbolToStringTag,
   TypeError,
   Uint8Array,
   Int32Array,
@@ -33,6 +31,11 @@ const {
   SafeArrayIterator,
   SafeWeakMap,
 } = primordials;
+const {
+  isArrayBuffer,
+  isDataView,
+  isTypedArray,
+} = core;
 import { pathFromURL } from "ext:deno_web/00_infra.js";
 const {
   op_ffi_call_nonblocking,
@@ -47,14 +50,10 @@ const {
  * @returns {number}
  */
 function getBufferSourceByteLength(source) {
-  if (ArrayBufferIsView(source)) {
-    if (TypedArrayPrototypeGetSymbolToStringTag(source) !== undefined) {
-      // TypedArray
-      return TypedArrayPrototypeGetByteLength(source);
-    } else {
-      // DataView
-      return DataViewPrototypeGetByteLength(source);
-    }
+  if (isTypedArray(source)) {
+    return TypedArrayPrototypeGetByteLength(source);
+  } else if (isDataView(source)) {
+    return DataViewPrototypeGetByteLength(source);
   }
   return ArrayBufferPrototypeGetByteLength(source);
 }
@@ -233,7 +232,7 @@ class UnsafePointer {
       } else {
         pointer = ops.op_ffi_ptr_of(value);
       }
-    } else if (ObjectPrototypeIsPrototypeOf(ArrayBufferPrototype, value)) {
+    } else if (isArrayBuffer(value)) {
       if (value.length === 0) {
         pointer = ops.op_ffi_ptr_of_exact(new Uint8Array(value));
       } else {
