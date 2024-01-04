@@ -1,5 +1,6 @@
 // Copyright 2018-2024 the Deno authors. All rights reserved. MIT license.
 import { core } from "ext:core/mod.js";
+import './lib.js';
 const {
   op_ws_create,
   op_ws_close,
