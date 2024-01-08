@@ -69,13 +69,19 @@ ops.op_ws_create = async (apiName: string, url: string, protocols: string | stri
 
   let rid = state.resourceTable.add(connection);
 
+  let protocol = connection.get_protocol();
+  let extensions = connection.get_extensions();
+
+  // Make a websocket handshake
+  let response = await Soup.websocket_client_prepare_handshake(message, origin, protocols, []);
+
   // let protocol = response.get('Sec-WebSocket-Protocol') || '';
   // let extensions = response.get_all('Sec-WebSocket-Extensions').join(',');
 
   return {
     rid,
-    // protocol,
-    // extensions,
+    protocol,
+    extensions,
   };
 };
 
